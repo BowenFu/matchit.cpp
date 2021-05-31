@@ -51,24 +51,124 @@ The value passed to `match` will be matched against the value evaluated from the
 ```C++
 #include "include/core.h"
 #include "include/patterns.h"
+#include <map>
 using namespace matchit;
 
-int32_t divide(int32_t dividen, int32_t divisor)
+template <typename Map, typename Key>
+bool contains(Map const& map, Key const& key)
 {
-    return match(dividen)(
-        pattern(divisor)     = [] { return 1; },
-        pattern(divisor * 2) = [] { return 2; },
-        pattern(divisor * 3) = [] { return 3; },
-        pattern(_)           = [] { return -1; }
+    return match(map.find(key))(
+        pattern(map.end()) = [] { return false; },
+        pattern(_)         = [] { return true; }
     );
 }
 ```
-Note that the variable `divisor` can be used inside `pattern`.
+Note that the expression `map.end()` can be be used inside `pattern`.
 
 ## Wildcard Pattern
 The wildcard `_` will match any patterns, as we see from the example above. It is a common practice to use it as the last pattern, playing the same role in our library as `default case` does for `switch` statements.
 It can be used inside other patterns (that accpet subpatterns) as well.
 
+## Predicate Pattern
+Predicate Pattern can be used to cast some restrictions on the value to be matched.
+```C++
+#include "include/core.h"
+#include "include/patterns.h"
+using namespace matchit;
+
+double relu(double value)
+{
+    return match(value)(
+        pattern(meet([](auto &&v) { return v >= 0; })) = [&] { return value; },
+        pattern(_) = [] { return 0; });
+}
+```
+We overload some operators for wildcard symbol `_` to faciliate usage of basic predicates.
+The above sample can be written as
+```C++
+double relu(double value)
+{
+    return match(value)(
+        pattern(_ >= 0) = [&] { return value; },
+        pattern(_) = [] { return 0; });
+}
+```
+
+## Or Pattern
+Or pattern makes it possible to merge/union multiple patterns, this can be especially useful when used as subpatterns of other patterns.
+```C++
+#include "include/core.h"
+#include "include/patterns.h"
+using namespace matchit;
+
+bool isValid(int32_t n)
+{
+    return match(n)(
+        pattern(or_(1, 3, 5)) = []{ return true; },
+        pattern(_)            = []{ return false; }
+    );
+}
+```
+
+## And Pattern
+And Pattern can be used to combine multiple Predicate patterns.
+```C++
+#include "include/core.h"
+#include "include/patterns.h"
+using namespace matchit;
+
+double clip(double value, double min, double max)
+{
+    return match(value)(
+        pattern(and_(_ >= min, _ <= max)) = [&] { return value; },
+        pattern(_ > max)                  = [&] { return max; },
+        pattern(_)                        = [&] { return min; }
+    );
+}
+```
+
+## App Pattern
+App Pattern is like the projection for ranges introduced in C++20. 
+Its syntax is
+```C++
+app(PROJECTION, PATTERN)
+```
+.
+An sample to check whether a num is large:
+```C++
+#include "include/core.h"
+#include "include/patterns.h"
+using namespace matchit;
+
+bool isLarge(double value)
+{
+    return match(value)(
+        pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = [] { return true; },
+        pattern(_)                                              = [&] { return false; }
+    );
+}
+```
+
 ## Identifier Pattern
 Users can bind values with `Identifier Pattern`.
+Logging the details when detect large values can be useful for the example above. With Identifier Pattern the codes would be
+```C++
+#include <iostream>
+#include "include/core.h"
+#include "include/patterns.h"
+using namespace matchit;
+
+bool checkAndlogLarge(double value)
+{
+    auto const square = [](auto &&v) { return v * v; };
+    Id<double> s;
+    return match(value)(
+        pattern(app(square, and_(_ > 1000, s))) = [&] {
+                std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
+                return true; },
+        pattern(_) = [&] { return false; });
+}
+```
+Note that we need to define declare the identifiers (`Id<double> s`) before using it inside the pattern matching.
+`*` operator is used to dereference the value inside identifiers.
 
