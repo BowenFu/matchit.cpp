@@ -172,3 +172,89 @@ bool checkAndlogLarge(double value)
 Note that we need to define declare the identifiers (`Id<double> s`) before using it inside the pattern matching.
 `*` operator is used to dereference the value inside identifiers.
 
+Note that we used `and_` here to bind a value to the identifier under some conditions on the value.
+This practice can achieve the functionality of `@` pattern in Rust.
+
+## Destructure Pattern
+We support Destucture Pattern for `std::tuple`, `std::pair`, and `std::array`. Each of them has a `std::get` function defined for it.
+Since it is not possible to overload a function in `std` namespace, we use ADL to look up avialable `get` functions for other types.
+That is to say, in order to use Destructure Pattern for structs or classes, we need to define a `get` function for them, similar to `std::get`, but inside the same namespace of the struct or the class. (`std::tuple_size` needs to be specialized as well.)
+```C++
+#include "include/core.h"
+#include "include/patterns.h"
+using namespace matchit;
+
+template<typename T1, typename T2>
+auto eval(std::tuple<char, T1, T2> const& expr)
+{
+        Id<T1> i;
+        Id<T2> j;
+        return match(expr)(
+            pattern(ds('+', i, j)) = [&i, &j] { return *i + *j; },
+            pattern(ds('-', i, j)) = [&i, &j] { return *i - *j; },
+            pattern(ds('*', i, j)) = [&i, &j] { return *i * *j; },
+            pattern(ds('/', i, j)) = [&i, &j] { return *i / *j; },
+            pattern(_) = [] { assert(false); return -1; });
+}
+```
+
+## Match Guard
+Match Guard can be used to cast extra restrictions on a pattern.
+The syntax is
+```C++
+pattern(PATTERN).when(PREDICATE) = HANDLER
+```
+.
+
+```C++
+#include <array>
+#include "include/core.h"
+#include "include/patterns.h"
+using namespace matchit;
+
+bool sumIs(std::array<int32_t, 2> const& arr, int s)
+{
+    Id<int32_t> i, j;
+    return match(arr)(
+        pattern(i, j).when([&] { return *i + *j == s; }) = [] { return true; },
+        pattern(_)                                       = [] { return false; });
+}
+```
+
+## Ooo Pattern
+Ooo Pattern can match aribitrary number of items. It can only be used inside `ds` patterns.
+```C++
+#include <array>
+#include "include/core.h"
+#include "include/patterns.h"
+using namespace matchit;
+
+template <typename Tuple>
+int32_t detectTuplePattern(Tuple const& tuple)
+{
+    return match(tuple)
+    (
+        pattern(ds(ooo(3)))             = []{return 1;}, // all 3
+        pattern(ds(_, ooo(3)))          = []{return 2;}, // all 3 except the first one
+        pattern(ds(ooo(3), _))          = []{return 3;}, // all 3 except the last one
+        pattern(ds(_, ooo(3), _))       = []{return 4;}, // all 3 except the first and the last one
+        pattern(ds(3, ooo(not_(3)), 3)) = []{return 5;}, // all non 3 except the first and the last one
+        pattern(ds(3, ooo(_), 3))       = []{return 6;}, // first and last being 3, mxied by 3 and non-3 in the middle.
+        pattern(_)                      = []{return 7;}  // mismatch
+    );
+}
+
+int main()
+{
+    printf("%d\n", detectTuplePattern(std::make_tuple(3, 3, 3, 3, 3))); // pattern 1
+    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 3, 3, 3))); // pattern 2
+    printf("%d\n", detectTuplePattern(std::make_tuple(3, 3, 3, 2)));    // pattern 3
+    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 3, 3, 2))); // pattern 4
+    printf("%d\n", detectTuplePattern(std::make_tuple(3, 4, 2, 4, 3))); // pattern 5
+    printf("%d\n", detectTuplePattern(std::make_tuple(3, 3, 2, 3, 3))); // pattern 6
+    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 2, 3, 3))); // pattern 7
+    return 0;
+}
+
+```
+
