@@ -1,5 +1,5 @@
 # match(it): A light-weight pattern-matching library for C++17.
-![match(it).cpp](./match(it).cpp.svg)
+![match(it).cpp](./matchit.cpp.svg)
 
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
