@@ -258,3 +258,5 @@ int main()
 
 ```
 
+## Compose Patterns
+
