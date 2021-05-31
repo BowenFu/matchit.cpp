@@ -3,8 +3,8 @@
 #include <array>
 #include <any>
 #include <iostream>
-#include "core.h"
-#include "patterns.h"
+#include "include/core.h"
+#include "include/patterns.h"
 using namespace matchit;
 
 template <typename V, typename U>

@@ -109,16 +109,16 @@ public:
     }
 };
 
-class WildCard
+class Wildcard
 {
 };
 
-constexpr WildCard _;
+constexpr Wildcard _;
 
 template <>
-class PatternTraits<WildCard>
+class PatternTraits<Wildcard>
 {
-    using Pattern = WildCard;
+    using Pattern = Wildcard;
 
 public:
     template <typename Value>
@@ -261,25 +261,25 @@ public:
 };
 
 template <typename T>
-auto operator<(WildCard const &, T const &t)
+auto operator<(Wildcard const &, T const &t)
 {
     return meet([t](auto &&p) { return p < t; });
 }
 
 template <typename T>
-auto operator<=(WildCard const &, T const &t)
+auto operator<=(Wildcard const &, T const &t)
 {
     return meet([t](auto &&p) { return p <= t; });
 }
 
 template <typename T>
-auto operator>=(WildCard const &, T const &t)
+auto operator>=(Wildcard const &, T const &t)
 {
     return meet([t](auto &&p) { return p >= t; });
 }
 
 template <typename T>
-auto operator>(WildCard const &, T const &t)
+auto operator>(Wildcard const &, T const &t)
 {
     return meet([t](auto &&p) { return p > t; });
 }
@@ -610,7 +610,7 @@ static_assert(isOooV<Ooo<int &> > == true);
 static_assert(isOooV<Ooo<int const &> > == true);
 static_assert(isOooV<Ooo<int &&> > == true);
 static_assert(isOooV<int> == false);
-static_assert(isOooV<const Ooo<WildCard> &> == true);
+static_assert(isOooV<const Ooo<Wildcard> &> == true);
 
 template <typename Tuple, std::size_t... I>
 auto takeImpl(Tuple &&t, std::index_sequence<I...>)
@@ -795,7 +795,7 @@ public:
     }
 };
 
-static_assert(MatchFuncDefinedV<std::tuple<>, WildCard >);
+static_assert(MatchFuncDefinedV<std::tuple<>, Wildcard >);
 static_assert(MatchFuncDefinedV<std::tuple<>, Ds<> >);
 static_assert(!MatchFuncDefinedV<std::tuple<>, Ds<int> >);
 
@@ -841,19 +841,19 @@ static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, D
 static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, RefId<char> >, int>>);
 static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, false> >, int>>);
 static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>,  int>, Ds<char, Ds<char, Id<char, true> >, unsigned>>);
-static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, WildCard>>);
+static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, Wildcard>>);
 static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, char>>);
 static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, Ds<char, Ds<char, Id<char, true> >, char>>);
 static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, std::tuple<char, char>, int>>, Ds<Ds<char, Ds<char, Id<char, true> >, int>>>);
 static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, Id<char, true> >>);
 static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<int, Id<char, true> >, int>>);
-static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<WildCard, Id<char, true> >, int>>);
+static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<Wildcard, Id<char, true> >, int>>);
 static_assert(MatchFuncDefinedV<char, char>);
 static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, char>>);
 static_assert(MatchFuncDefinedV<std::tuple<char>, Ds<char>>);
 static_assert(!MatchFuncDefinedV<std::tuple<char>, char>);
 static_assert(MatchFuncDefinedV<std::tuple<char>, Ooo<char>>);
-static_assert(MatchFuncDefinedV<std::tuple<char>, WildCard>);
+static_assert(MatchFuncDefinedV<std::tuple<char>, Wildcard>);
 static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, char>, int>, Ds<Ds<char, Id<char, true> >, int> >);
 static_assert(MatchFuncDefinedV<std::tuple<bool, std::tuple<char, char>, int>, Ds<bool, Ds<char, Id<char, true> >, int> >);
 static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, int>, Ds<int, Ds<char, Id<char, true> >, int> >);
@@ -862,7 +862,6 @@ static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, 
 static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, int> >);
 static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char> >, Ds<char, Ds<char, Id<char, true> > > >);
 static_assert(MatchFuncDefinedV<std::tuple<int, int, int, int, int>, Ds<Ooo<int>>>);
-static_assert(MatchFuncDefinedV<std::tuple<std::string, int, int, int, int>, Ds<Ooo<int>>>);
 } // namespace impl
 
 // export symbols
