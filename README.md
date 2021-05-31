@@ -17,6 +17,11 @@ int32_t factorial(int32_t n)
     );
 }
 ```
+[![godbolt][badge.godbolt]][godbolt]
+
+[badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
+
+[godbolt]: https://godbolt.org/z/d5cacaffq
 
 The basic syntax is
 ```C++
@@ -255,8 +260,7 @@ int main()
     printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 2, 3, 3))); // pattern 7
     return 0;
 }
-
 ```
 
 ## Compose Patterns
-
+TODO : some / none / as
