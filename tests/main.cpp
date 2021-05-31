@@ -302,9 +302,9 @@ void test10()
 {
     auto const dynCast = [](auto const &i) {
         return match(i)(
-            pattern(some(dynAs<Circle>(_))) = [] { return std::string("Circle"); },
-            pattern(some(dynAs<Square>(_))) = [] { return std::string("Square"); },
-            pattern(none) = [] { return std::string("None"); });
+            pattern(some(dynAs<Circle>(_))) = [] { return "Circle"; },
+            pattern(some(dynAs<Square>(_))) = [] { return "Square"; },
+            pattern(none) = [] { return "None"; });
     };
 
     testMatch(std::make_unique<Square>(), "Square", dynCast);
@@ -322,8 +322,8 @@ void test11()
 {
     auto const getIf = [](auto const &i) {
         return match(i)(
-            pattern(getAs<Square>(_)) = [] { return std::string("Square"); },
-            pattern(getAs<Circle>(_)) = [] { return std::string("Circle"); });
+            pattern(getAs<Square>(_)) = [] { return "Square"; },
+            pattern(getAs<Circle>(_)) = [] { return "Circle"; });
     };
 
     std::variant<Square, Circle> sc;
@@ -385,8 +385,8 @@ void test14()
 {
     auto const anyCast = [](auto const &i) {
         return match(i)(
-            pattern(anyAs<Square>(_)) = [] { return std::string("Square"); },
-            pattern(anyAs<Circle>(_)) = [] { return std::string("Circle"); });
+            pattern(anyAs<Square>(_)) = [] { return "Square"; },
+            pattern(anyAs<Circle>(_)) = [] { return "Circle"; });
     };
 
     std::any sc;
