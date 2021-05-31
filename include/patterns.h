@@ -79,7 +79,7 @@ private:
 template <typename Pattern>
 auto pattern(Pattern const &p)
 {
-    return PatternHelper<Pattern>{p};
+    return PatternHelper<std::decay_t<Pattern>>{p};
 }
 
 template <typename... Patterns>
@@ -447,7 +447,7 @@ class PatternTraits<Id<Type, own> >
 public:
     template <typename Value>
     static auto matchPatternImpl(Value const &value, Id<Type, own> const &idPat)
-    -> decltype(idPat.matchValue(value))
+        -> decltype(idPat.matchValue(value))
     {
         return idPat.matchValue(value);
     }
@@ -471,7 +471,7 @@ public:
     }
 
 private:
-    std::tuple<Patterns...> mPatterns;
+    std::tuple<std::decay_t<Patterns>...> mPatterns;
 };
 
 template <typename... Patterns>
@@ -795,6 +795,7 @@ public:
     }
 };
 
+static_assert(MatchFuncDefinedV<char[4], Id<const char*, true>>);
 static_assert(MatchFuncDefinedV<std::tuple<>, Wildcard >);
 static_assert(MatchFuncDefinedV<std::tuple<>, Ds<> >);
 static_assert(!MatchFuncDefinedV<std::tuple<>, Ds<int> >);

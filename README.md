@@ -180,6 +180,8 @@ Note that we need to define declare the identifiers (`Id<double> s`) before usin
 Note that we used `and_` here to bind a value to the identifier under some conditions on the value.
 This practice can achieve the functionality of `@` pattern in Rust.
 
+TODO : Maybe we can make our `Id` work like an `immutable` data structure in Functional Programming, so to support thread safety.
+
 ## Destructure Pattern
 We support Destucture Pattern for `std::tuple`, `std::pair`, and `std::array`. Each of them has a `std::get` function defined for it.
 Since it is not possible to overload a function in `std` namespace, we use ADL to look up avialable `get` functions for other types.

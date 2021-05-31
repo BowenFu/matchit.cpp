@@ -505,8 +505,8 @@ void test19()
     };
     testMatch(std::make_tuple('/', 2, 3), 1, matchFunc);
     testMatch(std::make_tuple('/', "123", 3), 2, matchFunc);
-    testMatch(std::make_tuple('*', std::string("123"), 3), 3, matchFunc);
-    testMatch(std::make_tuple('*', std::string("123"), 5), 6, matchFunc);
+    testMatch(std::make_tuple('*', "123", 3), 3, matchFunc);
+    testMatch(std::make_tuple('*', "123", 5), 6, matchFunc);
     testMatch(std::make_tuple('[', '/', ']', 2, 2, 3, 3, 5), 5, matchFunc);
     testMatch(std::make_tuple(3, 3, 3, 3, 3), 3, matchFunc);
     compare(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ds(ooo(3))), true);
@@ -597,13 +597,13 @@ void test20()
 void test21()
 {
     Id<std::string> strA;
-    RefId<std::string> strB;
+    Id<const char*> strB;
     compare(matchPattern(
-                std::string("abc"),
+                "abc",
                 strA),
             true);
     compare(matchPattern(
-                std::string("abc"),
+                "abc",
                 strB),
             true);
     auto A = std::make_tuple("string", 123);
