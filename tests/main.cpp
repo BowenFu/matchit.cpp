@@ -486,9 +486,9 @@ void test19()
             pattern(ds(ooo(_), '/', ooo(_), 3, ooo(_))) = [] { return 5; },
 
             // This won't compile since we do compile-time check unless `Seg` is detected.
-            // pattern(ds(_, std::string("123"), 5)) = []{ return 1; },
+            // pattern(ds(_, "123", 5)) = []{ return 1; },
             // This will compile
-            pattern(ds(ooo(_), std::string("123"), 5)) = []{ return 6; },
+            pattern(ds(ooo(_), "123", 5)) = []{ return 6; },
 
             // `... int 3`
             pattern(ds(ooo(_), j, 3)) = []{ return 7; },
@@ -510,7 +510,7 @@ void test19()
     testMatch(std::make_tuple('[', '/', ']', 2, 2, 3, 3, 5), 5, matchFunc);
     testMatch(std::make_tuple(3, 3, 3, 3, 3), 3, matchFunc);
     compare(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ds(ooo(3))), true);
-    compare(matchPattern(std::make_tuple("123", 3, 3, 3, 2), ds(std::string("123"), ooo(3), 2)), true);
+    compare(matchPattern(std::make_tuple("123", 3, 3, 3, 2), ds("123", ooo(3), 2)), true);
     compare(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo(2), 3)), false);
     compare(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ooo(3)), true);
     compare(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(2)), false);

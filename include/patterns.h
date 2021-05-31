@@ -471,7 +471,24 @@ public:
     }
 
 private:
-    std::tuple<std::decay_t<Patterns>...> mPatterns;
+    template<typename T>
+    struct AddConstToPointer {
+        using type = std::conditional_t< 
+            !std::is_pointer_v<T>,
+            T,
+            std::add_pointer_t<std::add_const_t<std::remove_pointer_t<T>>>
+        >;
+    };
+    template<typename T>
+    using AddConstToPointerT = typename AddConstToPointer<T>::type;
+
+    static_assert(std::is_same_v<AddConstToPointerT<void *>, void const*>);
+    static_assert(std::is_same_v<AddConstToPointerT<int32_t>, int32_t>);
+public:
+    using Type = std::tuple<AddConstToPointerT<std::decay_t<Patterns>>...>;
+
+private:
+    Type mPatterns;
 };
 
 template <typename... Patterns>
@@ -576,14 +593,14 @@ class PatternTraits<Ds<Patterns...> >
 public:
     template <typename Tuple>
     static auto matchPatternImpl(Tuple const &valueTuple, Ds<Patterns...> const &dsPat)
-        -> decltype(TupleMatchHelper<Tuple, std::tuple<Patterns...>>::tupleMatchImpl(valueTuple, dsPat.patterns()))
+        -> decltype(TupleMatchHelper<Tuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(valueTuple, dsPat.patterns()))
     {
-        return TupleMatchHelper<Tuple, std::tuple<Patterns...>>::tupleMatchImpl(valueTuple, dsPat.patterns());
+        return TupleMatchHelper<Tuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(valueTuple, dsPat.patterns());
     }
     static void resetIdImpl(Ds<Patterns...> const &dsPat)
     {
         return std::apply(
-            [](Patterns const &...patterns) {
+            [](auto&&... patterns) {
                 return (resetId(patterns), ...);
             },
             dsPat.patterns());
