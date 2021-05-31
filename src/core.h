@@ -5,6 +5,10 @@
 #include <cstdint>
 #include <algorithm>
 
+namespace matchit
+{
+namespace impl
+{
 template <typename... PatternPair>
 class PatternPairsRetType
 {
@@ -68,4 +72,10 @@ auto match(First const &first, Values const &...values)
     auto const x = std::forward_as_tuple(first, values...);
     return MatchHelper<decltype(x), false>{x};
 }
+} // namespace impl
+
+// export symbols
+using impl::match;
+
+} // namespace matchit
 #endif // _CORE_H_

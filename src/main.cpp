@@ -1,8 +1,11 @@
-#include "core.h"
-#include "patterns.h"
+#include <string>
 #include <variant>
 #include <array>
 #include <any>
+#include <iostream>
+#include "core.h"
+#include "patterns.h"
+using namespace matchit;
 
 template <typename V, typename U>
 void compare(V const &result, U const &expected)
@@ -204,7 +207,6 @@ void test5()
     testMatch(std::make_pair(3, 4), 2, matchFunc);
     testMatch(std::make_pair(4, 4), 3, matchFunc);
     testMatch(std::make_pair(4, 1), 4, matchFunc);
-    assert(drop<1>(std::make_tuple(4, 1)) == std::make_tuple(1));
 }
 
 int32_t fib(int32_t n)
@@ -516,8 +518,6 @@ void test19()
     compare(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo(2))), false);
     compare(matchPattern(std::make_tuple("string"), ds(ooo(5))), false);
     // Debug<decltype(ds(ooo(2)))> x;
-    static_assert(MatchFuncDefinedV<std::tuple<int, int, int, int, int>, Ds<Ooo<int>>>);
-    static_assert(MatchFuncDefinedV<std::tuple<std::string, int, int, int, int>, Ds<Ooo<int>>>);
     compare(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(_ > 0)), true);
     compare(matchPattern(std::make_tuple(3, 2, -3, 2, 3), ooo(_ > 0)), false);
     compare(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(not_(3))), false);
@@ -591,14 +591,6 @@ void test20()
                 std::make_tuple('+', 1, std::make_tuple('^', std::make_tuple('s', y), 2)),
                 ds('+', 1, ds('^', ds('s', x), 2))),
             true);
-    static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, char>, int>, Ds<Ds<char, Id<char, true> >, int> >);
-    static_assert(MatchFuncDefinedV<std::tuple<std::string, std::tuple<char, char>, int>, Ds<std::string, Ds<char, Id<char, true> >, int> >);
-    static_assert(MatchFuncDefinedV<std::tuple<bool, std::tuple<char, char>, int>, Ds<bool, Ds<char, Id<char, true> >, int> >);
-    static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, int>, Ds<int, Ds<char, Id<char, true> >, int> >);
-    static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, char>, Ds<int, Ds<char, Id<char, true> >, char> >);
-    static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, Ds<char, Ds<char, Id<char, true> >, char> >);
-    static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, int> >);
-    static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char> >, Ds<char, Ds<char, Id<char, true> > > >);
     assert(matchPattern(2, 2));
 }
 
@@ -615,7 +607,6 @@ void test21()
                 strB),
             true);
     auto A = std::make_tuple("string", 123);
-    assert(drop<0>(A) == A);
 }
 
 int main()
