@@ -5,6 +5,7 @@
 #include <iostream>
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/utility.h"
 using namespace matchit;
 
 template <typename V, typename U>
@@ -167,18 +168,25 @@ bool operator==(Two const &, Two const &)
 }
 
 template <Kind k>
-auto const kind = app(&Num::kind, k);
+auto constexpr kind = app(&Num::kind, k);
 
 template <typename T>
 auto const cast = [](auto && input){
     return static_cast<T>(input);
 }; 
 
-template <typename T, Kind k>
-auto const as = [](auto const& id)
+namespace matchit
 {
-    return and_(kind<k>, app(cast<T const&>, id));
+namespace impl
+{
+template <>
+class PredTraits<One>
+{
+public:
+    constexpr static auto pred = kind<Kind::kONE>;
 };
+}
+}
 
 void test4()
 {
@@ -186,7 +194,7 @@ void test4()
         RefId<One> one;
         RefId<Two> two;
         return match(input)(
-            pattern(as<One, Kind::kONE>(one)) = [&one] { return one.value().get(); },
+            pattern(as<One>(one)) = [&one] { return one.value().get(); },
             pattern(kind<Kind::kTWO>) = [] { return 2; },
             pattern(_) = [] { return 3; });
     };
@@ -255,12 +263,6 @@ void test8()
     testMatch(std::make_pair(2, std::make_pair(1, 2)), true, equal);
     testMatch(std::make_pair(2, std::make_pair(1, 3)), false, equal);
 }
-
-auto const some = [](auto const &id) {
-    auto deref = [](auto &&x) { return *x; };
-    return and_(app(cast<bool>, true), app(deref, id));
-};
-auto const none = app(cast<bool>, false);
 
 // optional
 void test9()

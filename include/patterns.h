@@ -221,7 +221,7 @@ template <typename Unary, typename Pattern>
 class App
 {
 public:
-    App(Unary const &unary, Pattern const &pattern)
+    constexpr App(Unary const &unary, Pattern const &pattern)
         : mUnary{unary}, mPattern{pattern}
     {
     }
@@ -240,7 +240,7 @@ private:
 };
 
 template <typename Unary, typename Pattern>
-auto app(Unary const &unary, Pattern const &pattern)
+constexpr auto app(Unary const &unary, Pattern const &pattern)
 {
     return App<Unary, Pattern>{unary, pattern};
 }
