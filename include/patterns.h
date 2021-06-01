@@ -530,8 +530,22 @@ class TupleMatchHelper
 };
 
 using std::get;
-template <std::size_t N, typename Tuple, std::void_t<decltype(std::tuple_size<std::remove_reference_t<Tuple>>{})>* = nullptr>
-auto drop(Tuple &&t);
+template <std::size_t N, typename Tuple, std::size_t... I>
+auto dropImpl(Tuple &&t, std::index_sequence<I...>)
+{
+    // Fixme, use std::forward_as_tuple when possible.
+    // return std::forward_as_tuple(get<I + N>(std::forward<Tuple>(t))...);
+    return std::make_tuple(get<I + N>(std::forward<Tuple>(t))...);
+}
+
+template <std::size_t N, typename Tuple>
+auto drop(Tuple &&t)
+{
+    return dropImpl<N>(
+        std::forward<Tuple>(t),
+        std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple> > - N>{});
+}
+
 
 template <typename ValuesTuple, typename PatternHead, typename... PatternTail>
 class TupleMatchHelper<ValuesTuple, std::tuple<PatternHead, PatternTail...>, std::enable_if_t<!isOooV<PatternHead>>>
@@ -642,22 +656,6 @@ auto take(Tuple &&t)
     return takeImpl(
         std::forward<Tuple>(t),
         std::make_index_sequence<N>{});
-}
-
-template <std::size_t N, typename Tuple, std::size_t... I>
-auto dropImpl(Tuple &&t, std::index_sequence<I...>)
-{
-    // Fixme, use std::forward_as_tuple when possible.
-    // return std::forward_as_tuple(get<I + N>(std::forward<Tuple>(t))...);
-    return std::make_tuple(get<I + N>(std::forward<Tuple>(t))...);
-}
-
-template <std::size_t N, typename Tuple, std::void_t<decltype(std::tuple_size<std::remove_reference_t<Tuple>>{})>*>
-auto drop(Tuple &&t)
-{
-    return dropImpl<N>(
-        std::forward<Tuple>(t),
-        std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple> > - N>{});
 }
 
 template <typename ValuesTuple, typename PatternsTuple>
