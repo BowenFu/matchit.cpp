@@ -175,26 +175,13 @@ auto const cast = [](auto && input){
     return static_cast<T>(input);
 }; 
 
-namespace matchit
-{
-namespace impl
-{
-template <>
-class PredTraits<One>
-{
-public:
-    constexpr static auto pred = kind<Kind::kONE>;
-};
-}
-}
-
 void test4()
 {
     auto const matchFunc = [](Num const &input) {
         RefId<One> one;
         RefId<Two> two;
         return match(input)(
-            pattern(as<One>(one)) = [&one] { return one.value().get(); },
+            pattern(and_(kind<Kind::kONE>, app(cast<One const&>, one))) = [&one] { return one.value().get(); },
             pattern(kind<Kind::kTWO>) = [] { return 2; },
             pattern(_) = [] { return 3; });
     };
