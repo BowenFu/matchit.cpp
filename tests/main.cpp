@@ -134,9 +134,10 @@ public:
 class One : public Num
 {
 public:
+    constexpr static auto k = Kind::kONE;
     Kind kind() const override
     {
-        return Kind::kONE;
+        return k;
     }
     int get() const
     {
@@ -147,9 +148,10 @@ public:
 class Two : public Num
 {
 public:
+    constexpr static auto k = Kind::kTWO;
     Kind kind() const override
     {
-        return Kind::kTWO;
+        return k;
     }
     int get() const
     {
@@ -171,22 +173,32 @@ template <Kind k>
 auto constexpr kind = app(&Num::kind, k);
 
 template <typename T>
-auto const cast = [](auto && input){
-    return static_cast<T>(input);
-}; 
-
-template <typename T, Kind k>
-auto constexpr castForKind = [](auto&& pat)
+class NumAsPointer
 {
-    return and_(kind<k>, app(cast<T const&>, pat));
+public:
+    auto operator()(Num const& num) const
+    {
+        return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
+    }
 };
+
+template <>
+class matchit::impl::AsPointer<One> : public NumAsPointer<One>
+{
+};
+
+template <>
+class matchit::impl::AsPointer<Two> : public NumAsPointer<Two>
+{
+};
+
 void test4()
 {
     auto const matchFunc = [](Num const &input) {
         RefId<One> one;
         RefId<Two> two;
         return match(input)(
-            pattern(castForKind<One, Kind::kONE>(one)) = [&one] { return one.value().get(); },
+            pattern(as<One>(one)) = [&one] { return one.value().get(); },
             pattern(kind<Kind::kTWO>) = [] { return 2; },
             pattern(_) = [] { return 3; });
     };
@@ -315,7 +327,7 @@ void test11()
     };
 
     using Value = std::variant<Square, Circle>;
-    using Pattern = matchit::impl::Meet<decltype(matchit::impl::AsPointerTraits<Square>::asPointer)>;
+    using Pattern = matchit::impl::Meet<matchit::impl::AsPointer<Square>>;
     static_assert(matchit::impl::MatchFuncDefinedV<Value, Pattern>);
 
     std::variant<Square, Circle> sc;

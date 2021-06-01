@@ -21,32 +21,27 @@ auto constexpr some = [](auto const pat) {
 auto constexpr none = app(cast<bool>, false);
 
 template <typename T>
-class AsPointerTraits
+class AsPointer
 {
-    class AsPointer
-    {
-    public:
-        template <typename B>
-        auto operator()(B const& b) const
-        {
-            return dynamic_cast<T const*>(std::addressof(b));
-        }
-        template <typename... Types>
-        auto operator()(std::variant<Types...> const& v) const
-        {
-            return std::get_if<T>(std::addressof(v));
-        }
-        auto operator()(std::any const& a) const
-        {
-            return std::any_cast<T>(std::addressof(a));
-        }
-    };
 public:
-    constexpr static auto asPointer = AsPointer{};
+    template <typename B>
+    auto operator()(B const& b) const
+    {
+        return dynamic_cast<T const*>(std::addressof(b));
+    }
+    template <typename... Types>
+    auto operator()(std::variant<Types...> const& v) const
+    {
+        return std::get_if<T>(std::addressof(v));
+    }
+    auto operator()(std::any const& a) const
+    {
+        return std::any_cast<T>(std::addressof(a));
+    }
 };
 
-template <typename T, typename AsPointer = decltype(AsPointerTraits<T>::asPointer)>
-auto constexpr as = [](auto const pat, AsPointer const asPointer = AsPointerTraits<T>::asPointer)
+template <typename T, typename AsPointerT = AsPointer<T>>
+auto constexpr as = [](auto const pat, AsPointerT const asPointer = {})
 {
     return app(asPointer, some(pat));
 };
