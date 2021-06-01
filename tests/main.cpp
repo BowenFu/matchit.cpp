@@ -182,13 +182,20 @@ public:
     }
 };
 
+template <typename... Ts>
+class Overloaded : Ts...
+{
+public:
+    using Ts::operator()...;
+};
+
 template <>
-class matchit::impl::AsPointer<One> : public NumAsPointer<One>
+class matchit::impl::AsPointer<One> : public Overloaded<NumAsPointer<One>, matchit::impl::AsPointerBase<One>>
 {
 };
 
 template <>
-class matchit::impl::AsPointer<Two> : public NumAsPointer<Two>
+class matchit::impl::AsPointer<Two> : public Overloaded<NumAsPointer<Two>, matchit::impl::AsPointerBase<Two>>
 {
 };
 
@@ -202,6 +209,7 @@ void test4()
             pattern(kind<Kind::kTWO>) = [] { return 2; },
             pattern(_) = [] { return 3; });
     };
+    matchit::impl::AsPointer<Two>()(std::variant<One, Two>{});
     testMatch(One{}, 1, matchFunc);
     testMatch(Two{}, 2, matchFunc);
 }

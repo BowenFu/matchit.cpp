@@ -21,7 +21,7 @@ auto constexpr some = [](auto const pat) {
 auto constexpr none = app(cast<bool>, false);
 
 template <typename T>
-class AsPointer
+class AsPointerBase
 {
 public:
     template <typename B>
@@ -39,6 +39,9 @@ public:
         return std::any_cast<T>(std::addressof(a));
     }
 };
+
+template <typename T>
+class AsPointer : public AsPointerBase<T> {};
 
 template <typename T, typename AsPointerT = AsPointer<T>>
 auto constexpr as = [](auto const pat, AsPointerT const asPointer = {})
