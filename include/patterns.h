@@ -651,7 +651,7 @@ auto dropImpl(Tuple &&t, std::index_sequence<I...>)
     return std::make_tuple(get<I + N>(std::forward<Tuple>(t))...);
 }
 
-template <std::size_t N, typename Tuple, std::void_t<decltype(std::tuple_size<std::remove_reference_t<Tuple>>{})>* = nullptr>
+template <std::size_t N, typename Tuple, std::void_t<decltype(std::tuple_size<std::remove_reference_t<Tuple>>{})>*>
 auto drop(Tuple &&t)
 {
     return dropImpl<N>(
