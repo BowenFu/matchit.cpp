@@ -301,19 +301,17 @@ void test10()
     testMatch(std::unique_ptr<Circle>(), "None", dynCast);
 }
 
-template <typename T>
-auto const getAs = [](auto &&id) {
-    auto getIf = [](auto &&p) { return std::get_if<T>(std::addressof(p)); };
-    return app(getIf, some(id));
-};
-
 void test11()
 {
     auto const getIf = [](auto const &i) {
         return match(i)(
-            pattern(getAs<Square>(_)) = [] { return "Square"; },
-            pattern(getAs<Circle>(_)) = [] { return "Circle"; });
+            pattern(as<Square>(_)) = [] { return "Square"; },
+            pattern(as<Circle>(_)) = [] { return "Circle"; });
     };
+
+    using Value = std::variant<Square, Circle>;
+    using Pattern = matchit::impl::Meet<decltype(matchit::impl::AsPointerTraits<Square>::asPointer)>;
+    static_assert(matchit::impl::MatchFuncDefinedV<Value, Pattern>);
 
     std::variant<Square, Circle> sc;
     sc = Square{};
@@ -364,18 +362,12 @@ void test13()
     testMatch(A{2, 5}, 5, dsAgg);
 }
 
-template <typename T>
-auto const anyAs = [](auto &&id) {
-    auto anyCast = [](auto &&p) { return std::any_cast<T>(std::addressof(p)); };
-    return app(anyCast, some(id));
-};
-
 void test14()
 {
     auto const anyCast = [](auto const &i) {
         return match(i)(
-            pattern(anyAs<Square>(_)) = [] { return "Square"; },
-            pattern(anyAs<Circle>(_)) = [] { return "Circle"; });
+            pattern(as<Square>(_)) = [] { return "Square"; },
+            pattern(as<Circle>(_)) = [] { return "Circle"; });
     };
 
     std::any sc;
@@ -384,8 +376,8 @@ void test14()
     sc = Circle{};
     testMatch(sc, "Circle", anyCast);
 
-    compare(matchPattern(sc, anyAs<Circle>(_)), true);
-    compare(matchPattern(sc, anyAs<Square>(_)), false);
+    compare(matchPattern(sc, as<Circle>(_)), true);
+    compare(matchPattern(sc, as<Square>(_)), false);
     // one would write if let like
     // if (matchPattern(value, pattern))
     // {
