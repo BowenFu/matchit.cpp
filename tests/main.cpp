@@ -175,13 +175,18 @@ auto const cast = [](auto && input){
     return static_cast<T>(input);
 }; 
 
+template <typename T, Kind k>
+auto constexpr castForKind = [](auto&& pat)
+{
+    return and_(kind<k>, app(cast<T const&>, pat));
+};
 void test4()
 {
     auto const matchFunc = [](Num const &input) {
         RefId<One> one;
         RefId<Two> two;
         return match(input)(
-            pattern(and_(kind<Kind::kONE>, app(cast<One const&>, one))) = [&one] { return one.value().get(); },
+            pattern(castForKind<One, Kind::kONE>(one)) = [&one] { return one.value().get(); },
             pattern(kind<Kind::kTWO>) = [] { return 2; },
             pattern(_) = [] { return 3; });
     };

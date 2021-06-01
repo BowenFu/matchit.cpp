@@ -45,17 +45,10 @@ public:
     constexpr static auto asPointer = AsPointer{};
 };
 
-// inherit from the basic Pred?
-
-// kind -> cast
-// get_if
-// get
-
 template <typename T, typename AsPointer = decltype(AsPointerTraits<T>::asPointer)>
 auto constexpr as = [](auto const pat, AsPointer const asPointer = AsPointerTraits<T>::asPointer)
 {
     return app(asPointer, some(pat));
-    // return meet(asPointer);
 };
 
 } // namespace impl
