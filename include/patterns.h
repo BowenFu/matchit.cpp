@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <tuple>
+#include <functional>
 
 namespace matchit
 {
