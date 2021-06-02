@@ -540,6 +540,9 @@ auto dropImpl(Tuple &&t, std::index_sequence<I...>)
 
 template <std::size_t N, typename Tuple>
 auto drop(Tuple &&t)
+    -> decltype(dropImpl<N>(
+        std::forward<Tuple>(t),
+        std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple> > - N>{}))
 {
     return dropImpl<N>(
         std::forward<Tuple>(t),
