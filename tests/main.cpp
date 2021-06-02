@@ -139,10 +139,6 @@ public:
     {
         return k;
     }
-    int get() const
-    {
-        return 1;
-    }
 };
 
 class Two : public Num
@@ -152,10 +148,6 @@ public:
     Kind kind() const override
     {
         return k;
-    }
-    int get() const
-    {
-        return 2;
     }
 };
 
@@ -195,10 +187,8 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
 void test4()
 {
     auto const matchFunc = [](Num const &input) {
-        RefId<One> one;
-        RefId<Two> two;
         return match(input)(
-            pattern(as<One>(one)) = [&one] { return one.value().get(); },
+            pattern(as<One>(_)) = [] { return 1; },
             pattern(kind<Kind::kTWO>) = [] { return 2; },
             pattern(_) = [] { return 3; });
     };
@@ -299,18 +289,12 @@ struct Square : Shape
 {
 };
 
-template <typename T>
-auto const dynAs = [](auto &&id) {
-    auto dynCast = [](auto &&p) { return dynamic_cast<T const *>(&p); };
-    return app(dynCast, some(id));
-};
-
 void test10()
 {
     auto const dynCast = [](auto const &i) {
         return match(i)(
-            pattern(some(dynAs<Circle>(_))) = [] { return "Circle"; },
-            pattern(some(dynAs<Square>(_))) = [] { return "Square"; },
+            pattern(some(as<Circle>(_))) = [] { return "Circle"; },
+            pattern(some(as<Square>(_))) = [] { return "Square"; },
             pattern(none) = [] { return "None"; });
     };
 
@@ -331,8 +315,7 @@ void test11()
     using Pattern = matchit::impl::Meet<matchit::impl::AsPointer<Square>>;
     static_assert(matchit::impl::MatchFuncDefinedV<Value, Pattern>);
 
-    std::variant<Square, Circle> sc;
-    sc = Square{};
+    std::variant<Square, Circle> sc = Square{};
     testMatch(sc, "Square", getIf);
     sc = Circle{};
     testMatch(sc, "Circle", getIf);

@@ -312,4 +312,141 @@ For none pattern we simply check if the converted boolean value is false.
 
 Some and none patterns can be used to lift functions for `std::optional`, `std::unique_ptr` and so on, refer to `samples/optionalLift.cpp`.
 
-###
+### As Pattern
+As pattern can be used to handle `sum type`, including base / derived classes, `std::variant`, and `std::any`.
+A simple sample can be
+```C++
+#include <iostream>
+#include "include/core.h"
+#include "include/patterns.h"
+#include "include/utility.h"
+using namespace matchit;
+
+struct Shape
+{
+    virtual ~Shape() = default;
+};
+struct Circle : Shape {};
+struct Square : Shape {};
+
+auto getClassName(Shape const &s)
+{
+    return match(s)(
+        pattern(as<Circle>(_)) = [] { return "Circle"; },
+        pattern(as<Square>(_)) = [] { return "Square"; }
+    );
+}
+
+int main()
+{
+    Circle c{};
+    std::cout << getClassName(c) << std::endl;
+    return 0;
+}
+```
+
+As pattern is not an atomic pattern, either. It is composed via
+```C++
+template <typename T, typename AsPointerT = AsPointer<T> >
+auto constexpr as = [](auto const pat, AsPointerT const asPointer = {}) {
+    return app(asPointer, some(pat));
+};
+```
+
+The default `As` Pattern for down casting is calling `dynamic_cast`.
+Users can customize their down casting via specializing `CustomAsPointer`:
+```C++
+#include <iostream>
+#include "include/core.h"
+#include "include/patterns.h"
+#include "include/utility.h"
+using namespace matchit;
+
+enum class Kind { kONE, kTWO };
+
+class Num
+{
+public:
+    virtual ~Num() = default;
+    virtual Kind kind() const = 0;
+};
+
+class One : public Num
+{
+public:
+    constexpr static auto k = Kind::kONE;
+    Kind kind() const override
+    {
+        return k;
+    }
+};
+
+class Two : public Num
+{
+public:
+    constexpr static auto k = Kind::kTWO;
+    Kind kind() const override
+    {
+        return k;
+    }
+};
+
+template <Kind k>
+auto constexpr kind = app(&Num::kind, k);
+
+template <typename T>
+class NumAsPointer
+{
+public:
+    auto operator()(Num const& num) const
+    {
+        return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
+    }
+};
+
+template <>
+class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One> {};
+
+template <>
+class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
+
+int staticCastAs(Num const& input)
+{
+    return match(input)(
+        pattern(as<One>(_)) = [] { return 1; },
+        pattern(kind<Kind::kTWO>) = [] { return 2; },
+        pattern(_) = [] { return 3; });
+}
+
+int main()
+{
+    std::cout << staticCastAs(One{}) << std::endl;
+    return 0;
+}
+```
+`std::variant` and `std::any` can be visited as
+```C++
+#include <iostream>
+#include "include/core.h"
+#include "include/patterns.h"
+#include "include/utility.h"
+using namespace matchit;
+
+template <typename T>
+auto getClassName(T const& v)
+{
+    return match(v)(
+        pattern(as<std::string>(_)) = [] { return "string"; },
+        pattern(as<int32_t>(_)) = [] { return "int"; }
+    );
+}
+
+int main()
+{
+    std::variant<std::string, int32_t> v = 5;
+    std::cout << getClassName(v) << std::endl;
+    std::any a = std::string("arr");
+    std::cout << getClassName(a) << std::endl;
+    return 0;
+}
+```
