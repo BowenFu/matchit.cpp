@@ -41,7 +41,14 @@ public:
 };
 
 template <typename T>
-class AsPointer : public AsPointerBase<T> {};
+class CustomAsPointer
+{
+};
+
+template <typename T>
+class AsPointer : public AsPointerBase<T>, public CustomAsPointer<T>
+{
+};
 
 template <typename T, typename AsPointerT = AsPointer<T>>
 auto constexpr as = [](auto const pat, AsPointerT const asPointer = {})

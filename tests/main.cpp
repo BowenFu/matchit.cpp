@@ -182,20 +182,13 @@ public:
     }
 };
 
-template <typename... Ts>
-class Overloaded : Ts...
-{
-public:
-    using Ts::operator()...;
-};
-
 template <>
-class matchit::impl::AsPointer<One> : public Overloaded<NumAsPointer<One>, matchit::impl::AsPointerBase<One>>
+class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One>
 {
 };
 
 template <>
-class matchit::impl::AsPointer<Two> : public Overloaded<NumAsPointer<Two>, matchit::impl::AsPointerBase<Two>>
+class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
 {
 };
 
