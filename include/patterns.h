@@ -538,17 +538,17 @@ auto dropImpl(Tuple &&t, std::index_sequence<I...>)
     return std::make_tuple(get<I + N>(std::forward<Tuple>(t))...);
 }
 
+// std::tuple_size_v cannot work with SFINAE with GCC, use std::tuple_size<>::value instead.
 template <std::size_t N, typename Tuple>
 auto drop(Tuple &&t)
     -> decltype(dropImpl<N>(
         std::forward<Tuple>(t),
-        std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple> > - N>{}))
+        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple> >::value - N>{}))
 {
     return dropImpl<N>(
         std::forward<Tuple>(t),
-        std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple> > - N>{});
+        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple> >::value - N>{});
 }
-
 
 template <typename ValuesTuple, typename PatternHead, typename... PatternTail>
 class TupleMatchHelper<ValuesTuple, std::tuple<PatternHead, PatternTail...>, std::enable_if_t<!isOooV<PatternHead>>>
