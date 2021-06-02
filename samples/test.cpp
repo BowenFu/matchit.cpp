@@ -9,7 +9,7 @@ auto optionalLift(Func func)
     return [func](auto &&v) {
         Id<std::decay_t<decltype(v)> > x;
         return match(v)(
-            pattern(some(x)) = [func] { return std::make_optional(func(*x)); },
+            pattern(some(x)) = [func, &x] { return std::make_optional(func(*x)); },
             pattern(none) = [] { return {}; });
     };
 }
