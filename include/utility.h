@@ -1,6 +1,8 @@
 #ifndef _UTILITY_H_
 #define _UTILITY_H_
 
+#include <variant>
+#include <any>
 #include "./patterns.h"
 
 namespace matchit
@@ -8,36 +10,36 @@ namespace matchit
 namespace impl
 {
 
-template <typename T>
-auto constexpr cast = [](auto && input){
-    return static_cast<T>(input);
-}; 
+    template <typename T>
+    auto constexpr cast = [](auto &&input) {
+        return static_cast<T>(input);
+    };
 
-auto constexpr some = [](auto const pat) {
-    auto constexpr deref = [](auto &&x) { return *x; };
-    return and_(app(cast<bool>, true), app(deref, pat));
-};
+    auto constexpr some = [](auto const pat) {
+        auto constexpr deref = [](auto &&x) { return *x; };
+        return and_(app(cast<bool>, true), app(deref, pat));
+    };
 
-auto constexpr none = app(cast<bool>, false);
+    auto constexpr none = app(cast<bool>, false);
 
-template <typename T>
-class AsPointerBase
-{
-public:
-    template <typename B>
-    auto operator()(B const& b) const
+    template <typename T>
+    class AsPointerBase
     {
-        return dynamic_cast<T const*>(std::addressof(b));
-    }
-    template <typename... Types>
-    auto operator()(std::variant<Types...> const& v) const
-    {
-        return std::get_if<T>(std::addressof(v));
-    }
-    auto operator()(std::any const& a) const
-    {
-        return std::any_cast<T>(std::addressof(a));
-    }
+    public:
+        template <typename B>
+        auto operator()(B const &b) const
+        {
+            return dynamic_cast<T const *>(std::addressof(b));
+        }
+        template <typename... Types>
+        auto operator()(std::variant<Types...> const &v) const
+        {
+            return std::get_if<T>(std::addressof(v));
+        }
+        auto operator()(std::any const &a) const
+        {
+            return std::any_cast<T>(std::addressof(a));
+        }
 };
 
 template <typename T>

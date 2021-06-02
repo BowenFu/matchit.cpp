@@ -270,4 +270,46 @@ TODO : some / none / as
 Some / None Patterns can be used to match raw pointers, std::optional, std::unique_ptr, std::shared_ptr and other types that can be converted to bool and dereferenced.
 A typical sample can be
 ```C++
+#include <iostream>
+#include "include/core.h"
+#include "include/patterns.h"
+#include "include/utility.h"
+using namespace matchit;
+
+template <typename T>
+auto square(T const* t)
+{
+    Id<T> id;
+    return match(t)(
+        pattern(some(id)) = [&id] { return *id * *id; },
+        pattern(none) = [] { return 0; });
+}
+
+int main()
+{
+    auto t = 3;
+    std::cout << square(&t) << std::endl;
+    return 0;
+}
 ```
+
+Some and none patterns are not atomic patterns, they are composed via
+```C++
+template <typename T>
+auto constexpr cast = [](auto && input) {
+    return static_cast<T>(input);
+}; 
+
+auto constexpr some = [](auto const pat) {
+    auto constexpr deref = [](auto &&x) { return *x; };
+    return and_(app(cast<bool>, true), app(deref, pat));
+};
+
+auto constexpr none = app(cast<bool>, false);
+```
+For some pattern, first we cast the value to bool, if the boolean value is true, we can further dereference it. Otherwise, the match fails.
+For none pattern we simply check if the converted boolean value is false.
+
+Some and none patterns can be used to lift functions for `std::optional`, `std::unique_ptr` and so on, refer to `samples/optionalLift.cpp`.
+
+###
