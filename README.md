@@ -266,3 +266,8 @@ int main()
 
 ## Compose Patterns
 TODO : some / none / as
+### Some / None Patterns
+Some / None Patterns can be used to match raw pointers, std::optional, std::unique_ptr, std::shared_ptr and other types that can be converted to bool and dereferenced.
+A typical sample can be
+```C++
+```
