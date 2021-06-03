@@ -22,7 +22,7 @@ int32_t factorial(int32_t n)
 
 [badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
 
-[godbolt]: https://godbolt.org/z/d5cacaffq
+[godbolt]: https://godbolt.org/z/4s1jjE3qY
 
 The basic syntax is
 ```C++
