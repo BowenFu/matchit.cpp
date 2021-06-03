@@ -6,13 +6,14 @@ The following sample shows to how to implement factorial using the pattern match
 ```C++
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 int32_t factorial(int32_t n)
 {
     assert(n >= 0);
     return match(n)(
-        pattern(0) = [] { return 1; },
+        pattern(0) = nullary(1),
         pattern(_) = [n] { return n * factorial(n - 1); }
     );
 }
@@ -56,6 +57,7 @@ The value passed to `match` will be matched against the value evaluated from the
 ```C++
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 #include <map>
 using namespace matchit;
 
@@ -63,12 +65,13 @@ template <typename Map, typename Key>
 bool contains(Map const& map, Key const& key)
 {
     return match(map.find(key))(
-        pattern(map.end()) = [] { return false; },
-        pattern(_)         = [] { return true; }
+        pattern(map.end()) = nullary(false),
+        pattern(_)         = nullary(true)
     );
 }
 ```
 Note that the expression `map.end()` can be be used inside `pattern`.
+nullary is a helper function that can be used to generate a nullary function that return a value.
 
 ## Wildcard Pattern
 The wildcard `_` will match any patterns, as we see from the example above. It is a common practice to use it as the last pattern, playing the same role in our library as `default case` does for `switch` statements.
@@ -79,13 +82,14 @@ Predicate Pattern can be used to cast some restrictions on the value to be match
 ```C++
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 double relu(double value)
 {
     return match(value)(
-        pattern(meet([](auto &&v) { return v >= 0; })) = [&] { return value; },
-        pattern(_) = [] { return 0; });
+        pattern(meet([](auto &&v) { return v >= 0; })) = nullary(value),
+        pattern(_) = nullary(0));
 }
 ```
 We overload some operators for wildcard symbol `_` to faciliate usage of basic predicates.
@@ -94,8 +98,8 @@ The above sample can be written as
 double relu(double value)
 {
     return match(value)(
-        pattern(_ >= 0) = [&] { return value; },
-        pattern(_) = [] { return 0; });
+        pattern(_ >= 0) = nullary(value),
+        pattern(_) = nullary(0));
 }
 ```
 
@@ -104,13 +108,14 @@ Or pattern makes it possible to merge/union multiple patterns, this can be espec
 ```C++
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 bool isValid(int32_t n)
 {
     return match(n)(
-        pattern(or_(1, 3, 5)) = []{ return true; },
-        pattern(_)            = []{ return false; }
+        pattern(or_(1, 3, 5)) = nullary(true),
+        pattern(_)            = nullary(false)
     );
 }
 ```
@@ -120,14 +125,15 @@ And Pattern can be used to combine multiple Predicate patterns.
 ```C++
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 double clip(double value, double min, double max)
 {
     return match(value)(
-        pattern(and_(_ >= min, _ <= max)) = [&] { return value; },
-        pattern(_ > max)                  = [&] { return max; },
-        pattern(_)                        = [&] { return min; }
+        pattern(and_(_ >= min, _ <= max)) = nullary(value),
+        pattern(_ > max)                  = nullary(max),
+        pattern(_)                        = nullary(min)
     );
 }
 ```
@@ -143,13 +149,14 @@ An sample to check whether a num is large:
 ```C++
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 bool isLarge(double value)
 {
     return match(value)(
-        pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = [] { return true; },
-        pattern(_)                                              = [&] { return false; }
+        pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = nullary(true),
+        pattern(_)                                              = nullary(false)
     );
 }
 ```
@@ -161,6 +168,7 @@ Logging the details when detect large values can be useful for the example above
 #include <iostream>
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 bool checkAndlogLarge(double value)
@@ -171,7 +179,7 @@ bool checkAndlogLarge(double value)
         pattern(app(square, and_(_ > 1000, s))) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
-        pattern(_) = [&] { return false; });
+        pattern(_) = nullary(false));
 }
 ```
 Note that we need to define declare the identifiers (`Id<double> s`) before using it inside the pattern matching.
@@ -189,6 +197,7 @@ That is to say, in order to use Destructure Pattern for structs or classes, we n
 ```C++
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 template<typename T1, typename T2>
@@ -197,13 +206,14 @@ auto eval(std::tuple<char, T1, T2> const& expr)
         Id<T1> i;
         Id<T2> j;
         return match(expr)(
-            pattern(ds('+', i, j)) = [&i, &j] { return *i + *j; },
-            pattern(ds('-', i, j)) = [&i, &j] { return *i - *j; },
-            pattern(ds('*', i, j)) = [&i, &j] { return *i * *j; },
-            pattern(ds('/', i, j)) = [&i, &j] { return *i / *j; },
+            pattern(ds('+', i, j)) = i + j,
+            pattern(ds('-', i, j)) = i - j,
+            pattern(ds('*', i, j)) = i * j,
+            pattern(ds('/', i, j)) = i / j,
             pattern(_) = [] { assert(false); return -1; });
 }
 ```
+Note that we overload some operators for `Id`, so `i + j` will return a nullary function that return the value of `*i + *j`.
 
 ## Match Guard
 Match Guard can be used to cast extra restrictions on a pattern.
@@ -211,22 +221,24 @@ The syntax is
 ```C++
 pattern(PATTERN).when(PREDICATE) = HANDLER
 ```
-.
 
+A basic sample can be
 ```C++
 #include <array>
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 bool sumIs(std::array<int32_t, 2> const& arr, int s)
 {
     Id<int32_t> i, j;
     return match(arr)(
-        pattern(i, j).when([&] { return *i + *j == s; }) = [] { return true; },
-        pattern(_)                                       = [] { return false; });
+        pattern(i, j).when(i + j == s) = nullary(true),
+        pattern(_)                     = nullary(false));
 }
 ```
+Note that `i + j == s` will return a nullary function that return the result of `*i + *j == s`.
 
 ## Ooo Pattern
 Ooo Pattern can match aribitrary number of items. It can only be used inside `ds` patterns.
@@ -234,6 +246,7 @@ Ooo Pattern can match aribitrary number of items. It can only be used inside `ds
 #include <array>
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 template <typename Tuple>
@@ -241,13 +254,13 @@ int32_t detectTuplePattern(Tuple const& tuple)
 {
     return match(tuple)
     (
-        pattern(ds(ooo(3)))             = []{return 1;}, // all 3
-        pattern(ds(_, ooo(3)))          = []{return 2;}, // all 3 except the first one
-        pattern(ds(ooo(3), _))          = []{return 3;}, // all 3 except the last one
-        pattern(ds(_, ooo(3), _))       = []{return 4;}, // all 3 except the first and the last one
-        pattern(ds(3, ooo(not_(3)), 3)) = []{return 5;}, // all non 3 except the first and the last one
-        pattern(ds(3, ooo(_), 3))       = []{return 6;}, // first and last being 3, mxied by 3 and non-3 in the middle.
-        pattern(_)                      = []{return 7;}  // mismatch
+        pattern(ds(ooo(3)))             = nullary(1), // all 3
+        pattern(ds(_, ooo(3)))          = nullary(2), // all 3 except the first one
+        pattern(ds(ooo(3), _))          = nullary(3), // all 3 except the last one
+        pattern(ds(_, ooo(3), _))       = nullary(4), // all 3 except the first and the last one
+        pattern(ds(3, ooo(not_(3)), 3)) = nullary(5), // all non 3 except the first and the last one
+        pattern(ds(3, ooo(_), 3))       = nullary(6), // first and last being 3, mxied by 3 and non-3 in the middle.
+        pattern(_)                      = nullary(7)  // mismatch
     );
 }
 
@@ -274,6 +287,7 @@ A typical sample can be
 #include "include/core.h"
 #include "include/patterns.h"
 #include "include/utility.h"
+#include "include/expression.h"
 using namespace matchit;
 
 template <typename T>
@@ -281,8 +295,8 @@ auto square(T const* t)
 {
     Id<T> id;
     return match(t)(
-        pattern(some(id)) = [&id] { return *id * *id; },
-        pattern(none) = [] { return 0; });
+        pattern(some(id)) = id * id,
+        pattern(none)     = nullary(0))
 }
 
 int main()
@@ -320,6 +334,7 @@ A simple sample can be
 #include "include/core.h"
 #include "include/patterns.h"
 #include "include/utility.h"
+#include "include/expression.h"
 using namespace matchit;
 
 struct Shape
@@ -332,8 +347,8 @@ struct Square : Shape {};
 auto getClassName(Shape const &s)
 {
     return match(s)(
-        pattern(as<Circle>(_)) = [] { return "Circle"; },
-        pattern(as<Square>(_)) = [] { return "Square"; }
+        pattern(as<Circle>(_)) = nullary("Circle"),
+        pattern(as<Square>(_)) = nullary("Square")
     );
 }
 
@@ -360,6 +375,7 @@ Users can customize their down casting via specializing `CustomAsPointer`:
 #include "include/core.h"
 #include "include/patterns.h"
 #include "include/utility.h"
+#include "include/expression.h"
 using namespace matchit;
 
 enum class Kind { kONE, kTWO };
@@ -414,9 +430,9 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
 int staticCastAs(Num const& input)
 {
     return match(input)(
-        pattern(as<One>(_)) = [] { return 1; },
-        pattern(kind<Kind::kTWO>) = [] { return 2; },
-        pattern(_) = [] { return 3; });
+        pattern(as<One>(_))       = nullary(1),
+        pattern(kind<Kind::kTWO>) = nullary(2),
+        pattern(_)                = nullary(3));
 }
 
 int main()
@@ -431,14 +447,15 @@ int main()
 #include "include/core.h"
 #include "include/patterns.h"
 #include "include/utility.h"
+#include "include/expression.h"
 using namespace matchit;
 
 template <typename T>
 auto getClassName(T const& v)
 {
     return match(v)(
-        pattern(as<std::string>(_)) = [] { return "string"; },
-        pattern(as<int32_t>(_)) = [] { return "int"; }
+        pattern(as<std::string>(_)) = nullary("string"),
+        pattern(as<int32_t>(_))     = nullary("int")
     );
 }
 
@@ -457,4 +474,4 @@ Users can specialize `PatternTraits` if they want to add a new pattern.
 
 # TODO
 1. Merge Id and RefId. Id should recongize if own is true based on the parameter type. `Rvalue` means owned. `Lvalue` means not owned.
-2. Simplify `nullary`.
+2. Should we rename `nullary` to `_0` or something else?
