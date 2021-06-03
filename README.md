@@ -263,9 +263,9 @@ int main()
     return 0;
 }
 ```
+Currently we do allow multiple `ooo` patterns inside the same `ds` pattern. But we may remove that support later if we find that it bring more potential issues than benefits. Rust and Racket forbid this kind of uses. 
 
 ## Compose Patterns
-TODO : some / none / as
 ### Some / None Patterns
 Some / None Patterns can be used to match raw pointers, std::optional, std::unique_ptr, std::shared_ptr and other types that can be converted to bool and dereferenced.
 A typical sample can be
@@ -352,7 +352,7 @@ auto constexpr as = [](auto const pat, AsPointerT const asPointer = {}) {
     return app(asPointer, some(pat));
 };
 ```
-
+#### Customization Point of `As` Pattern
 The default `As` Pattern for down casting is calling `dynamic_cast`.
 Users can customize their down casting via specializing `CustomAsPointer`:
 ```C++
@@ -400,6 +400,7 @@ class NumAsPointer
 public:
     auto operator()(Num const& num) const
     {
+        std::cout << "custom as pointer." << std::endl;
         return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
     }
 };
@@ -450,3 +451,10 @@ int main()
     return 0;
 }
 ```
+
+## Customziation Point
+Users can specialize `PatternTraits` if they want to add a new pattern.
+
+# TODO
+1. Merge Id and RefId. Id should recongize if own is true based on the parameter type. `Rvalue` means owned. `Lvalue` means not owned.
+2. Simplify `nullary`.
