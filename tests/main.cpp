@@ -52,13 +52,13 @@ void test1()
             pattern(1) = func1,
             pattern(2) = func2,
             pattern(or_(56, 59)) = func2,
-            pattern(_ < 0) = [] { return -1; },
-            pattern(_ < 10) = [] { return -10; },
-            pattern(and_(_<17, _> 15)) = [] { return 16; },
+            pattern(_ < 0) = nullary(-1),
+            pattern(_ < 10) = nullary(-10),
+            pattern(and_(_<17, _> 15)) = nullary(16),
             pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = nullary(1000),
             pattern(app([](int32_t x) { return x * x; }, ii)) = nullary(ii),
             pattern(ii) = ii + 1,
-            pattern(_) = [] { return 111; });
+            pattern(_) = nullary(111));
     };
     testMatch(1, true, matchFunc);
     testMatch(2, 12, matchFunc);
@@ -77,8 +77,8 @@ void test2()
         Id<int> i;
         Id<int> j;
         return match(input)(
-            pattern(ds('/', 1, 1)) = [] { return 1; },
-            pattern(ds('/', 0, _)) = [] { return 0; },
+            pattern(ds('/', 1, 1)) = nullary(1),
+            pattern(ds('/', 0, _)) = nullary(0),
             pattern(ds('*', i, j)) = i * j,
             pattern(ds('+', i, j)) = i + j,
             pattern(_) = [&i, &j] { return -1; });
@@ -188,9 +188,9 @@ void test4()
 {
     auto const matchFunc = [](Num const &input) {
         return match(input)(
-            pattern(as<One>(_)) = [] { return 1; },
-            pattern(kind<Kind::kTWO>) = [] { return 2; },
-            pattern(_) = [] { return 3; });
+            pattern(as<One>(_)) = nullary(1),
+            pattern(kind<Kind::kTWO>) = nullary(2),
+            pattern(_) = nullary(3));
     };
     matchit::impl::AsPointer<Two>()(std::variant<One, Two>{});
     testMatch(One{}, 1, matchFunc);
@@ -201,10 +201,10 @@ void test5()
 {
     auto const matchFunc = [](std::pair<int32_t, int32_t> ij) {
         return match(ij.first % 3, ij.second % 5)(
-            pattern(0, 0) = [] { return 1; },
-            pattern(0, _ > 2) = [] { return 2; },
-            pattern(_, _ > 2) = [] { return 3; },
-            pattern(_) = [] { return 4; });
+            pattern(0, 0) = nullary(1),
+            pattern(0, _ > 2) = nullary(2),
+            pattern(_, _ > 2) = nullary(3),
+            pattern(_) = nullary(4));
     };
     testMatch(std::make_pair(3, 5), 1, matchFunc);
     testMatch(std::make_pair(3, 4), 2, matchFunc);
@@ -216,8 +216,8 @@ int32_t fib(int32_t n)
 {
     assert(n > 0);
     return match(n)(
-        pattern(1) = [] { return 1; },
-        pattern(2) = [] { return 1; },
+        pattern(1) = nullary(1),
+        pattern(2) = nullary(1),
         pattern(_) = [n] { return fib(n - 1) + fib(n - 2); });
 }
 
@@ -240,9 +240,9 @@ void test7()
         };
         return match(ij.first % 3, ij.second % 5)(
             pattern(0, _ > 2) = nullary(2),
-            pattern(ds(1, _ > 2)) = [] { return 3; },
+            pattern(ds(1, _ > 2)) = nullary(3),
             pattern(at(id, ds(_, 2))) = [&id] {assert(std::get<1>(*id) == 2); return 4; },
-            pattern(_) = [] { return 5; });
+            pattern(_) = nullary(5));
     };
     testMatch(std::make_pair(4, 2), 4, matchFunc);
 }
@@ -252,8 +252,8 @@ void test8()
     auto const equal = [](std::pair<int32_t, std::pair<int32_t, int32_t> > ijk) {
         Id<int32_t> x;
         return match(ijk)(
-            pattern(ds(x, ds(_, x))) = [] { return true; },
-            pattern(_) = [] { return false; });
+            pattern(ds(x, ds(_, x))) = nullary(true),
+            pattern(_) = nullary(false));
     };
     testMatch(std::make_pair(2, std::make_pair(1, 2)), true, equal);
     testMatch(std::make_pair(2, std::make_pair(1, 3)), false, equal);
@@ -265,8 +265,8 @@ void test9()
     auto const optional = [](auto const &i) {
         Id<int32_t> x;
         return match(i)(
-            pattern(some(x)) = [] { return true; },
-            pattern(none) = [] { return false; });
+            pattern(some(x)) = nullary(true),
+            pattern(none) = nullary(false));
     };
     testMatch(std::make_unique<int32_t>(2), true, optional);
     testMatch(std::unique_ptr<int32_t>{}, false, optional);
@@ -293,9 +293,9 @@ void test10()
 {
     auto const dynCast = [](auto const &i) {
         return match(i)(
-            pattern(some(as<Circle>(_))) = [] { return "Circle"; },
-            pattern(some(as<Square>(_))) = [] { return "Square"; },
-            pattern(none) = [] { return "None"; });
+            pattern(some(as<Circle>(_))) = nullary("Circle"),
+            pattern(some(as<Square>(_))) = nullary("Square"),
+            pattern(none) = nullary("None"));
     };
 
     testMatch(std::make_unique<Square>(), "Square", dynCast);
@@ -307,8 +307,8 @@ void test11()
 {
     auto const getIf = [](auto const &i) {
         return match(i)(
-            pattern(as<Square>(_)) = [] { return "Square"; },
-            pattern(as<Circle>(_)) = [] { return "Circle"; });
+            pattern(as<Square>(_)) = nullary("Square"),
+            pattern(as<Circle>(_)) = nullary("Circle"));
     };
 
     using Value = std::variant<Square, Circle>;
@@ -353,8 +353,8 @@ void test13()
     auto const dsAgg = [](auto const &v) {
         Id<int> i;
         return match(v)(
-            pattern(ds(1, i)) = [&i] { return *i; },
-            pattern(ds(_, i)) = [&i] { return *i; });
+            pattern(ds(1, i)) = nullary(i),
+            pattern(ds(_, i)) = nullary(i));
     };
 
     testMatch(A{1, 2}, 2, dsAgg);
@@ -367,8 +367,8 @@ void test14()
 {
     auto const anyCast = [](auto const &i) {
         return match(i)(
-            pattern(as<Square>(_)) = [] { return "Square"; },
-            pattern(as<Circle>(_)) = [] { return "Circle"; });
+            pattern(as<Square>(_)) = nullary("Square"),
+            pattern(as<Circle>(_)) = nullary("Circle"));
     };
 
     std::any sc;
@@ -391,9 +391,9 @@ void test15()
     auto const optional = [](auto const &i) {
         Id<char> c;
         return match(i)(
-            pattern(none) = [] { return 1; },
-            pattern(some(none)) = [] { return 2; },
-            pattern(some(some(c))) = [&c] { return *c; });
+            pattern(none) = nullary(1),
+            pattern(some(none)) = nullary(2),
+            pattern(some(some(c))) = nullary(c));
     };
     char const **x = nullptr;
     char const *y_ = nullptr;
@@ -410,9 +410,9 @@ void test16()
 {
     auto const notX = [](auto const &i) {
         return match(i)(
-            pattern(not_(or_(1, 2))) = [] { return 3; },
-            pattern(2) = [] { return 2; },
-            pattern(_) = [] { return 1; });
+            pattern(not_(or_(1, 2))) = nullary(3),
+            pattern(2) = nullary(2),
+            pattern(_) = nullary(1));
     };
     testMatch(1, 1, notX);
     testMatch(2, 2, notX);
@@ -425,9 +425,9 @@ void test17()
     auto const whenX = [](auto const &x) {
         Id<int32_t> i, j;
         return match(x)(
-            pattern(i, j).when([&] { return *i + *j == 10; }) = [] { return 3; },
-            pattern(_ < 5, _) = [] { return 5; },
-            pattern(_) = [] { return 1; });
+            pattern(i, j).when(i + j == 10) = nullary(3),
+            pattern(_ < 5, _) = nullary(5),
+            pattern(_) = nullary(1));
     };
     testMatch(std::make_pair(1, 9), 3, whenX);
     testMatch(std::make_pair(1, 7), 5, whenX);
@@ -439,8 +439,8 @@ void test18()
     auto const idNotOwn = [](auto const &x) {
         RefId<int32_t> i;
         return match(x)(
-            pattern(i).when([&i] { return *i == 5; }) = [] { return 1; },
-            pattern(_) = [] { return 2; });
+            pattern(i).when(i == 5) = nullary(1),
+            pattern(_) = nullary(2));
     };
     testMatch(1, 2, idNotOwn);
     testMatch(5, 1, idNotOwn);
@@ -452,38 +452,38 @@ void test19()
         Id<int> j;
         return match(input)(
             // `... / 2 3`
-            pattern(ds(ooo(_), '/', 2, 3)) = []{ return 1; },
+            pattern(ds(ooo(_), '/', 2, 3)) = nullary(1),
             // `/ ... 3`
-            pattern(ds('/', ooo(_), ooo(_), 3)) = []{ return 2; },
+            pattern(ds('/', ooo(_), ooo(_), 3)) = nullary(2),
             // `... 3`
-            pattern(ds(ooo(_), 3)) = []{ return 3; },
+            pattern(ds(ooo(_), 3)) = nullary(3),
             // `/ ...`
-            pattern(ds('/', ooo(_))) = []{ return 4; },
+            pattern(ds('/', ooo(_))) = nullary(4),
 
-            pattern(ds(ooo(j))) = []{ return 222; },
+            pattern(ds(ooo(j))) = nullary(222),
             // `3 3 3 3 ..` all 3
-            pattern(ds(ooo(3))) = []{ return 333; },
+            pattern(ds(ooo(3))) = nullary(333),
 
             // `... / ... 3 ...`
-            pattern(ds(ooo(_), '/', ooo(_), 3, ooo(_))) = [] { return 5; },
+            pattern(ds(ooo(_), '/', ooo(_), 3, ooo(_))) = nullary(5),
 
             // This won't compile since we do compile-time check unless `Seg` is detected.
-            // pattern(ds(_, "123", 5)) = []{ return 1; },
+            // pattern(ds(_, "123", 5)) = nullary(1),
             // This will compile
-            pattern(ds(ooo(_), "123", 5)) = []{ return 6; },
+            pattern(ds(ooo(_), "123", 5)) = nullary(6),
 
             // `... int 3`
-            pattern(ds(ooo(_), j, 3)) = []{ return 7; },
+            pattern(ds(ooo(_), j, 3)) = nullary(7),
             // `... int 3`
-            pattern(ds(ooo(_), or_(j), 3)) = [] { return 8; },
+            pattern(ds(ooo(_), or_(j), 3)) = nullary(8),
 
             // `...`
-            pattern(ds(ooo(_), ooo(_), ooo(_), ooo(_))) = []{ return 9; }, // equal to ds(_)
-            pattern(ds(ooo(_), ooo(_), ooo(_))) = []{ return 10; },
-            pattern(ds(ooo(_), ooo(_))) = []{ return 11; },
-            pattern(ds(ooo(_))) = []{ return 12; },
+            pattern(ds(ooo(_), ooo(_), ooo(_), ooo(_))) = nullary(9), // equal to ds(_)
+            pattern(ds(ooo(_), ooo(_), ooo(_))) = nullary(10),
+            pattern(ds(ooo(_), ooo(_))) = nullary(11),
+            pattern(ds(ooo(_))) = nullary(12),
 
-            pattern(_) = [] { return -1; });
+            pattern(_) = nullary(-1));
     };
     testMatch(std::make_tuple('/', 2, 3), 1, matchFunc);
     testMatch(std::make_tuple('/', "123", 3), 2, matchFunc);
@@ -524,22 +524,22 @@ void test20()
         return match(input)(
             // why this one fail to match?
             pattern(
-                ds('+', ooo(_), 1, ds('^', ds('s', x), 2))) = [] { return 9; },
+                ds('+', ooo(_), 1, ds('^', ds('s', x), 2))) = nullary(9),
             pattern(
-                ds('+', ooo(_), 1, ds('^', ds('s', x), ooo(_), 2))) = [] { return 8; },
+                ds('+', ooo(_), 1, ds('^', ds('s', x), ooo(_), 2))) = nullary(8),
             pattern(
-                ds('+', ooo(_), 1, ds('^', ds('s', x), ooo(_)), ooo(_))) = [] { return 7; },
+                ds('+', ooo(_), 1, ds('^', ds('s', x), ooo(_)), ooo(_))) = nullary(7),
             pattern(
-                ds('+', 1, ds('^', ooo(_)), ooo(_))) = [] { return 6; },
+                ds('+', 1, ds('^', ooo(_)), ooo(_))) = nullary(6),
             pattern(
-                ds('+', 1, ds(ooo(_)), ooo(_))) = [] { return 5; },
+                ds('+', 1, ds(ooo(_)), ooo(_))) = nullary(5),
             pattern(
-                ds('+', 1, _, ooo(_))) = [] { return 4; },
+                ds('+', 1, _, ooo(_))) = nullary(4),
             pattern(
-                ds('+', 1, ooo(_))) = [] { return 3; },
+                ds('+', 1, ooo(_))) = nullary(3),
             pattern(
-                ds('+', ooo(_))) = [] { return 2; },
-            pattern(_) = [] { return -1; });
+                ds('+', ooo(_))) = nullary(2),
+            pattern(_) = nullary(-1));
     };
     Id<char> x;
     char y = 'y';

@@ -20,8 +20,8 @@ namespace matchit
             return Expr<T>{t};
         }
 
-        template <typename T>
-        auto nullary(Id<T> const& id)
+        template <typename T, bool own>
+        auto nullary(Id<T, own> const& id)
         {
             return expr([&] { return *id; });
         }
@@ -52,11 +52,11 @@ namespace matchit
             }
         };
 
-        template <typename T>
-        class EvalTraits<Id<T>>
+        template <typename T, bool own>
+        class EvalTraits<Id<T, own>>
         {
         public:
-            constexpr static auto evalImpl(Id<T> const& id)
+            constexpr static auto evalImpl(Id<T, own> const& id)
             {
                 return *id;
             }
@@ -71,8 +71,8 @@ namespace matchit
         template <typename T>
         class IsExprOrId : public std::false_type {};
 
-        template <typename T>
-        class IsExprOrId<Id<T>> : public std::true_type {};
+        template <typename T, bool own>
+        class IsExprOrId<Id<T, own>> : public std::true_type {};
 
         template <typename T>
         class IsExprOrId<Expr<T>> : public std::true_type {};
@@ -98,6 +98,7 @@ namespace matchit
     using impl::nullary;
     using impl::operator+;
     using impl::operator*;
+    using impl::operator==;
 } // namespace matchit
 
 #endif // _EXPRESSION_H_
