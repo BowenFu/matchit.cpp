@@ -6,6 +6,7 @@
 #include "include/core.h"
 #include "include/patterns.h"
 #include "include/utility.h"
+#include "include/expression.h"
 using namespace matchit;
 
 template <typename V, typename U>
@@ -54,10 +55,9 @@ void test1()
             pattern(_ < 0) = [] { return -1; },
             pattern(_ < 10) = [] { return -10; },
             pattern(and_(_<17, _> 15)) = [] { return 16; },
-            pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = [] { return 1000; },
-            pattern(app([](int32_t x) { return x * x; }, meet([](auto &&x) { return x > 1000; }))) = [] { return 1000; },
-            pattern(app([](int32_t x) { return x * x; }, ii)) = [&ii] { return ii.value() + 0; },
-            pattern(ii) = [&ii] { return ii.value() + 1; },
+            pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = nullary(1000),
+            pattern(app([](int32_t x) { return x * x; }, ii)) = nullary(ii),
+            pattern(ii) = ii + 1,
             pattern(_) = [] { return 111; });
     };
     testMatch(1, true, matchFunc);
@@ -79,8 +79,8 @@ void test2()
         return match(input)(
             pattern(ds('/', 1, 1)) = [] { return 1; },
             pattern(ds('/', 0, _)) = [] { return 0; },
-            pattern(ds('*', i, j)) = [&i, &j] { return i.value() * j.value(); },
-            pattern(ds('+', i, j)) = [&i, &j] { return i.value() + j.value(); },
+            pattern(ds('*', i, j)) = i * j,
+            pattern(ds('+', i, j)) = i + j,
             pattern(_) = [&i, &j] { return -1; });
     };
     testMatch(std::make_tuple('/', 1, 1), 1, matchFunc);
@@ -111,8 +111,8 @@ void test3()
             return and_(app(&A::a, x), app(&A::b, 1));
         };
         return match(input)(
-            pattern(dsA(i)) = [&i] { return i.value(); },
-            pattern(_) = [] { return -1; });
+            pattern(dsA(i)) = nullary(i),
+            pattern(_) = nullary(-1));
     };
     testMatch(A{3, 1}, 3, matchFunc);
     testMatch(A{2, 2}, -1, matchFunc);
@@ -239,9 +239,9 @@ void test7()
             return and_(id, pattern);
         };
         return match(ij.first % 3, ij.second % 5)(
-            pattern(0, _ > 2) = [] { return 2; },
+            pattern(0, _ > 2) = nullary(2),
             pattern(ds(1, _ > 2)) = [] { return 3; },
-            pattern(at(id, ds(_, 2))) = [&id] {assert(std::get<1>(id.value()) == 2); return 4; },
+            pattern(at(id, ds(_, 2))) = [&id] {assert(std::get<1>(*id) == 2); return 4; },
             pattern(_) = [] { return 5; });
     };
     testMatch(std::make_pair(4, 2), 4, matchFunc);
