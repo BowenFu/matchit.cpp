@@ -122,22 +122,26 @@ namespace matchit
         {
         };
 
-#define BINARY_OP(op)                                                                                                   \
+#define BIN_OP_FOR_NULLARY(op)                                                                                                   \
     template <typename T, typename U, std::enable_if_t<IsNullaryOrId<T>::value || IsNullaryOrId<U>::value, bool> = true> \
     auto operator op(T const &t, U const &u)                                                                            \
     {                                                                                                                   \
         return nullary([&] { return eval(t) op eval(u); });                                                                \
     }
 
-        BINARY_OP(+)
-        BINARY_OP(-)
-        BINARY_OP(*)
-        BINARY_OP(/)
-        BINARY_OP(<)
-        BINARY_OP(<=)
-        BINARY_OP(==)
-        BINARY_OP(>=)
-        BINARY_OP(>)
+        // ADL will find these operators.
+        BIN_OP_FOR_NULLARY(+)
+        BIN_OP_FOR_NULLARY(-)
+        BIN_OP_FOR_NULLARY(*)
+        BIN_OP_FOR_NULLARY(/)
+        BIN_OP_FOR_NULLARY(<)
+        BIN_OP_FOR_NULLARY(<=)
+        BIN_OP_FOR_NULLARY(==)
+        BIN_OP_FOR_NULLARY(!=)
+        BIN_OP_FOR_NULLARY(>=)
+        BIN_OP_FOR_NULLARY(>)
+        BIN_OP_FOR_NULLARY(||)
+        BIN_OP_FOR_NULLARY(&&)
 
         class Placeholder
         {
@@ -159,30 +163,28 @@ namespace matchit
         {
         };
 
-        // TODO, need to distinguish nullary / unary exprs.
-#define BINARY_OP_ARG(op)                                                                                                              \
+#define BIN_OP_FOR_UNARY(op)                                                                                                              \
     template <typename T, typename U, std::enable_if_t<IsUnaryOrPlaceholder<T>::value || IsUnaryOrPlaceholder<U>::value, bool> = true> \
     auto operator op(T const &t, U const &u)                                                                                           \
     {                                                                                                                                  \
         return unary([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                        \
     }                                                                                                                                  \
 
-        BINARY_OP_ARG(+)
-        BINARY_OP_ARG(-)
-        BINARY_OP_ARG(*)
-        BINARY_OP_ARG(/)
-        BINARY_OP_ARG(<)
-        BINARY_OP_ARG(<=)
-        BINARY_OP_ARG(==)
-        BINARY_OP_ARG(>=)
-        BINARY_OP_ARG(>)
+        BIN_OP_FOR_UNARY(+)
+        BIN_OP_FOR_UNARY(-)
+        BIN_OP_FOR_UNARY(*)
+        BIN_OP_FOR_UNARY(/)
+        BIN_OP_FOR_UNARY(<)
+        BIN_OP_FOR_UNARY(<=)
+        BIN_OP_FOR_UNARY(==)
+        BIN_OP_FOR_UNARY(!=)
+        BIN_OP_FOR_UNARY(>=)
+        BIN_OP_FOR_UNARY(>)
+        BIN_OP_FOR_UNARY(||)
+        BIN_OP_FOR_UNARY(&&)
     } // namespace impl
     using impl::expr;
     using impl::_1;
-    // ADL
-    // using impl::operator+;
-    // using impl::operator*;
-    // using impl::operator==;
 } // namespace matchit
 
 #endif // _EXPRESSION_H_

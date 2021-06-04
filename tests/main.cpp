@@ -61,8 +61,8 @@ void test1()
             pattern(_ < 0) = expr(-1),
             pattern(_ < 10) = expr(-10),
             pattern(and_(_<17, _> 15)) = expr(16),
-            pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = expr(1000),
-            pattern(app([](int32_t x) { return x * x; }, ii)) = expr(ii),
+            pattern(app(_1 * _1, _ > 1000)) = expr(1000),
+            pattern(app(_1 * _1, ii)) = expr(ii),
             pattern(ii) = ii + 1,
             pattern(_) = expr(111));
     };
@@ -174,7 +174,7 @@ template <typename T>
 class NumAsPointer
 {
 public:
-    auto operator()(Num const& num) const
+    auto operator()(Num const &num) const
     {
         return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
     }
@@ -318,7 +318,7 @@ void test11()
     };
 
     using Value = std::variant<Square, Circle>;
-    using Pattern = matchit::impl::Meet<matchit::impl::AsPointer<Square>>;
+    using Pattern = matchit::impl::Meet<matchit::impl::AsPointer<Square> >;
     static_assert(matchit::impl::MatchFuncDefinedV<Value, Pattern>);
 
     std::variant<Square, Circle> sc = Square{};
@@ -585,7 +585,7 @@ void test20()
 void test21()
 {
     Id<std::string> strA;
-    Id<const char*> strB;
+    Id<const char *> strB;
     compare(matchPattern(
                 "abc",
                 strA),
