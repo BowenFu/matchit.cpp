@@ -261,30 +261,6 @@ public:
     }
 };
 
-template <typename T>
-auto operator<(Wildcard const &, T const &t)
-{
-    return meet([t](auto &&p) { return p < t; });
-}
-
-template <typename T>
-auto operator<=(Wildcard const &, T const &t)
-{
-    return meet([t](auto &&p) { return p <= t; });
-}
-
-template <typename T>
-auto operator>=(Wildcard const &, T const &t)
-{
-    return meet([t](auto &&p) { return p >= t; });
-}
-
-template <typename T>
-auto operator>(Wildcard const &, T const &t)
-{
-    return meet([t](auto &&p) { return p > t; });
-}
-
 template <typename... Patterns>
 class And
 {

@@ -88,7 +88,7 @@ namespace matchit
                 return e(arg);
             }
         };
-        
+
         class Placeholder;
         template <>
         class EvalTraits<Placeholder>
@@ -96,6 +96,29 @@ namespace matchit
         public:
             template <typename Arg>
             constexpr static auto evalImpl(Placeholder const &e, Arg const &arg)
+            {
+                return arg;
+            }
+        };
+
+        template <typename T>
+        class EvalTraits<Meet<T> >
+        {
+        public:
+            template <typename Arg>
+            constexpr static auto evalImpl(Meet<T> const &e, Arg const &arg)
+            {
+                return e.predicate()(arg);
+            }
+        };
+
+        class Wildcard;
+        template <>
+        class EvalTraits<Wildcard>
+        {
+        public:
+            template <typename Arg>
+            constexpr static auto evalImpl(Wildcard const &e, Arg const &arg)
             {
                 return arg;
             }
@@ -129,11 +152,11 @@ namespace matchit
         return nullary([&] { return op eval(t); });                               \
     }
 
-#define BIN_OP_FOR_NULLARY(op)                                                                                                   \
+#define BIN_OP_FOR_NULLARY(op)                                                                                           \
     template <typename T, typename U, std::enable_if_t<IsNullaryOrId<T>::value || IsNullaryOrId<U>::value, bool> = true> \
-    auto operator op(T const &t, U const &u)                                                                            \
-    {                                                                                                                   \
-        return nullary([&] { return eval(t) op eval(u); });                                                                \
+    auto operator op(T const &t, U const &u)                                                                             \
+    {                                                                                                                    \
+        return nullary([&] { return eval(t) op eval(u); });                                                              \
     }
 
         // ADL will find these operators.
@@ -174,19 +197,19 @@ namespace matchit
         {
         };
 
-#define UN_OP_FOR_UNARY(op)                                                                                                              \
+#define UN_OP_FOR_UNARY(op)                                                              \
     template <typename T, std::enable_if_t<IsUnaryOrPlaceholder<T>::value, bool> = true> \
-    auto operator op(T const &t)                                                                                           \
-    {                                                                                                                                  \
-        return unary([&](auto &&arg) { return op eval(t, arg); });                                                        \
-    }                                                                                                                                  \
+    auto operator op(T const &t)                                                         \
+    {                                                                                    \
+        return unary([&](auto &&arg) { return op eval(t, arg); });                       \
+    }
 
-#define BIN_OP_FOR_UNARY(op)                                                                                                              \
+#define BIN_OP_FOR_UNARY(op)                                                                                                           \
     template <typename T, typename U, std::enable_if_t<IsUnaryOrPlaceholder<T>::value || IsUnaryOrPlaceholder<U>::value, bool> = true> \
     auto operator op(T const &t, U const &u)                                                                                           \
     {                                                                                                                                  \
         return unary([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                        \
-    }                                                                                                                                  \
+    }
 
         UN_OP_FOR_UNARY(!)
         UN_OP_FOR_UNARY(-)
@@ -204,6 +227,54 @@ namespace matchit
         BIN_OP_FOR_UNARY(>)
         BIN_OP_FOR_UNARY(||)
         BIN_OP_FOR_UNARY(&&)
+
+        // Meet
+        template <typename T>
+        class IsMeetOrWildcard : public std::false_type
+        {
+        };
+
+        template <>
+        class IsMeetOrWildcard<Wildcard> : public std::true_type
+        {
+        };
+
+        template <typename T>
+        class IsMeetOrWildcard<Meet<T> > : public std::true_type
+        {
+        };
+
+#define UN_OP_FOR_MEET(op)                                                              \
+    template <typename T, std::enable_if_t<IsMeetOrWildcard<T>::value, bool> = true> \
+    auto operator op(T const &t)                                                         \
+    {                                                                                    \
+        return meet([&](auto &&arg) { return op eval(t, arg); });                       \
+    }
+
+#define BIN_OP_FOR_MEET(op)                                                                                                           \
+    template <typename T, typename U, std::enable_if_t<IsMeetOrWildcard<T>::value || IsMeetOrWildcard<U>::value, bool> = true> \
+    auto operator op(T const &t, U const &u)                                                                                           \
+    {                                                                                                                                  \
+        return meet([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                        \
+    }
+
+        UN_OP_FOR_MEET(!)
+        UN_OP_FOR_MEET(-)
+
+        BIN_OP_FOR_MEET(+)
+        BIN_OP_FOR_MEET(-)
+        BIN_OP_FOR_MEET(*)
+        BIN_OP_FOR_MEET(/)
+        BIN_OP_FOR_MEET(%)
+        BIN_OP_FOR_MEET(<)
+        BIN_OP_FOR_MEET(<=)
+        BIN_OP_FOR_MEET(==)
+        BIN_OP_FOR_MEET(!=)
+        BIN_OP_FOR_MEET(>=)
+        BIN_OP_FOR_MEET(>)
+        BIN_OP_FOR_MEET(||)
+        BIN_OP_FOR_MEET(&&)
+
     } // namespace impl
     using impl::expr;
     using impl::_1;
