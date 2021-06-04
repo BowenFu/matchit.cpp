@@ -36,7 +36,8 @@ namespace matchit
         class EvalTraits
         {
         public:
-            constexpr static auto evalImpl(T const& v)
+            template <typename... Args>
+            constexpr static auto evalImpl(T const& v, Args const&... args)
             {
                 return v;
             }
@@ -46,9 +47,10 @@ namespace matchit
         class EvalTraits<Expr<T>>
         {
         public:
-            constexpr static auto evalImpl(Expr<T> const& expr)
+            template <typename... Args>
+            constexpr static auto evalImpl(Expr<T> const& e, Args const&... args)
             {
-                return expr();
+                return e(args...);
             }
         };
 
@@ -56,16 +58,17 @@ namespace matchit
         class EvalTraits<Id<T, own>>
         {
         public:
-            constexpr static auto evalImpl(Id<T, own> const& id)
+            template <typename... Args>
+            constexpr static auto evalImpl(Id<T, own> const& id, Args const&... args)
             {
                 return *id;
             }
         };
 
-        template <typename T>
-        auto eval(T const& t)
+        template <typename T, typename... Args>
+        auto eval(T const& t, Args const&... args)
         {
-            return EvalTraits<T>::evalImpl(t);
+            return EvalTraits<T>::evalImpl(t, args...);
         }
 
         template <typename T>
@@ -94,11 +97,19 @@ namespace matchit
         BINARY_OP(>=)
         BINARY_OP(>)
 
+        #define BINARY_OP_ARG(op)                                                  \
+        template <typename T, typename U, typename = std::enable_if_t<std::is_same_v<T, Wildcard> || std::is_same_v<U, Wildcard>>>                               \
+        auto operator op (T const& t, U const& u)                       \
+        {                                                               \
+            return expr([&] (auto&& arg) { return eval(t, arg) op eval(u, arg); });            \
+        }
+
     } // namespace impl
     using impl::nullary;
-    using impl::operator+;
-    using impl::operator*;
-    using impl::operator==;
+    // ADL
+    // using impl::operator+;
+    // using impl::operator*;
+    // using impl::operator==;
 } // namespace matchit
 
 #endif // _EXPRESSION_H_
