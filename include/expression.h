@@ -8,84 +8,114 @@ namespace matchit
     namespace impl
     {
         template <typename T>
-        class Expr : public T
+        class Nullary : public T
         {
         public:
             using T::operator();
         };
 
         template <typename T>
-        auto expr(T t)
+        class Unary : public T
         {
-            return Expr<T>{t};
-        }
+        public:
+            using T::operator();
+        };
 
-        template <typename T, bool own>
-        auto nullary(Id<T, own> const& id)
+        template <typename T>
+        auto nullary(T t)
         {
-            return expr([&] { return *id; });
+            return Nullary<T>{t};
         }
 
         template <typename T>
-        auto nullary(T const& v)
+        auto unary(T t)
         {
-            return expr([&] { return v; });
+            return Unary<T>{t};
         }
 
+        template <typename T, bool own>
+        auto expr(Id<T, own> const &id)
+        {
+            return nullary([&] { return *id; });
+        }
+
+        template <typename T>
+        auto expr(T const &v)
+        {
+            return nullary([&] { return v; });
+        }
+
+        // for constant
         template <typename T>
         class EvalTraits
         {
         public:
             template <typename... Args>
-            constexpr static auto evalImpl(T const& v, Args const&... args)
+            constexpr static auto evalImpl(T const &v, Args const &...args)
             {
                 return v;
             }
         };
 
         template <typename T>
-        class EvalTraits<Expr<T>>
+        class EvalTraits<Nullary<T> >
         {
         public:
-            template <typename... Args>
-            constexpr static auto evalImpl(Expr<T> const& e, Args const&... args)
+            constexpr static auto evalImpl(Nullary<T> const &e)
             {
-                return e(args...);
+                return e();
             }
         };
 
+        // Only allowed in nullary
         template <typename T, bool own>
-        class EvalTraits<Id<T, own>>
+        class EvalTraits<Id<T, own> >
         {
         public:
-            template <typename... Args>
-            constexpr static auto evalImpl(Id<T, own> const& id, Args const&... args)
+            constexpr static auto evalImpl(Id<T, own> const &id)
             {
                 return *id;
             }
         };
 
+        template <typename T>
+        class EvalTraits<Unary<T> >
+        {
+        public:
+            template <typename Arg>
+            constexpr static auto evalImpl(Unary<T> const &e, Arg const &arg)
+            {
+                return e(arg);
+            }
+        };
+
         template <typename T, typename... Args>
-        auto eval(T const& t, Args const&... args)
+        auto eval(T const &t, Args const &...args)
         {
             return EvalTraits<T>::evalImpl(t, args...);
         }
 
         template <typename T>
-        class IsExprOrId : public std::false_type {};
+        class IsNullaryOrId : public std::false_type
+        {
+        };
 
         template <typename T, bool own>
-        class IsExprOrId<Id<T, own>> : public std::true_type {};
+        class IsNullaryOrId<Id<T, own> > : public std::true_type
+        {
+        };
 
         template <typename T>
-        class IsExprOrId<Expr<T>> : public std::true_type {};
+        class IsNullaryOrId<Nullary<T> > : public std::true_type
+        {
+        };
 
-        #define BINARY_OP(op)                                                  \
-        template <typename T, typename U, typename = std::enable_if_t<IsExprOrId<T>::value || IsExprOrId<U>::value>>                               \
-        auto operator op (T const& t, U const& u)                       \
-        {                                                               \
-            return expr([&] { return eval(t) op eval(u); });            \
-        }
+#define BINARY_OP(op)                                                                                                   \
+    template <typename T, typename U, typename = std::enable_if_t<IsNullaryOrId<T>::value || IsNullaryOrId<U>::value> > \
+    auto operator op(T const &t, U const &u)                                                                            \
+    {                                                                                                                   \
+        return nullary([&] { return eval(t) op eval(u); });                                                                \
+    }
 
         BINARY_OP(+)
         BINARY_OP(-)
@@ -97,15 +127,31 @@ namespace matchit
         BINARY_OP(>=)
         BINARY_OP(>)
 
-        #define BINARY_OP_ARG(op)                                                  \
-        template <typename T, typename U, typename = std::enable_if_t<std::is_same_v<T, Wildcard> || std::is_same_v<U, Wildcard>>>                               \
-        auto operator op (T const& t, U const& u)                       \
-        {                                                               \
-            return expr([&] (auto&& arg) { return eval(t, arg) op eval(u, arg); });            \
-        }
+        template <typename T>
+        class IsUnaryOrWildcard : public std::false_type
+        {
+        };
+
+        template <>
+        class IsUnaryOrWildcard<Wildcard> : public std::true_type
+        {
+        };
+
+        template <typename T>
+        class IsUnaryOrWildcard<Unary<T> > : public std::true_type
+        {
+        };
+
+        // TODO, need to distinguish nullary / unary exprs.
+#define BINARY_OP_ARG(op)                                                                                                       \
+    template <typename T, typename U, typename = std::enable_if_t<IsUnaryOrWildcard<T>::value || IsUnaryOrWildcard<U>::value> > \
+    auto operator op(T const &t, U const &u)                                                                                    \
+    {                                                                                                                           \
+        return expr([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                  \
+    }
 
     } // namespace impl
-    using impl::nullary;
+    using impl::expr;
     // ADL
     // using impl::operator+;
     // using impl::operator*;

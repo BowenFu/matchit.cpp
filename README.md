@@ -13,7 +13,7 @@ int32_t factorial(int32_t n)
 {
     assert(n >= 0);
     return match(n)(
-        pattern(0) = nullary(1),
+        pattern(0) = expr(1),
         pattern(_) = [n] { return n * factorial(n - 1); }
     );
 }
@@ -65,13 +65,13 @@ template <typename Map, typename Key>
 bool contains(Map const& map, Key const& key)
 {
     return match(map.find(key))(
-        pattern(map.end()) = nullary(false),
-        pattern(_)         = nullary(true)
+        pattern(map.end()) = expr(false),
+        pattern(_)         = expr(true)
     );
 }
 ```
 Note that the expression `map.end()` can be be used inside `pattern`.
-nullary is a helper function that can be used to generate a nullary function that return a value.
+expr is a helper function that can be used to generate a expr function that return a value.
 
 ## Wildcard Pattern
 The wildcard `_` will match any patterns, as we see from the example above. It is a common practice to use it as the last pattern, playing the same role in our library as `default case` does for `switch` statements.
@@ -88,8 +88,8 @@ using namespace matchit;
 double relu(double value)
 {
     return match(value)(
-        pattern(meet([](auto &&v) { return v >= 0; })) = nullary(value),
-        pattern(_) = nullary(0));
+        pattern(meet([](auto &&v) { return v >= 0; })) = expr(value),
+        pattern(_) = expr(0));
 }
 ```
 We overload some operators for wildcard symbol `_` to faciliate usage of basic predicates.
@@ -98,8 +98,8 @@ The above sample can be written as
 double relu(double value)
 {
     return match(value)(
-        pattern(_ >= 0) = nullary(value),
-        pattern(_) = nullary(0));
+        pattern(_ >= 0) = expr(value),
+        pattern(_) = expr(0));
 }
 ```
 
@@ -114,8 +114,8 @@ using namespace matchit;
 bool isValid(int32_t n)
 {
     return match(n)(
-        pattern(or_(1, 3, 5)) = nullary(true),
-        pattern(_)            = nullary(false)
+        pattern(or_(1, 3, 5)) = expr(true),
+        pattern(_)            = expr(false)
     );
 }
 ```
@@ -131,9 +131,9 @@ using namespace matchit;
 double clip(double value, double min, double max)
 {
     return match(value)(
-        pattern(and_(_ >= min, _ <= max)) = nullary(value),
-        pattern(_ > max)                  = nullary(max),
-        pattern(_)                        = nullary(min)
+        pattern(and_(_ >= min, _ <= max)) = expr(value),
+        pattern(_ > max)                  = expr(max),
+        pattern(_)                        = expr(min)
     );
 }
 ```
@@ -155,8 +155,8 @@ using namespace matchit;
 bool isLarge(double value)
 {
     return match(value)(
-        pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = nullary(true),
-        pattern(_)                                              = nullary(false)
+        pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = expr(true),
+        pattern(_)                                              = expr(false)
     );
 }
 ```
@@ -179,7 +179,7 @@ bool checkAndlogLarge(double value)
         pattern(app(square, and_(_ > 1000, s))) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
-        pattern(_) = nullary(false));
+        pattern(_) = expr(false));
 }
 ```
 Note that we need to define declare the identifiers (`Id<double> s`) before using it inside the pattern matching.
@@ -213,7 +213,7 @@ auto eval(std::tuple<char, T1, T2> const& expr)
             pattern(_) = [] { assert(false); return -1; });
 }
 ```
-Note that we overload some operators for `Id`, so `i + j` will return a nullary function that return the value of `*i + *j`.
+Note that we overload some operators for `Id`, so `i + j` will return a expr function that return the value of `*i + *j`.
 
 ## Match Guard
 Match Guard can be used to cast extra restrictions on a pattern.
@@ -234,11 +234,11 @@ bool sumIs(std::array<int32_t, 2> const& arr, int s)
 {
     Id<int32_t> i, j;
     return match(arr)(
-        pattern(i, j).when(i + j == s) = nullary(true),
-        pattern(_)                     = nullary(false));
+        pattern(i, j).when(i + j == s) = expr(true),
+        pattern(_)                     = expr(false));
 }
 ```
-Note that `i + j == s` will return a nullary function that return the result of `*i + *j == s`.
+Note that `i + j == s` will return a expr function that return the result of `*i + *j == s`.
 
 ## Ooo Pattern
 Ooo Pattern can match aribitrary number of items. It can only be used inside `ds` patterns.
@@ -254,13 +254,13 @@ int32_t detectTuplePattern(Tuple const& tuple)
 {
     return match(tuple)
     (
-        pattern(ds(ooo(3)))             = nullary(1), // all 3
-        pattern(ds(_, ooo(3)))          = nullary(2), // all 3 except the first one
-        pattern(ds(ooo(3), _))          = nullary(3), // all 3 except the last one
-        pattern(ds(_, ooo(3), _))       = nullary(4), // all 3 except the first and the last one
-        pattern(ds(3, ooo(not_(3)), 3)) = nullary(5), // all non 3 except the first and the last one
-        pattern(ds(3, ooo(_), 3))       = nullary(6), // first and last being 3, mxied by 3 and non-3 in the middle.
-        pattern(_)                      = nullary(7)  // mismatch
+        pattern(ds(ooo(3)))             = expr(1), // all 3
+        pattern(ds(_, ooo(3)))          = expr(2), // all 3 except the first one
+        pattern(ds(ooo(3), _))          = expr(3), // all 3 except the last one
+        pattern(ds(_, ooo(3), _))       = expr(4), // all 3 except the first and the last one
+        pattern(ds(3, ooo(not_(3)), 3)) = expr(5), // all non 3 except the first and the last one
+        pattern(ds(3, ooo(_), 3))       = expr(6), // first and last being 3, mxied by 3 and non-3 in the middle.
+        pattern(_)                      = expr(7)  // mismatch
     );
 }
 
@@ -296,7 +296,7 @@ auto square(T const* t)
     Id<T> id;
     return match(t)(
         pattern(some(id)) = id * id,
-        pattern(none)     = nullary(0))
+        pattern(none)     = expr(0))
 }
 
 int main()
@@ -347,8 +347,8 @@ struct Square : Shape {};
 auto getClassName(Shape const &s)
 {
     return match(s)(
-        pattern(as<Circle>(_)) = nullary("Circle"),
-        pattern(as<Square>(_)) = nullary("Square")
+        pattern(as<Circle>(_)) = expr("Circle"),
+        pattern(as<Square>(_)) = expr("Square")
     );
 }
 
@@ -430,9 +430,9 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
 int staticCastAs(Num const& input)
 {
     return match(input)(
-        pattern(as<One>(_))       = nullary(1),
-        pattern(kind<Kind::kTWO>) = nullary(2),
-        pattern(_)                = nullary(3));
+        pattern(as<One>(_))       = expr(1),
+        pattern(kind<Kind::kTWO>) = expr(2),
+        pattern(_)                = expr(3));
 }
 
 int main()
@@ -454,8 +454,8 @@ template <typename T>
 auto getClassName(T const& v)
 {
     return match(v)(
-        pattern(as<std::string>(_)) = nullary("string"),
-        pattern(as<int32_t>(_))     = nullary("int")
+        pattern(as<std::string>(_)) = expr("string"),
+        pattern(as<int32_t>(_))     = expr("int")
     );
 }
 
@@ -474,4 +474,4 @@ Users can specialize `PatternTraits` if they want to add a new pattern.
 
 # TODO
 1. Merge Id and RefId. Id should recongize if own is true based on the parameter type. `Rvalue` means owned. `Lvalue` means not owned.
-2. Should we rename `nullary` to `_0` or something else?
+2. Should we rename `expr` to `_0` or something else?
