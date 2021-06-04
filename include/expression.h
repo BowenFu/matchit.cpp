@@ -122,6 +122,13 @@ namespace matchit
         {
         };
 
+#define UN_OP_FOR_NULLARY(op)                                                     \
+    template <typename T, std::enable_if_t<IsNullaryOrId<T>::value, bool> = true> \
+    auto operator op(T const &t)                                                  \
+    {                                                                             \
+        return nullary([&] { return op eval(t); });                               \
+    }
+
 #define BIN_OP_FOR_NULLARY(op)                                                                                                   \
     template <typename T, typename U, std::enable_if_t<IsNullaryOrId<T>::value || IsNullaryOrId<U>::value, bool> = true> \
     auto operator op(T const &t, U const &u)                                                                            \
@@ -130,10 +137,14 @@ namespace matchit
     }
 
         // ADL will find these operators.
+        UN_OP_FOR_NULLARY(!)
+        UN_OP_FOR_NULLARY(-)
+
         BIN_OP_FOR_NULLARY(+)
         BIN_OP_FOR_NULLARY(-)
         BIN_OP_FOR_NULLARY(*)
         BIN_OP_FOR_NULLARY(/)
+        BIN_OP_FOR_NULLARY(%)
         BIN_OP_FOR_NULLARY(<)
         BIN_OP_FOR_NULLARY(<=)
         BIN_OP_FOR_NULLARY(==)
@@ -163,6 +174,13 @@ namespace matchit
         {
         };
 
+#define UN_OP_FOR_UNARY(op)                                                                                                              \
+    template <typename T, std::enable_if_t<IsUnaryOrPlaceholder<T>::value, bool> = true> \
+    auto operator op(T const &t)                                                                                           \
+    {                                                                                                                                  \
+        return unary([&](auto &&arg) { return op eval(t, arg); });                                                        \
+    }                                                                                                                                  \
+
 #define BIN_OP_FOR_UNARY(op)                                                                                                              \
     template <typename T, typename U, std::enable_if_t<IsUnaryOrPlaceholder<T>::value || IsUnaryOrPlaceholder<U>::value, bool> = true> \
     auto operator op(T const &t, U const &u)                                                                                           \
@@ -170,10 +188,14 @@ namespace matchit
         return unary([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                        \
     }                                                                                                                                  \
 
+        UN_OP_FOR_UNARY(!)
+        UN_OP_FOR_UNARY(-)
+
         BIN_OP_FOR_UNARY(+)
         BIN_OP_FOR_UNARY(-)
         BIN_OP_FOR_UNARY(*)
         BIN_OP_FOR_UNARY(/)
+        BIN_OP_FOR_UNARY(%)
         BIN_OP_FOR_UNARY(<)
         BIN_OP_FOR_UNARY(<=)
         BIN_OP_FOR_UNARY(==)

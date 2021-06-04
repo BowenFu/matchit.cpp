@@ -155,11 +155,13 @@ using namespace matchit;
 bool isLarge(double value)
 {
     return match(value)(
-        pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = expr(true),
-        pattern(_)                                              = expr(false)
+        pattern(app(_1 * _1, _ > 1000)) = expr(true),
+        pattern(_)                      = expr(false)
     );
 }
 ```
+Note that `_1 * _1` generates a function object that compute the square of the input, can be considered the short version of `[](auto&& x){ return x*x;}`.
+We suggest using this only for very short and simple functions. Otherwise the normal lambda expressions are preferred.
 
 ## Identifier Pattern
 Users can bind values with `Identifier Pattern`.
@@ -173,10 +175,9 @@ using namespace matchit;
 
 bool checkAndlogLarge(double value)
 {
-    auto const square = [](auto &&v) { return v * v; };
     Id<double> s;
     return match(value)(
-        pattern(app(square, and_(_ > 1000, s))) = [&] {
+        pattern(app(_1 * _1, and_(_ > 1000, s))) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
         pattern(_) = expr(false));
@@ -214,6 +215,7 @@ auto eval(std::tuple<char, T1, T2> const& expr)
 }
 ```
 Note that we overload some operators for `Id`, so `i + j` will return a expr function that return the value of `*i + *j`.
+We suggest using this only for very short and simple functions. Otherwise the normal lambda expressions are preferred.
 
 ## Match Guard
 Match Guard can be used to cast extra restrictions on a pattern.

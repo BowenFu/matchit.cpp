@@ -63,7 +63,7 @@ void test1()
             pattern(and_(_<17, _> 15)) = expr(16),
             pattern(app(_1 * _1, _ > 1000)) = expr(1000),
             pattern(app(_1 * _1, ii)) = expr(ii),
-            pattern(ii) = ii + 1,
+            pattern(ii) = -ii,
             pattern(_) = expr(111));
     };
     testMatch(1, true, matchFunc);
