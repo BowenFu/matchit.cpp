@@ -88,6 +88,18 @@ namespace matchit
                 return e(arg);
             }
         };
+        
+        class Placeholder;
+        template <>
+        class EvalTraits<Placeholder>
+        {
+        public:
+            template <typename Arg>
+            constexpr static auto evalImpl(Placeholder const &e, Arg const &arg)
+            {
+                return arg;
+            }
+        };
 
         template <typename T, typename... Args>
         auto eval(T const &t, Args const &...args)
@@ -111,7 +123,7 @@ namespace matchit
         };
 
 #define BINARY_OP(op)                                                                                                   \
-    template <typename T, typename U, typename = std::enable_if_t<IsNullaryOrId<T>::value || IsNullaryOrId<U>::value> > \
+    template <typename T, typename U, std::enable_if_t<IsNullaryOrId<T>::value || IsNullaryOrId<U>::value, bool> = true> \
     auto operator op(T const &t, U const &u)                                                                            \
     {                                                                                                                   \
         return nullary([&] { return eval(t) op eval(u); });                                                                \
@@ -127,31 +139,46 @@ namespace matchit
         BINARY_OP(>=)
         BINARY_OP(>)
 
+        class Placeholder
+        {
+        };
+        constexpr Placeholder _1;
+
         template <typename T>
-        class IsUnaryOrWildcard : public std::false_type
+        class IsUnaryOrPlaceholder : public std::false_type
         {
         };
 
         template <>
-        class IsUnaryOrWildcard<Wildcard> : public std::true_type
+        class IsUnaryOrPlaceholder<Placeholder> : public std::true_type
         {
         };
 
         template <typename T>
-        class IsUnaryOrWildcard<Unary<T> > : public std::true_type
+        class IsUnaryOrPlaceholder<Unary<T> > : public std::true_type
         {
         };
 
         // TODO, need to distinguish nullary / unary exprs.
-#define BINARY_OP_ARG(op)                                                                                                       \
-    template <typename T, typename U, typename = std::enable_if_t<IsUnaryOrWildcard<T>::value || IsUnaryOrWildcard<U>::value> > \
-    auto operator op(T const &t, U const &u)                                                                                    \
-    {                                                                                                                           \
-        return expr([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                  \
-    }
+#define BINARY_OP_ARG(op)                                                                                                              \
+    template <typename T, typename U, std::enable_if_t<IsUnaryOrPlaceholder<T>::value || IsUnaryOrPlaceholder<U>::value, bool> = true> \
+    auto operator op(T const &t, U const &u)                                                                                           \
+    {                                                                                                                                  \
+        return unary([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                        \
+    }                                                                                                                                  \
 
+        BINARY_OP_ARG(+)
+        BINARY_OP_ARG(-)
+        BINARY_OP_ARG(*)
+        BINARY_OP_ARG(/)
+        BINARY_OP_ARG(<)
+        BINARY_OP_ARG(<=)
+        BINARY_OP_ARG(==)
+        BINARY_OP_ARG(>=)
+        BINARY_OP_ARG(>)
     } // namespace impl
     using impl::expr;
+    using impl::_1;
     // ADL
     // using impl::operator+;
     // using impl::operator*;

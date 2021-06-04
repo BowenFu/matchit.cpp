@@ -45,6 +45,12 @@ int64_t func2()
 
 void test1()
 {
+
+    const auto x = (expr(5) + 5)();
+    assert(x == 10);
+    const auto y = (_1 * 2)(5);
+    assert(y == 10);
+
     auto const matchFunc = [](int32_t input) {
         Id<int> ii;
         ii.matchValue(5);
