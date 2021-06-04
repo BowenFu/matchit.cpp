@@ -1,5 +1,6 @@
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 bool isLarge(double value)
