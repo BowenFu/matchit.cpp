@@ -48,7 +48,7 @@ void test1()
 
     const auto x = (expr(5) + 5)();
     assert(x == 10);
-    const auto y = (_1 * 2)(5);
+    const auto y = (_ * 2)(5);
     assert(y == 10);
 
     auto const matchFunc = [](int32_t input) {
@@ -61,8 +61,8 @@ void test1()
             pattern(_ < 0) = expr(-1),
             pattern(_ < 10) = expr(-10),
             pattern(and_(_<17, _> 15)) = expr(16),
-            pattern(app(_1 * _1, _ > 1000)) = expr(1000),
-            pattern(app(_1 * _1, ii)) = expr(ii),
+            pattern(app(_ * _, _ > 1000)) = expr(1000),
+            pattern(app(_ * _, ii)) = expr(ii),
             pattern(ii) = -ii,
             pattern(_) = expr(111));
     };

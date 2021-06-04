@@ -155,12 +155,12 @@ using namespace matchit;
 bool isLarge(double value)
 {
     return match(value)(
-        pattern(app(_1 * _1, _ > 1000)) = expr(true),
-        pattern(_)                      = expr(false)
+        pattern(app(_ * _, _ > 1000)) = expr(true),
+        pattern(_)                    = expr(false)
     );
 }
 ```
-Note that `_1 * _1` generates a function object that compute the square of the input, can be considered the short version of `[](auto&& x){ return x*x;}`.
+Note that `_ * _` generates a function object that compute the square of the input, can be considered the short version of `[](auto&& x){ return x*x;}`.
 We suggest using this only for very short and simple functions. Otherwise the normal lambda expressions are preferred.
 
 ## Identifier Pattern
@@ -177,7 +177,7 @@ bool checkAndlogLarge(double value)
 {
     Id<double> s;
     return match(value)(
-        pattern(app(_1 * _1, and_(_ > 1000, s))) = [&] {
+        pattern(app(_ * _, and_(_ > 1000, s))) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
         pattern(_) = expr(false));

@@ -180,22 +180,12 @@ public:
 };
 
 template <typename Pred>
-class Meet
+class Meet : public Pred
 {
 public:
-    explicit Meet(Pred const &pred)
-        : mPred{pred}
-    {
-    }
-    auto const &predicate() const
-    {
-        return mPred;
-    }
-
-private:
-    Pred const mPred;
+    using Pred::operator();
 };
-    
+
 template <typename Pred>
 auto meet(Pred const &pred)
 {
@@ -208,9 +198,9 @@ class PatternTraits<Meet<Pred> >
 public:
     template <typename Value>
     static auto matchPatternImpl(Value const &value, Meet<Pred> const &meetPat)
-    -> decltype(meetPat.predicate()(value))
+    -> decltype(meetPat(value))
     {
-        return meetPat.predicate()(value);
+        return meetPat(value);
     }
     static void resetIdImpl(Meet<Pred> const &meetPat)
     {

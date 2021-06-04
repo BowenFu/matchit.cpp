@@ -15,22 +15,9 @@ namespace matchit
         };
 
         template <typename T>
-        class Unary : public T
-        {
-        public:
-            using T::operator();
-        };
-
-        template <typename T>
         auto nullary(T t)
         {
             return Nullary<T>{t};
-        }
-
-        template <typename T>
-        auto unary(T t)
-        {
-            return Unary<T>{t};
         }
 
         template <typename T, bool own>
@@ -78,6 +65,12 @@ namespace matchit
             }
         };
 
+        template <typename Pred> class Meet;
+    
+        // Unary is an alias of Meet.
+        template <typename T>
+        using Unary = Meet<T>;
+
         template <typename T>
         class EvalTraits<Unary<T> >
         {
@@ -86,29 +79,6 @@ namespace matchit
             constexpr static auto evalImpl(Unary<T> const &e, Arg const &arg)
             {
                 return e(arg);
-            }
-        };
-
-        class Placeholder;
-        template <>
-        class EvalTraits<Placeholder>
-        {
-        public:
-            template <typename Arg>
-            constexpr static auto evalImpl(Placeholder const &e, Arg const &arg)
-            {
-                return arg;
-            }
-        };
-
-        template <typename T>
-        class EvalTraits<Meet<T> >
-        {
-        public:
-            template <typename Arg>
-            constexpr static auto evalImpl(Meet<T> const &e, Arg const &arg)
-            {
-                return e.predicate()(arg);
             }
         };
 
@@ -177,35 +147,39 @@ namespace matchit
         BIN_OP_FOR_NULLARY(||)
         BIN_OP_FOR_NULLARY(&&)
 
-        class Placeholder
-        {
-        };
-        constexpr Placeholder _1;
-
+        // Unary
         template <typename T>
-        class IsUnaryOrPlaceholder : public std::false_type
+        class IsUnaryOrWildcard : public std::false_type
         {
         };
 
         template <>
-        class IsUnaryOrPlaceholder<Placeholder> : public std::true_type
+        class IsUnaryOrWildcard<Wildcard> : public std::true_type
         {
         };
 
         template <typename T>
-        class IsUnaryOrPlaceholder<Unary<T> > : public std::true_type
+        class IsUnaryOrWildcard<Unary<T> > : public std::true_type
         {
         };
 
+
+        // unary is an alias of meet.
+        template <typename T>
+        auto unary(T&& t)
+        {
+            return meet(std::forward<T>(t));
+        }
+
 #define UN_OP_FOR_UNARY(op)                                                              \
-    template <typename T, std::enable_if_t<IsUnaryOrPlaceholder<T>::value, bool> = true> \
+    template <typename T, std::enable_if_t<IsUnaryOrWildcard<T>::value, bool> = true> \
     auto operator op(T const &t)                                                         \
     {                                                                                    \
         return unary([&](auto &&arg) { return op eval(t, arg); });                       \
     }
 
 #define BIN_OP_FOR_UNARY(op)                                                                                                           \
-    template <typename T, typename U, std::enable_if_t<IsUnaryOrPlaceholder<T>::value || IsUnaryOrPlaceholder<U>::value, bool> = true> \
+    template <typename T, typename U, std::enable_if_t<IsUnaryOrWildcard<T>::value || IsUnaryOrWildcard<U>::value, bool> = true> \
     auto operator op(T const &t, U const &u)                                                                                           \
     {                                                                                                                                  \
         return unary([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                        \
@@ -228,56 +202,8 @@ namespace matchit
         BIN_OP_FOR_UNARY(||)
         BIN_OP_FOR_UNARY(&&)
 
-        // Meet
-        template <typename T>
-        class IsMeetOrWildcard : public std::false_type
-        {
-        };
-
-        template <>
-        class IsMeetOrWildcard<Wildcard> : public std::true_type
-        {
-        };
-
-        template <typename T>
-        class IsMeetOrWildcard<Meet<T> > : public std::true_type
-        {
-        };
-
-#define UN_OP_FOR_MEET(op)                                                              \
-    template <typename T, std::enable_if_t<IsMeetOrWildcard<T>::value, bool> = true> \
-    auto operator op(T const &t)                                                         \
-    {                                                                                    \
-        return meet([&](auto &&arg) { return op eval(t, arg); });                       \
-    }
-
-#define BIN_OP_FOR_MEET(op)                                                                                                           \
-    template <typename T, typename U, std::enable_if_t<IsMeetOrWildcard<T>::value || IsMeetOrWildcard<U>::value, bool> = true> \
-    auto operator op(T const &t, U const &u)                                                                                           \
-    {                                                                                                                                  \
-        return meet([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                        \
-    }
-
-        UN_OP_FOR_MEET(!)
-        UN_OP_FOR_MEET(-)
-
-        BIN_OP_FOR_MEET(+)
-        BIN_OP_FOR_MEET(-)
-        BIN_OP_FOR_MEET(*)
-        BIN_OP_FOR_MEET(/)
-        BIN_OP_FOR_MEET(%)
-        BIN_OP_FOR_MEET(<)
-        BIN_OP_FOR_MEET(<=)
-        BIN_OP_FOR_MEET(==)
-        BIN_OP_FOR_MEET(!=)
-        BIN_OP_FOR_MEET(>=)
-        BIN_OP_FOR_MEET(>)
-        BIN_OP_FOR_MEET(||)
-        BIN_OP_FOR_MEET(&&)
-
     } // namespace impl
     using impl::expr;
-    using impl::_1;
 } // namespace matchit
 
 #endif // _EXPRESSION_H_
