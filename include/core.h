@@ -17,7 +17,7 @@ public:
     using RetType = std::common_type_t<typename PatternPair::RetType...>;
 };
 
-template <typename Value, bool byLRef>
+template <typename Value, bool byRef>
 class ValueType
 {
 public:
@@ -31,16 +31,17 @@ public:
     using ValueT = Value &&;
 };
 
-template <typename Value, bool byLRef>
+template <typename Value, bool byRef>
 class MatchHelper
 {
 private:
-    using ValueT = typename ValueType<Value, byLRef>::ValueT;
+    using ValueT = typename ValueType<Value, byRef>::ValueT;
     ValueT mValue;
     using ValueRefT = ValueT&&;
 public:
-    explicit MatchHelper(Value &&value)
-        : mValue{std::forward<Value>(value)}
+    template <typename V>
+    explicit MatchHelper(V &&value)
+        : mValue{std::forward<V>(value)}
     {
     }
     template <typename... PatternPair>
@@ -71,8 +72,7 @@ auto match(Value &&value)
 template <typename First, typename... Values>
 auto match(First &&first, Values &&...values)
 {
-    auto const x = std::forward_as_tuple(first, values...);
-    return MatchHelper<decltype(x), false>{x};
+    return MatchHelper<decltype(std::forward_as_tuple(first, values...)), false>{std::forward_as_tuple(first, values...)};
 }
 } // namespace impl
 
