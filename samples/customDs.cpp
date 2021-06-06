@@ -8,9 +8,9 @@ using namespace matchit;
 struct A
 {
     int a;
-    int b;
+    std::string b;
 };
-bool operator==(A const lhs, A const rhs)
+bool operator==(A const& lhs, A const& rhs)
 {
     return lhs.a == rhs.a && lhs.b == rhs.b;
 }
@@ -52,15 +52,14 @@ namespace std
 template <typename T>
 auto getSecond(T&& v)
 {
-    assert(std::get<0>(matchit::impl::drop<1>(v)) == 2);
-    Id<int> i;
+    Id<std::string> i;
     return match(std::forward<T>(v))(
-        pattern(ds(1, i)) = expr(i),
+        pattern(ds(2, i)) = expr(i),
         pattern(ds(_, i)) = expr(i));
 }
 
 int main()
 {
-    std::cout << getSecond(A{1,2}) << std::endl;
+    std::cout << getSecond(A{1, "123"}) << std::endl;
     return 0;
 }

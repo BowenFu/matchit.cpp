@@ -3,10 +3,10 @@
 #include <array>
 #include <any>
 #include <iostream>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/utility.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/utility.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 template <typename V, typename U>

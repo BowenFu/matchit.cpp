@@ -202,7 +202,7 @@ namespace matchit
             {
                 return meetPat(std::forward<Value>(value));
             }
-            static void resetIdImpl(Meet<Pred> const &meetPat)
+            static void resetIdImpl(Meet<Pred> const &)
             {
             }
         };
@@ -570,7 +570,7 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static auto tupleMatchImpl(VT &&values, std::tuple<>)
+            static auto tupleMatchImpl(VT &&, std::tuple<>)
             {
                 return false;
             }

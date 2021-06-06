@@ -4,9 +4,9 @@
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
 ```C++
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 int32_t factorial(int32_t n)
@@ -39,8 +39,8 @@ Now let's go through all kinds of patterns in the library.
 
 We can match multiple values at the same time:
 ```C++
-#include "include/core.h"
-#include "include/patterns.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
 using namespace matchit;
 
 int32_t gcd(int32_t a, int32_t b)
@@ -55,9 +55,9 @@ int32_t gcd(int32_t a, int32_t b)
 ## Expression Pattern
 The value passed to `match` will be matched against the value evaluated from the expression with `pattern == value`.
 ```C++
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 #include <map>
 using namespace matchit;
 
@@ -80,9 +80,9 @@ It can be used inside other patterns (that accpet subpatterns) as well.
 ## Predicate Pattern
 Predicate Pattern can be used to cast some restrictions on the value to be matched.
 ```C++
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 double relu(double value)
@@ -106,9 +106,9 @@ double relu(double value)
 ## Or Pattern
 Or pattern makes it possible to merge/union multiple patterns, this can be especially useful when used as subpatterns of other patterns.
 ```C++
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 bool isValid(int32_t n)
@@ -123,9 +123,9 @@ bool isValid(int32_t n)
 ## And Pattern
 And Pattern can be used to combine multiple Predicate patterns.
 ```C++
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 double clip(double value, double min, double max)
@@ -147,9 +147,9 @@ app(PROJECTION, PATTERN)
 .
 An sample to check whether a num is large:
 ```C++
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 bool isLarge(double value)
@@ -168,9 +168,9 @@ Users can bind values with `Identifier Pattern`.
 Logging the details when detect large values can be useful for the example above. With Identifier Pattern the codes would be
 ```C++
 #include <iostream>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 bool checkAndlogLarge(double value)
@@ -196,9 +196,9 @@ We support Destucture Pattern for `std::tuple`, `std::pair`, and `std::array`. E
 Since it is not possible to overload a function in `std` namespace, we use ADL to look up avialable `get` functions for other types.
 That is to say, in order to use Destructure Pattern for structs or classes, we need to define a `get` function for them, similar to `std::get`, but inside the same namespace of the struct or the class. (`std::tuple_size` needs to be specialized as well.)
 ```C++
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 template<typename T1, typename T2>
@@ -227,9 +227,9 @@ pattern(PATTERN).when(PREDICATE) = HANDLER
 A basic sample can be
 ```C++
 #include <array>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 bool sumIs(std::array<int32_t, 2> const& arr, int s)
@@ -246,9 +246,9 @@ Note that `i + j == s` will return a expr function that return the result of `*i
 Ooo Pattern can match aribitrary number of items. It can only be used inside `ds` patterns.
 ```C++
 #include <array>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 template <typename Tuple>
@@ -286,10 +286,10 @@ Some / None Patterns can be used to match raw pointers, std::optional, std::uniq
 A typical sample can be
 ```C++
 #include <iostream>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/utility.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/utility.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 template <typename T>
@@ -333,10 +333,10 @@ As pattern can be used to handle `sum type`, including base / derived classes, `
 A simple sample can be
 ```C++
 #include <iostream>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/utility.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/utility.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 struct Shape
@@ -374,10 +374,10 @@ The default `As` Pattern for down casting is calling `dynamic_cast`.
 Users can customize their down casting via specializing `CustomAsPointer`:
 ```C++
 #include <iostream>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/utility.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/utility.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 enum class Kind { kONE, kTWO };
@@ -446,10 +446,10 @@ int main()
 `std::variant` and `std::any` can be visited as
 ```C++
 #include <iostream>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/utility.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/utility.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 template <typename T>

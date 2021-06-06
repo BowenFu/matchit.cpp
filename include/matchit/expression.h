@@ -38,7 +38,7 @@ namespace matchit
         {
         public:
             template <typename... Args>
-            constexpr static auto evalImpl(T const &v, Args const &...args)
+            constexpr static auto evalImpl(T const &v, Args const &...)
             {
                 return v;
             }
@@ -88,7 +88,7 @@ namespace matchit
         {
         public:
             template <typename Arg>
-            constexpr static auto evalImpl(Wildcard const &e, Arg const &arg)
+            constexpr static auto evalImpl(Wildcard const &, Arg const &arg)
             {
                 return arg;
             }

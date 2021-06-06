@@ -1,6 +1,6 @@
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/expression.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 double clip(double value, double min, double max)

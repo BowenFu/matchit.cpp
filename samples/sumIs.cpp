@@ -1,6 +1,6 @@
 #include <array>
-#include "include/core.h"
-#include "include/patterns.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
 using namespace matchit;
 
 bool sumIs(std::array<int32_t, 2> const& arr, int s)

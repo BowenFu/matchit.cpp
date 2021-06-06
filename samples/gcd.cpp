@@ -1,5 +1,5 @@
-#include "include/core.h"
-#include "include/patterns.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
 using namespace matchit;
 
 int32_t gcd(int32_t a, int32_t b)

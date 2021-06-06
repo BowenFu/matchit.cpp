@@ -1,7 +1,7 @@
 #include <iostream>
-#include "include/core.h"
-#include "include/patterns.h"
-#include "include/utility.h"
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/utility.h"
 using namespace matchit;
 
 struct Shape
