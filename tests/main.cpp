@@ -53,7 +53,10 @@ void test1()
 
     auto const matchFunc = [](int32_t input) {
         Id<int> ii;
-        ii.matchValue(5);
+        volatile int x = 5;
+        ii.matchValue((_*_)(x));
+        assert(*ii == 25);
+
         return match(input)(
             pattern(1) = func1,
             pattern(2) = func2,
@@ -239,7 +242,7 @@ void test6()
 void test7()
 {
     auto const matchFunc = [](std::pair<int32_t, int32_t> ij) {
-        RefId<std::tuple<int32_t const &, int32_t const &> > id;
+        Id<std::tuple<int32_t const &, int32_t const &> > id;
         // delegate at to and_
         auto const at = [](auto &&id, auto &&pattern) {
             return and_(id, pattern);
@@ -286,17 +289,38 @@ void test9()
 
 struct Shape
 {
+    virtual bool is() = 0;
     virtual ~Shape() = default;
 };
 struct Circle : Shape
 {
+    bool is()
+    {
+        return false;
+    }
 };
 struct Square : Shape
 {
+    bool is()
+    {
+        return false;
+    }
 };
+
+bool operator==(Shape const&, Shape const&)
+{
+    return true;
+}
 
 void test10()
 {
+    static_assert(matchit::impl::CanReset<Shape, Shape&>::value);
+    static_assert(matchit::impl::CanReset<Shape const, Shape const&>::value);
+
+    Id<Shape> s;
+    Circle c{};
+    Shape& cc = c;
+    s.matchValue(cc);
     auto const dynCast = [](auto const &i) {
         return match(i)(
             pattern(some(as<Circle>(_))) = expr("Circle"),
@@ -443,7 +467,7 @@ void test17()
 void test18()
 {
     auto const idNotOwn = [](auto const &x) {
-        RefId<int32_t> i;
+        Id<int32_t> i;
         return match(x)(
             pattern(i).when(i == 5) = expr(1),
             pattern(_) = expr(2));

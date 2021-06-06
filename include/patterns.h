@@ -13,10 +13,10 @@ namespace matchit
         class PatternTraits;
 
         template <typename Value, typename Pattern>
-        auto matchPattern(Value const &value, Pattern const &pattern)
-            -> decltype(PatternTraits<Pattern>::matchPatternImpl(value, pattern))
+        auto matchPattern(Value &&value, Pattern const &pattern)
+            -> decltype(PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern))
         {
-            return PatternTraits<Pattern>::matchPatternImpl(value, pattern);
+            return PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern);
         }
 
         template <typename Pattern>
@@ -36,10 +36,10 @@ namespace matchit
             {
             }
             template <typename Value>
-            bool matchValue(Value const &value) const
+            bool matchValue(Value &&value) const
             {
                 resetId(mPattern);
-                return matchPattern(value, mPattern);
+                return matchPattern(std::forward<Value>(value), mPattern);
             }
             auto execute() const
             {
@@ -100,10 +100,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value const &value, Pattern const &pattern)
-                -> decltype(pattern == value)
+            static auto matchPatternImpl(Value &&value, Pattern const &pattern)
+                -> decltype(pattern == std::forward<Value>(value))
             {
-                return pattern == value;
+                return pattern == std::forward<Value>(value);
             }
             static void resetIdImpl(Pattern const &)
             {
@@ -123,7 +123,7 @@ namespace matchit
 
         public:
             template <typename Value>
-            static bool matchPatternImpl(Value const &, Pattern const &)
+            static bool matchPatternImpl(Value &&, Pattern const &)
             {
                 return true;
             }
@@ -160,12 +160,12 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value const &value, Or<Patterns...> const &orPat)
-                -> decltype((matchPattern(value, std::declval<Patterns>()) || ...))
+            static auto matchPatternImpl(Value &&value, Or<Patterns...> const &orPat)
+                -> decltype((matchPattern(std::forward<Value>(value), std::declval<Patterns>()) || ...))
             {
                 return std::apply(
                     [&value](Patterns const &...patterns) {
-                        return (matchPattern(value, patterns) || ...);
+                        return (matchPattern(std::forward<Value>(value), patterns) || ...);
                     },
                     orPat.patterns());
             }
@@ -197,10 +197,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value const &value, Meet<Pred> const &meetPat)
-                -> decltype(meetPat(value))
+            static auto matchPatternImpl(Value &&value, Meet<Pred> const &meetPat)
+                -> decltype(meetPat(std::forward<Value>(value)))
             {
-                return meetPat(value);
+                return meetPat(std::forward<Value>(value));
             }
             static void resetIdImpl(Meet<Pred> const &meetPat)
             {
@@ -240,10 +240,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value const &value, App<Unary, Pattern> const &appPat)
-                -> decltype(matchPattern(std::invoke(appPat.unary(), value), appPat.pattern()))
+            static auto matchPatternImpl(Value &&value, App<Unary, Pattern> const &appPat)
+                -> decltype(matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern()))
             {
-                return matchPattern(std::invoke(appPat.unary(), value), appPat.pattern());
+                return matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern());
             }
             static void resetIdImpl(App<Unary, Pattern> const &appPat)
             {
@@ -279,12 +279,12 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value const &value, And<Patterns...> const &andPat)
-                -> decltype((matchPattern(value, std::declval<Patterns>()) && ...))
+            static auto matchPatternImpl(Value &&value, And<Patterns...> const &andPat)
+                -> decltype((matchPattern(std::forward<Value>(value), std::declval<Patterns>()) && ...))
             {
                 return std::apply(
                     [&value](Patterns const &...patterns) {
-                        return (matchPattern(value, patterns) && ...);
+                        return (matchPattern(std::forward<Value>(value), patterns) && ...);
                     },
                     andPat.patterns());
             }
@@ -326,10 +326,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value const &value, Not<Pattern> const &notPat)
-                -> decltype(!matchPattern(value, notPat.pattern()))
+            static auto matchPatternImpl(Value &&value, Not<Pattern> const &notPat)
+                -> decltype(!matchPattern(std::forward<Value>(value), notPat.pattern()))
             {
-                return !matchPattern(value, notPat.pattern());
+                return !matchPattern(std::forward<Value>(value), notPat.pattern());
             }
             static void resetIdImpl(Not<Pattern> const &notPat)
             {
@@ -358,41 +358,72 @@ namespace matchit
         {
         public:
             template <typename Type, typename Value>
-            static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value const &value)
-                -> decltype(ptr = std::unique_ptr<Type, Deleter>(new Type{value}, Deleter{true}), void())
+            static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value &&value)
             {
-                ptr = std::unique_ptr<Type, Deleter>(new Type{value}, Deleter{true});
+                ptr = std::unique_ptr<Type, Deleter>(new Type{std::move(value)}, Deleter{true});
             }
         };
+
+        template <typename Ptr, typename Value, typename = std::void_t<> >
+        struct CanReset : std::false_type
+        {
+        };
+
+        template <typename Type, typename Value>
+        struct CanReset<Type, Value, std::void_t<decltype(std::declval<std::unique_ptr<Type, Deleter>>().reset(&std::declval<Value>()))> >
+            : std::true_type
+        {
+        };
+
+        template <typename T>
+        class Debug;
+
+        // Debug<decltype(&std::declval<char&>())> x{};
+        
+        template <typename Type, typename Value>
+        using t = decltype(
+            std::declval<std::unique_ptr<Type, Deleter>>().reset(&std::declval<Value>()));
+
+        static_assert(CanReset<const char, char &>::value);
+        static_assert(CanReset<const char, const char &>::value);
 
         template <>
         class IdTrait<false>
         {
         public:
-            template <typename Ptr, typename Value>
-            static auto matchValueImpl(Ptr &ptr, Value const &value)
-                -> decltype(ptr.reset(&value), void())
+            template <typename Type, typename Value>
+            static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value &&value)
             {
-                ptr.reset(&value);
+                if constexpr (CanReset<Type, Value>::value)
+                {
+                    ptr.reset(&value);
+                    ptr.get_deleter().mOwn = false;
+                }
+                else if constexpr (!CanReset<Type, Value>::value)
+                {
+                    ptr = std::unique_ptr<Type, Deleter>(new Type{std::move(value)}, Deleter{true});
+                }
             }
         };
 
-        template <typename Type, bool own = true>
+        template <typename Type>
         class Id
         {
             using PtrT = std::unique_ptr<Type const, Deleter>;
             mutable std::shared_ptr<PtrT> mValue = std::make_shared<PtrT>();
 
         public:
+            static_assert(std::is_array_v<std::remove_reference_t<char const (&)[4]>>);
             template <typename Value>
-            auto matchValue(Value const &value) const
-                -> decltype(**mValue == value, IdTrait<own>::matchValueImpl(*mValue, value), bool{})
+            auto matchValue(Value &&value) const
+                // -> decltype(**mValue == value, IdTrait<std::is_rvalue_reference_v<Value> || std::is_array_v<std::remove_reference_t<Value>>>::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
+                -> decltype(**mValue == value, IdTrait<std::is_rvalue_reference_v<Value>>::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
             {
                 if (*mValue)
                 {
                     return **mValue == value;
                 }
-                IdTrait<own>::matchValueImpl(*mValue, value);
+                IdTrait<std::is_rvalue_reference_v<Value>>::matchValueImpl(*mValue, std::forward<Value>(value));
                 return true;
             }
             void reset() const
@@ -410,19 +441,16 @@ namespace matchit
         };
 
         template <typename Type>
-        using RefId = Id<Type, false>;
-
-        template <typename Type, bool own>
-        class PatternTraits<Id<Type, own> >
+        class PatternTraits<Id<Type> >
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value const &value, Id<Type, own> const &idPat)
-                -> decltype(idPat.matchValue(value))
+            static auto matchPatternImpl(Value &&value, Id<Type>  const &idPat)
+                -> decltype(idPat.matchValue(std::forward<Value>(value)))
             {
-                return idPat.matchValue(value);
+                return idPat.matchValue(std::forward<Value>(value));
             }
-            static void resetIdImpl(Id<Type, own> const &idPat)
+            static void resetIdImpl(Id<Type>  const &idPat)
             {
                 idPat.reset();
             }
@@ -525,10 +553,10 @@ namespace matchit
         {
         public:
             template <typename VT = ValuesTuple>
-            static auto tupleMatchImpl(VT const &values, std::tuple<PatternHead, PatternTail...> const &patterns)
-                -> decltype(matchPattern(get<0>(values), get<0>(patterns)) && TupleMatchHelper<decltype(drop<1>(values)), decltype(drop<1>(patterns))>::tupleMatchImpl(drop<1>(values), drop<1>(patterns)))
+            static auto tupleMatchImpl(VT &&values, std::tuple<PatternHead, PatternTail...> const &patterns)
+                -> decltype(matchPattern(get<0>(std::forward<VT>(values)), get<0>(patterns)) && TupleMatchHelper<decltype(drop<1>(values)), decltype(drop<1>(patterns))>::tupleMatchImpl(drop<1>(values), drop<1>(patterns)))
             {
-                return matchPattern(get<0>(values), get<0>(patterns)) && TupleMatchHelper<decltype(drop<1>(values)), decltype(drop<1>(patterns))>::tupleMatchImpl(drop<1>(values), drop<1>(patterns));
+                return matchPattern(get<0>(std::forward<VT>(values)), get<0>(patterns)) && TupleMatchHelper<decltype(drop<1>(std::forward<VT>(values))), decltype(drop<1>(patterns))>::tupleMatchImpl(drop<1>(std::forward<VT>(values)), drop<1>(patterns));
             }
         };
 
@@ -556,10 +584,10 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static auto tupleMatchImpl(VT const &values, std::tuple<PatternHead, PatternTail...> const &patterns)
-                -> decltype(tryOooMatch(values, patterns))
+            static auto tupleMatchImpl(VT &&values, std::tuple<PatternHead, PatternTail...> const &patterns)
+                -> decltype(tryOooMatch(std::forward<VT>(values), patterns))
             {
-                return tryOooMatch(values, patterns);
+                return tryOooMatch(std::forward<VT>(values), patterns);
             }
         };
 
@@ -578,11 +606,11 @@ namespace matchit
         class PatternTraits<Ds<Patterns...> >
         {
         public:
-            template <typename Tuple>
-            static auto matchPatternImpl(Tuple const &valueTuple, Ds<Patterns...> const &dsPat)
-                -> decltype(TupleMatchHelper<Tuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(valueTuple, dsPat.patterns()))
+            template <typename ValueTuple>
+            static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat)
+                -> decltype(TupleMatchHelper<ValueTuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(std::forward<ValueTuple>(valueTuple), dsPat.patterns()))
             {
-                return TupleMatchHelper<Tuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(valueTuple, dsPat.patterns());
+                return TupleMatchHelper<ValueTuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(std::forward<ValueTuple>(valueTuple), dsPat.patterns());
             }
             static void resetIdImpl(Ds<Patterns...> const &dsPat)
             {
@@ -723,11 +751,11 @@ namespace matchit
         {
         public:
             template <typename... Values>
-            static auto matchPatternImpl(std::tuple<Values...> const &valueTuple, Ooo<Pattern> const &oooPat)
+            static auto matchPatternImpl(std::tuple<Values...> const&valueTuple, Ooo<Pattern> const &oooPat)
                 -> decltype((matchPattern(std::declval<Values>(), oooPat.pattern()) && ...))
             {
                 return std::apply(
-                    [&oooPat](Values const &...values) {
+                    [&oooPat](Values const&...values) {
                         auto result = (matchPattern(values, oooPat.pattern()) && ...);
                         return result;
                     },
@@ -783,14 +811,14 @@ namespace matchit
             }
         };
 
-        static_assert(MatchFuncDefinedV<char[4], Id<const char *, true> >);
+        static_assert(MatchFuncDefinedV<char[4], Id<const char *> >);
         static_assert(MatchFuncDefinedV<std::tuple<>, Wildcard>);
         static_assert(MatchFuncDefinedV<std::tuple<>, Ds<> >);
         static_assert(!MatchFuncDefinedV<std::tuple<>, Ds<int> >);
 
         static_assert(MatchFuncDefinedV<const std::tuple<char, std::tuple<char, char>, int> &,
-                                        const Ds<char, Ds<char, Id<char, true> >, int> &>);
-        static_assert(!MatchFuncDefinedV<const int &, const Ds<char, Ds<char, Id<char, true> >, int> &>);
+                                        const Ds<char, Ds<char, Id<char> >, int> &>);
+        static_assert(!MatchFuncDefinedV<const int &, const Ds<char, Ds<char, Id<char> >, int> &>);
 
         static_assert(MatchFuncDefinedV<char, char>);
         static_assert(MatchFuncDefinedV<int, char>);
@@ -802,54 +830,54 @@ namespace matchit
         static_assert(MatchFuncDefinedV<std::tuple<char, int, std::tuple<char, std::tuple<char, char>, int> >,
                                         Ds<char, int, Ds<char, Ds<char, char>, int> > >);
         static_assert(MatchFuncDefinedV<std::tuple<char, int, std::tuple<char, std::tuple<char, char>, int> >,
-                                        Ds<char, int, Ds<char, Ds<char, Id<char, true> >, int> > >);
+                                        Ds<char, int, Ds<char, Ds<char, Id<char>  >, int> > >);
         static_assert(MatchFuncDefinedV<const std::tuple<char, std::tuple<char, char>, int> &,
                                         const Ds<char, Ds<char, char>, int> &>);
         static_assert(MatchFuncDefinedV<char &,
-                                        Id<char, true> >);
+                                        Id<char>  >);
         static_assert(MatchFuncDefinedV<const std::tuple<char, char> &,
-                                        const Ds<char, Id<char, true> > &>);
+                                        const Ds<char, Id<char>  > &>);
         static_assert(MatchFuncDefinedV<const std::tuple<char, std::tuple<char, char> > &,
-                                        const Ds<char, Ds<char, Id<char, true> > > &>);
+                                        const Ds<char, Ds<char, Id<char>  > > &>);
         static_assert(MatchFuncDefinedV<const std::tuple<std::tuple<char, char>, int> &,
-                                        const Ds<Ds<char, Id<char, true> >, int> &>);
+                                        const Ds<Ds<char, Id<char>  >, int> &>);
         static_assert(MatchFuncDefinedV<const std::tuple<int, std::tuple<char, char>, int> &,
-                                        const Ds<int, Ds<char, Id<char, true> >, int> &>);
+                                        const Ds<int, Ds<char, Id<char>  >, int> &>);
         static_assert(MatchFuncDefinedV<const std::tuple<char, std::tuple<char, char>, char> &,
-                                        const Ds<char, Ds<char, Id<char, true> >, char> &>);
+                                        const Ds<char, Ds<char, Id<char>  >, char> &>);
         static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<int, int>, int>,
-                                        Ds<int, Ds<int, Id<int, true> >, int> >);
+                                        Ds<int, Ds<int, Id<int>  >, int> >);
         static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, char>, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, Id<char, true> > >);
-        static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, int>, Ds<int, Ds<char, Id<char, true> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int64_t>, Ds<char, Ds<char, Id<char, true> >, int64_t> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, long>, Ds<char, Ds<char, Id<char, true> >, long> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, unsigned>, Ds<char, Ds<char, Id<char, true> >, unsigned> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<Id<char, true> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, RefId<char> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, false> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, unsigned> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, Wildcard> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, char> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, Ds<char, Ds<char, Id<char, true> >, char> >);
-        static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, std::tuple<char, char>, int> >, Ds<Ds<char, Ds<char, Id<char, true> >, int> > >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, Id<char, true> > >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<int, Id<char, true> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<Wildcard, Id<char, true> >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, Id<char>  > >);
+        static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, int>, Ds<int, Ds<char, Id<char>  >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int64_t>, Ds<char, Ds<char, Id<char>  >, int64_t> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, long>, Ds<char, Ds<char, Id<char>  >, long> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, unsigned>, Ds<char, Ds<char, Id<char>  >, unsigned> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char>  >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<Id<char>  >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char>  >, unsigned> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char>  >, Wildcard> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char>  >, char> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, Ds<char, Ds<char, Id<char>  >, char> >);
+        static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, std::tuple<char, char>, int> >, Ds<Ds<char, Ds<char, Id<char>  >, int> > >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, Id<char>  > >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<int, Id<char>  >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<Wildcard, Id<char>  >, int> >);
         static_assert(MatchFuncDefinedV<char, char>);
         static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, char> >);
         static_assert(MatchFuncDefinedV<std::tuple<char>, Ds<char> >);
         static_assert(!MatchFuncDefinedV<std::tuple<char>, char>);
         static_assert(MatchFuncDefinedV<std::tuple<char>, Ooo<char> >);
         static_assert(MatchFuncDefinedV<std::tuple<char>, Wildcard>);
-        static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, char>, int>, Ds<Ds<char, Id<char, true> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<bool, std::tuple<char, char>, int>, Ds<bool, Ds<char, Id<char, true> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, int>, Ds<int, Ds<char, Id<char, true> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, char>, Ds<int, Ds<char, Id<char, true> >, char> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, Ds<char, Ds<char, Id<char, true> >, char> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char, true> >, int> >);
-        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char> >, Ds<char, Ds<char, Id<char, true> > > >);
+        static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, char>, int>, Ds<Ds<char, Id<char>  >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<bool, std::tuple<char, char>, int>, Ds<bool, Ds<char, Id<char>  >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, int>, Ds<int, Ds<char, Id<char>  >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, char>, Ds<int, Ds<char, Id<char>  >, char> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, Ds<char, Ds<char, Id<char>  >, char> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char>  >, int> >);
+        static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char> >, Ds<char, Ds<char, Id<char>  > > >);
         static_assert(MatchFuncDefinedV<std::tuple<int, int, int, int, int>, Ds<Ooo<int> > >);
     } // namespace impl
 
@@ -865,7 +893,7 @@ namespace matchit
     using impl::ooo;
     using impl::or_;
     using impl::pattern;
-    using impl::RefId;
+    using impl::Id;
 } // namespace matchit
 
 #endif // _PATTERNS_H_

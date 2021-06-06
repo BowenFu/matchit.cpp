@@ -20,8 +20,8 @@ namespace matchit
             return Nullary<T>{t};
         }
 
-        template <typename T, bool own>
-        auto expr(Id<T, own> const &id)
+        template <typename T>
+        auto expr(Id<T> const &id)
         {
             return nullary([&] { return *id; });
         }
@@ -55,11 +55,11 @@ namespace matchit
         };
 
         // Only allowed in nullary
-        template <typename T, bool own>
-        class EvalTraits<Id<T, own> >
+        template <typename T>
+        class EvalTraits<Id<T> >
         {
         public:
-            constexpr static auto evalImpl(Id<T, own> const &id)
+            constexpr static auto evalImpl(Id<T> const &id)
             {
                 return *id;
             }
@@ -105,8 +105,8 @@ namespace matchit
         {
         };
 
-        template <typename T, bool own>
-        class IsNullaryOrId<Id<T, own> > : public std::true_type
+        template <typename T>
+        class IsNullaryOrId<Id<T> > : public std::true_type
         {
         };
 
