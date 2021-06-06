@@ -1,5 +1,6 @@
 #include "include/core.h"
 #include "include/patterns.h"
+#include "include/expression.h"
 using namespace matchit;
 
 template<typename T1, typename T2>
@@ -8,11 +9,11 @@ auto eval(std::tuple<char, T1, T2> const& expr)
         Id<T1> i;
         Id<T2> j;
         return match(expr)(
-            pattern(ds('+', i, j)) = [&i, &j] { return *i + *j; },
-            pattern(ds('-', i, j)) = [&i, &j] { return *i - *j; },
-            pattern(ds('*', i, j)) = [&i, &j] { return *i * *j; },
-            pattern(ds('/', i, j)) = [&i, &j] { return *i / *j; },
-            pattern(_) = [&i, &j] { assert(false); return -1; });
+            pattern(ds('+', i, j)) = i + j,
+            pattern(ds('-', i, j)) = i - j,
+            pattern(ds('*', i, j)) = i * j,
+            pattern(ds('/', i, j)) = i / j,
+            pattern(_)             = [] { assert(false); return -1; });
 }
 
 int main()
