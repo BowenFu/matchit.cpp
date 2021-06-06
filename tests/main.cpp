@@ -355,6 +355,8 @@ void test12()
 {
     compare(matchPattern(std::array<int, 2>{1, 2}, ds(ooo(_), _)), true);
     compare(matchPattern(std::array<int, 3>{1, 2, 3}, ds(ooo(_), _)), true);
+    Id<int> x;
+    compare(matchPattern(std::array<int, 2>{1, 2}, ds(ooo(x), _)), true);
 }
 
 template <size_t I>
