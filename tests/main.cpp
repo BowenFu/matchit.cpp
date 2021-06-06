@@ -372,6 +372,19 @@ constexpr auto get(A const &a)
     }
 }
 
+template <size_t I>
+constexpr auto get(A &&a)
+{
+    if constexpr (I == 0)
+    {
+        return std::move(a.a);
+    }
+    else if constexpr (I == 1)
+    {
+        return std::move(a.b);
+    }
+}
+
 namespace std
 {
     template <>
@@ -600,26 +613,26 @@ void test21()
 
 int main()
 {
-    test1();
-    test2();
-    test3();
-    test4();
-    test5();
-    test6();
-    test7();
-    test8();
-    test9();
-    test10();
-    test11();
-    test12();
+    // test1();
+    // test2();
+    // test3();
+    // test4();
+    // test5();
+    // test6();
+    // test7();
+    // test8();
+    // test9();
+    // test10();
+    // test11();
+    // test12();
     test13();
     test14();
-    test15();
-    test16();
-    test17();
-    test18();
-    test19();
-    test20();
-    test21();
+    // test15();
+    // test16();
+    // test17();
+    // test18();
+    // test19();
+    // test20();
+    // test21();
     return 0;
 }

@@ -416,7 +416,6 @@ namespace matchit
             static_assert(std::is_array_v<std::remove_reference_t<char const (&)[4]> >);
             template <typename Value>
             auto matchValue(Value &&value) const
-                // -> decltype(**mValue == value, IdTrait<std::is_rvalue_reference_v<Value> || std::is_array_v<std::remove_reference_t<Value>>>::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
                 -> decltype(**mValue == value, IdTrait<std::is_rvalue_reference_v<Value> >::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
             {
                 if (*mValue)
@@ -524,7 +523,7 @@ namespace matchit
         class TupleMatchHelper
         {
             template <typename VT = ValuesTuple>
-            static bool tupleMatchImpl(VT const &values, PatternsTuple const &patterns) = delete;
+            static bool tupleMatchImpl(VT &&values, PatternsTuple const &patterns) = delete;
         };
 
         using std::get;
@@ -532,8 +531,7 @@ namespace matchit
         auto dropImpl(Tuple &&t, std::index_sequence<I...>)
         {
             // Fixme, use std::forward_as_tuple when possible.
-            // return std::forward_as_tuple(get<I + N>(std::forward<Tuple>(t))...);
-            return std::make_tuple(get<I + N>(std::forward<Tuple>(t))...);
+            return std::forward_as_tuple(get<I + N>(std::forward<Tuple>(t))...);
         }
 
         // std::tuple_size_v cannot work with SFINAE with GCC, use std::tuple_size<>::value instead.
@@ -565,7 +563,7 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static bool tupleMatchImpl(VT const &values, std::tuple<PatternHead, PatternTail...> const &patterns) = delete;
+            static bool tupleMatchImpl(VT &&values, std::tuple<PatternHead, PatternTail...> const &patterns) = delete;
         };
 
         template <typename ValuesTuple>
@@ -573,7 +571,7 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static auto tupleMatchImpl(VT const &values, std::tuple<>)
+            static auto tupleMatchImpl(VT &&values, std::tuple<>)
             {
                 return false;
             }
@@ -584,10 +582,10 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static auto tupleMatchImpl(VT &&values, std::tuple<PatternHead, PatternTail...> const &patterns)
-                -> decltype(tryOooMatch(std::forward<VT>(values), patterns))
+            static auto tupleMatchImpl(VT const&values, std::tuple<PatternHead, PatternTail...> const &patterns)
+                -> decltype(tryOooMatch(values, patterns))
             {
-                return tryOooMatch(std::forward<VT>(values), patterns);
+                return tryOooMatch(values, patterns);
             }
         };
 
@@ -596,7 +594,7 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static auto tupleMatchImpl(VT, std::tuple<>)
+            static auto tupleMatchImpl(VT&&, std::tuple<>)
             {
                 return true;
             }
@@ -695,7 +693,7 @@ namespace matchit
             {
                 if constexpr (MatchFuncDefinedV<decltype(take<I>(values)), std::tuple_element_t<0, PatternsTuple> >)
                 {
-                    if (!PatternTraits<std::tuple_element_t<0, PatternsTuple> >::matchPatternImplSingle(get<I - 1>(values), get<0>(patterns)))
+                    if (!PatternTraits<std::decay_t<std::tuple_element_t<0, PatternsTuple>> >::matchPatternImplSingle(get<I - 1>(values), get<0>(patterns)))
                     {
                         throw OooMatchBreak();
                     }
