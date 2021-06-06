@@ -596,6 +596,227 @@ unittests/fast:
 	$(MAKE) -f test/matchit/CMakeFiles/unittests.dir/build.make test/matchit/CMakeFiles/unittests.dir/build
 .PHONY : unittests/fast
 
+#=============================================================================
+# Target rules for targets named sumIs
+
+# Build rule for target.
+sumIs: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 sumIs
+.PHONY : sumIs
+
+# fast build rule for target.
+sumIs/fast:
+	$(MAKE) -f samples/CMakeFiles/sumIs.dir/build.make samples/CMakeFiles/sumIs.dir/build
+.PHONY : sumIs/fast
+
+#=============================================================================
+# Target rules for targets named gcd
+
+# Build rule for target.
+gcd: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 gcd
+.PHONY : gcd
+
+# fast build rule for target.
+gcd/fast:
+	$(MAKE) -f samples/CMakeFiles/gcd.dir/build.make samples/CMakeFiles/gcd.dir/build
+.PHONY : gcd/fast
+
+#=============================================================================
+# Target rules for targets named clip
+
+# Build rule for target.
+clip: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 clip
+.PHONY : clip
+
+# fast build rule for target.
+clip/fast:
+	$(MAKE) -f samples/CMakeFiles/clip.dir/build.make samples/CMakeFiles/clip.dir/build
+.PHONY : clip/fast
+
+#=============================================================================
+# Target rules for targets named variantAny
+
+# Build rule for target.
+variantAny: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 variantAny
+.PHONY : variantAny
+
+# fast build rule for target.
+variantAny/fast:
+	$(MAKE) -f samples/CMakeFiles/variantAny.dir/build.make samples/CMakeFiles/variantAny.dir/build
+.PHONY : variantAny/fast
+
+#=============================================================================
+# Target rules for targets named someNone
+
+# Build rule for target.
+someNone: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 someNone
+.PHONY : someNone
+
+# fast build rule for target.
+someNone/fast:
+	$(MAKE) -f samples/CMakeFiles/someNone.dir/build.make samples/CMakeFiles/someNone.dir/build
+.PHONY : someNone/fast
+
+#=============================================================================
+# Target rules for targets named isValid
+
+# Build rule for target.
+isValid: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 isValid
+.PHONY : isValid
+
+# fast build rule for target.
+isValid/fast:
+	$(MAKE) -f samples/CMakeFiles/isValid.dir/build.make samples/CMakeFiles/isValid.dir/build
+.PHONY : isValid/fast
+
+#=============================================================================
+# Target rules for targets named getClassName
+
+# Build rule for target.
+getClassName: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 getClassName
+.PHONY : getClassName
+
+# fast build rule for target.
+getClassName/fast:
+	$(MAKE) -f samples/CMakeFiles/getClassName.dir/build.make samples/CMakeFiles/getClassName.dir/build
+.PHONY : getClassName/fast
+
+#=============================================================================
+# Target rules for targets named contains
+
+# Build rule for target.
+contains: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 contains
+.PHONY : contains
+
+# fast build rule for target.
+contains/fast:
+	$(MAKE) -f samples/CMakeFiles/contains.dir/build.make samples/CMakeFiles/contains.dir/build
+.PHONY : contains/fast
+
+#=============================================================================
+# Target rules for targets named isLarge
+
+# Build rule for target.
+isLarge: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 isLarge
+.PHONY : isLarge
+
+# fast build rule for target.
+isLarge/fast:
+	$(MAKE) -f samples/CMakeFiles/isLarge.dir/build.make samples/CMakeFiles/isLarge.dir/build
+.PHONY : isLarge/fast
+
+#=============================================================================
+# Target rules for targets named relu
+
+# Build rule for target.
+relu: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 relu
+.PHONY : relu
+
+# fast build rule for target.
+relu/fast:
+	$(MAKE) -f samples/CMakeFiles/relu.dir/build.make samples/CMakeFiles/relu.dir/build
+.PHONY : relu/fast
+
+#=============================================================================
+# Target rules for targets named customAsPointer
+
+# Build rule for target.
+customAsPointer: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 customAsPointer
+.PHONY : customAsPointer
+
+# fast build rule for target.
+customAsPointer/fast:
+	$(MAKE) -f samples/CMakeFiles/customAsPointer.dir/build.make samples/CMakeFiles/customAsPointer.dir/build
+.PHONY : customAsPointer/fast
+
+#=============================================================================
+# Target rules for targets named optionalLift
+
+# Build rule for target.
+optionalLift: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 optionalLift
+.PHONY : optionalLift
+
+# fast build rule for target.
+optionalLift/fast:
+	$(MAKE) -f samples/CMakeFiles/optionalLift.dir/build.make samples/CMakeFiles/optionalLift.dir/build
+.PHONY : optionalLift/fast
+
+#=============================================================================
+# Target rules for targets named checkAndlogLarge
+
+# Build rule for target.
+checkAndlogLarge: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 checkAndlogLarge
+.PHONY : checkAndlogLarge
+
+# fast build rule for target.
+checkAndlogLarge/fast:
+	$(MAKE) -f samples/CMakeFiles/checkAndlogLarge.dir/build.make samples/CMakeFiles/checkAndlogLarge.dir/build
+.PHONY : checkAndlogLarge/fast
+
+#=============================================================================
+# Target rules for targets named detectTuplePattern
+
+# Build rule for target.
+detectTuplePattern: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 detectTuplePattern
+.PHONY : detectTuplePattern
+
+# fast build rule for target.
+detectTuplePattern/fast:
+	$(MAKE) -f samples/CMakeFiles/detectTuplePattern.dir/build.make samples/CMakeFiles/detectTuplePattern.dir/build
+.PHONY : detectTuplePattern/fast
+
+#=============================================================================
+# Target rules for targets named factorial
+
+# Build rule for target.
+factorial: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 factorial
+.PHONY : factorial
+
+# fast build rule for target.
+factorial/fast:
+	$(MAKE) -f samples/CMakeFiles/factorial.dir/build.make samples/CMakeFiles/factorial.dir/build
+.PHONY : factorial/fast
+
+#=============================================================================
+# Target rules for targets named eval
+
+# Build rule for target.
+eval: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 eval
+.PHONY : eval
+
+# fast build rule for target.
+eval/fast:
+	$(MAKE) -f samples/CMakeFiles/eval.dir/build.make samples/CMakeFiles/eval.dir/build
+.PHONY : eval/fast
+
+#=============================================================================
+# Target rules for targets named customDs
+
+# Build rule for target.
+customDs: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 customDs
+.PHONY : customDs
+
+# fast build rule for target.
+customDs/fast:
+	$(MAKE) -f samples/CMakeFiles/customDs.dir/build.make samples/CMakeFiles/customDs.dir/build
+.PHONY : customDs/fast
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -642,6 +863,23 @@ help:
 	@echo "... gtest_main"
 	@echo "... gtest"
 	@echo "... unittests"
+	@echo "... sumIs"
+	@echo "... gcd"
+	@echo "... clip"
+	@echo "... variantAny"
+	@echo "... someNone"
+	@echo "... isValid"
+	@echo "... getClassName"
+	@echo "... contains"
+	@echo "... isLarge"
+	@echo "... relu"
+	@echo "... customAsPointer"
+	@echo "... optionalLift"
+	@echo "... checkAndlogLarge"
+	@echo "... detectTuplePattern"
+	@echo "... factorial"
+	@echo "... eval"
+	@echo "... customDs"
 .PHONY : help
 
 
