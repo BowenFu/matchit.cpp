@@ -47,9 +47,19 @@ namespace matchit
         {
         };
 
-        template <typename T>
-        class AsPointer : public AsPointerBase<T>, public CustomAsPointer<T>
+        template <typename T, typename = std::void_t<>>
+        class AsPointer : public AsPointerBase<T>
         {
+        public:
+            using AsPointerBase<T>::operator();
+        };
+
+        template <typename T>
+        class AsPointer<T, std::void_t<decltype(&CustomAsPointer<T>::operator())>> : public AsPointerBase<T>, public CustomAsPointer<T>
+        {
+        public:
+            using AsPointerBase<T>::operator();
+            using CustomAsPointer<T>::operator();
         };
 
         template <typename T, typename AsPointerT = AsPointer<T> >
