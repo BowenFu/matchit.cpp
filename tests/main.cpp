@@ -90,7 +90,7 @@ void test2()
             pattern(ds('/', 0, _)) = expr(0),
             pattern(ds('*', i, j)) = i * j,
             pattern(ds('+', i, j)) = i + j,
-            pattern(_) = [&i, &j] { return -1; });
+            pattern(_)             = expr(-1));
     };
     testMatch(std::make_tuple('/', 1, 1), 1, matchFunc);
     testMatch(std::make_tuple('+', 2, 1), 3, matchFunc);
@@ -547,30 +547,6 @@ void test19()
 
 void test20()
 {
-    auto const matchFunc = [](auto &&input) {
-        Id<char> x;
-        // Id<int> i;
-        int i = 2;
-        return match(input)(
-            // why this one fail to match?
-            pattern(
-                ds('+', ooo(_), 1, ds('^', ds('s', x), 2))) = expr(9),
-            pattern(
-                ds('+', ooo(_), 1, ds('^', ds('s', x), ooo(_), 2))) = expr(8),
-            pattern(
-                ds('+', ooo(_), 1, ds('^', ds('s', x), ooo(_)), ooo(_))) = expr(7),
-            pattern(
-                ds('+', 1, ds('^', ooo(_)), ooo(_))) = expr(6),
-            pattern(
-                ds('+', 1, ds(ooo(_)), ooo(_))) = expr(5),
-            pattern(
-                ds('+', 1, _, ooo(_))) = expr(4),
-            pattern(
-                ds('+', 1, ooo(_))) = expr(3),
-            pattern(
-                ds('+', ooo(_))) = expr(2),
-            pattern(_) = expr(-1));
-    };
     Id<char> x;
     char y = 'y';
     compare(matchPattern(
@@ -618,7 +594,6 @@ void test21()
                 "abc",
                 strB),
             true);
-    auto A = std::make_tuple("string", 123);
 }
 
 int main()
