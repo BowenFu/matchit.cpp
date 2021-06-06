@@ -1,4 +1,4 @@
-# match(it): A light-weight pattern-matching library for C++17.
+# match(it): A light-weight header-only pattern-matching library for C++17.
 ![match(it).cpp](./matchit.cpp.svg)
 
 ## Basic usage.
@@ -475,4 +475,3 @@ int main()
 Users can specialize `PatternTraits` if they want to add a new pattern.
 
 # TODO
-1. Merge Id and Id. Id should recongize if own is true based on the parameter type. `Rvalue` means owned. `Lvalue` means not owned.

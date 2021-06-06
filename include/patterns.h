@@ -746,6 +746,7 @@ namespace matchit
             return Ooo<Pattern>{pattern};
         }
 
+        // TODO: ooo does not support move to Id.
         template <typename Pattern>
         class PatternTraits<Ooo<Pattern> >
         {
@@ -762,10 +763,10 @@ namespace matchit
                     valueTuple);
             }
             template <typename Value>
-            static auto matchPatternImplSingle(Value const &value, Ooo<Pattern> const &oooPat)
-                -> decltype(matchPattern(value, oooPat.pattern()))
+            static auto matchPatternImplSingle(Value &&value, Ooo<Pattern> const &oooPat)
+                -> decltype(matchPattern(std::forward<Value>(value), oooPat.pattern()))
             {
-                return matchPattern(value, oooPat.pattern());
+                return matchPattern(std::forward<Value>(value), oooPat.pattern());
             }
             static void resetIdImpl(Ooo<Pattern> const &oooPat)
             {
@@ -800,10 +801,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value const &value, PostCheck<Pattern, Pred> const &postCheck)
-                -> decltype(matchPattern(value, postCheck.pattern()) && postCheck.check())
+            static auto matchPatternImpl(Value &&value, PostCheck<Pattern, Pred> const &postCheck)
+                -> decltype(matchPattern(std::forward<Value>(value), postCheck.pattern()) && postCheck.check())
             {
-                return matchPattern(value, postCheck.pattern()) && postCheck.check();
+                return matchPattern(std::forward<Value>(value), postCheck.pattern()) && postCheck.check();
             }
             static void resetIdImpl(PostCheck<Pattern, Pred> const &postCheck)
             {
