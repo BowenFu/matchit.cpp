@@ -337,9 +337,6 @@ namespace matchit
             }
         };
 
-        template <bool own>
-        class IdTrait;
-
         class Deleter
         {
         public:
@@ -352,16 +349,6 @@ namespace matchit
                 }
             }
             bool mOwn{false};
-        };
-        template <>
-        class IdTrait<true>
-        {
-        public:
-            template <typename Type, typename Value>
-            static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value &&value)
-            {
-                ptr = std::unique_ptr<Type, Deleter>(new Type{std::move(value)}, Deleter{true});
-            }
         };
 
         template <typename Ptr, typename Value, typename = std::void_t<> >
@@ -387,22 +374,19 @@ namespace matchit
         static_assert(CanReset<const char, char &>::value);
         static_assert(CanReset<const char, const char &>::value);
 
-        template <>
-        class IdTrait<false>
+        class IdTrait
         {
         public:
-            template <typename Type, typename Value>
+            template <typename Type, typename Value, std::enable_if_t<!CanReset<Type, Value>::value>* = nullptr>
             static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value &&value)
             {
-                if constexpr (CanReset<Type, Value>::value)
-                {
-                    ptr.reset(&value);
-                    ptr.get_deleter().mOwn = false;
-                }
-                else if constexpr (!CanReset<Type, Value>::value)
-                {
-                    ptr = std::unique_ptr<Type, Deleter>(new Type{std::move(value)}, Deleter{true});
-                }
+                ptr = std::unique_ptr<Type, Deleter>(new Type{std::forward<Value>(value)}, Deleter{true});
+            }
+            template <typename Type, typename Value, std::enable_if_t<CanReset<Type, Value>::value>* = nullptr>
+            static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value &&value)
+            {
+                ptr.reset(&value);
+                ptr.get_deleter().mOwn = false;
             }
         };
 
@@ -415,13 +399,13 @@ namespace matchit
         public:
             template <typename Value>
             auto matchValue(Value &&value) const
-                -> decltype(**mValue == value, IdTrait<std::is_rvalue_reference_v<Value> >::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
+                -> decltype(**mValue == value, IdTrait::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
             {
                 if (*mValue)
                 {
                     return **mValue == value;
                 }
-                IdTrait<std::is_rvalue_reference_v<Value> >::matchValueImpl(*mValue, std::forward<Value>(value));
+                IdTrait::matchValueImpl(*mValue, std::forward<Value>(value));
                 return true;
             }
             void reset() const
