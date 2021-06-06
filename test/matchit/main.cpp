@@ -48,8 +48,10 @@ void test1()
 
     const auto x = (expr(5) + 5)();
     assert(x == 10);
+    static_cast<void>(x);
     const auto y = (_ * 2)(5);
     assert(y == 10);
+    static_cast<void>(y);
 
     auto const matchFunc = [](int32_t input) {
         Id<int> ii;
@@ -250,7 +252,7 @@ void test7()
         return match(ij.first % 3, ij.second % 5)(
             pattern(0, _ > 2) = expr(2),
             pattern(ds(1, _ > 2)) = expr(3),
-            pattern(at(id, ds(_, 2))) = [&id] {assert(std::get<1>(*id) == 2); return 4; },
+            pattern(at(id, ds(_, 2))) = [&id] {assert(std::get<1>(*id) == 2); static_cast<void>(id); return 4; },
             pattern(_) = expr(5));
     };
     testMatch(std::make_pair(4, 2), 4, matchFunc);

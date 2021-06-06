@@ -59,6 +59,7 @@ public:
         };
         bool const matched = (func(patterns) || ...);
         assert(matched);
+        static_cast<void>(matched);
         return result;
     }
 };
