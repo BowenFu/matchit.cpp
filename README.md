@@ -1,6 +1,13 @@
 # match(it): A light-weight header-only pattern-matching library for C++17.
 ![match(it).cpp](./matchit.cpp.svg)
 
+[![CMake](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml)
+[![godbolt][badge.godbolt]][godbolt]
+
+[badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
+
+[godbolt]: https://godbolt.org/z/bjo41j793
+
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
 ```C++
@@ -18,11 +25,6 @@ int32_t factorial(int32_t n)
     );
 }
 ```
-[![godbolt][badge.godbolt]][godbolt]
-
-[badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
-
-[godbolt]: https://godbolt.org/z/bjo41j793
 
 The basic syntax is
 ```C++
