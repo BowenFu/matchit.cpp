@@ -377,8 +377,9 @@ namespace matchit
         class IdTrait
         {
         public:
-            template <typename Type, typename Value, std::enable_if_t<!CanReset<Type, Value>::value>* = nullptr>
+            template <typename Type, typename Value, std::enable_if_t<!CanReset<Type, Value>::value> * = nullptr>
             static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value &&value)
+                -> decltype(ptr = std::unique_ptr<Type, Deleter>(new Type{std::forward<Value>(value)}, Deleter{true}), void())
             {
                 ptr = std::unique_ptr<Type, Deleter>(new Type{std::forward<Value>(value)}, Deleter{true});
             }
