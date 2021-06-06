@@ -413,7 +413,6 @@ namespace matchit
             mutable std::shared_ptr<PtrT> mValue = std::make_shared<PtrT>();
 
         public:
-            static_assert(std::is_array_v<std::remove_reference_t<char const (&)[4]> >);
             template <typename Value>
             auto matchValue(Value &&value) const
                 -> decltype(**mValue == value, IdTrait<std::is_rvalue_reference_v<Value> >::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
