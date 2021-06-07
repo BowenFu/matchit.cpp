@@ -48,19 +48,36 @@ public:
     auto operator()(PatternPair const &...patterns)
     {
         using RetType = typename PatternPairsRetType<PatternPair...>::RetType;
-        RetType result{};
-        auto const func = [this, &result](auto const &pattern) -> bool {
-            if (pattern.matchValue(std::forward<ValueRefT>(mValue)))
-            {
-                result = pattern.execute();
-                return true;
-            }
-            return false;
-        };
-        bool const matched = (func(patterns) || ...);
-        assert(matched);
-        static_cast<void>(matched);
-        return result;
+        if constexpr(!std::is_same_v<RetType, void>)
+        {
+            RetType result{};
+            auto const func = [this, &result](auto const &pattern) -> bool {
+                if (pattern.matchValue(std::forward<ValueRefT>(mValue)))
+                {
+                    result = pattern.execute();
+                    return true;
+                }
+                return false;
+            };
+            bool const matched = (func(patterns) || ...);
+            assert(matched);
+            static_cast<void>(matched);
+            return result;
+        }
+        else if constexpr(std::is_same_v<RetType, void>)
+        {
+            auto const func = [this](auto const &pattern) -> bool {
+                if (pattern.matchValue(std::forward<ValueRefT>(mValue)))
+                {
+                    pattern.execute();
+                    return true;
+                }
+                return false;
+            };
+            bool const matched = (func(patterns) || ...);
+            assert(matched);
+            static_cast<void>(matched);
+        }
     }
 };
 

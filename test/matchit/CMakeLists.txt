@@ -1,4 +1,4 @@
-add_executable(unittests expr.cpp legacy.cpp)
+add_executable(unittests expr.cpp legacy.cpp noRet.cpp)
 target_compile_options(unittests PRIVATE ${BASE_COMPILE_FLAGS})
 target_link_libraries(unittests PRIVATE matchit gtest_main)
 set_target_properties(unittests PROPERTIES CXX_EXTENSIONS OFF)
