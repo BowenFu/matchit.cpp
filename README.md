@@ -140,6 +140,23 @@ double clip(double value, double min, double max)
 }
 ```
 
+The above can also be simplified as
+```C++
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
+using namespace matchit;
+
+double clip(double value, double min, double max)
+{
+    return match(value)(
+        pattern(min <= _ && _ <= max) = expr(value),
+        pattern(_ > max)              = expr(max),
+        pattern(_)                    = expr(min)
+    );
+}
+```
+
 ## App Pattern
 App Pattern is like the projection for ranges introduced in C++20. 
 Its syntax is
