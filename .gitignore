@@ -42,4 +42,4 @@ Dart*
 Testing
 log
 Makefile
-bin/unittests
+bin/*
