@@ -1,4 +1,5 @@
 #include <string>
+#include <gtest/gtest.h>
 #include <variant>
 #include <array>
 #include <any>
@@ -9,80 +10,44 @@
 #include "matchit/expression.h"
 using namespace matchit;
 
-template <typename V, typename U>
-void compare(V const &result, U const &expected)
-{
-    if (result == expected)
-    {
-        printf("Passed!\n");
-    }
-    else
-    {
-        printf("Failed!\n");
-        if constexpr (std::is_same_v<U, int>)
-        {
-            std::cout << result << " != " << expected << std::endl;
-        }
-    }
-}
-
-template <typename V, typename U, typename Func>
-void testMatch(V const &input, U const &expected, Func matchFunc)
-{
-    auto const x = matchFunc(input);
-    compare(x, expected);
-}
-
 bool func1()
 {
-    return true;
+  return true;
 }
 
 int64_t func2()
 {
-    return 12;
+  return 12;
 }
 
-void test1()
+TEST(Match, test1)
 {
-
-    const auto x = (expr(5) + 5)();
-    assert(x == 10);
-    static_cast<void>(x);
-    const auto y = (_ * 2)(5);
-    assert(y == 10);
-    static_cast<void>(y);
-
-    auto const matchFunc = [](int32_t input) {
-        Id<int> ii;
-        volatile int x = 5;
-        ii.matchValue((_*_)(x));
-        assert(*ii == 25);
-
-        return match(input)(
-            pattern(1) = func1,
-            pattern(2) = func2,
-            pattern(or_(56, 59)) = func2,
-            pattern(_ < 0) = expr(-1),
-            pattern(_ < 10) = expr(-10),
-            pattern(and_(_<17, _> 15)) = expr(16),
-            pattern(app(_ * _, _ > 1000)) = expr(1000),
-            pattern(app(_ * _, ii)) = expr(ii),
-            pattern(ii) = -ii,
-            pattern(_) = expr(111));
-    };
-    testMatch(1, true, matchFunc);
-    testMatch(2, 12, matchFunc);
-    testMatch(11, 121, matchFunc);   // Id matched.
-    testMatch(59, 12, matchFunc);    // or_ matched.
-    testMatch(-5, -1, matchFunc);    // meet matched.
-    testMatch(10, 100, matchFunc);   // app matched.
-    testMatch(100, 1000, matchFunc); // app > meet matched.
-    testMatch(5, -10, matchFunc);    // _ < 10 matched.
-    testMatch(16, 16, matchFunc);    // and_ matched.
+  auto const matchFunc = [](int32_t input) {
+    Id<int> ii;
+    return match(input)(
+        pattern(1) = func1,
+        pattern(2) = func2,
+        pattern(or_(56, 59)) = func2,
+        pattern(_ < 0) = expr(-1),
+        pattern(_ < 10) = expr(-10),
+        pattern(and_(_<17, _> 15)) = expr(16),
+        pattern(app(_ * _, _ > 1000)) = expr(1000),
+        pattern(app(_ * _, ii)) = expr(ii),
+        pattern(ii) = -ii,
+        pattern(_) = expr(111));
+  };
+  EXPECT_EQ(matchFunc(1), true);
+  EXPECT_EQ(matchFunc(2), 12);
+  EXPECT_EQ(matchFunc(11), 121);   // Id matched.
+  EXPECT_EQ(matchFunc(59), 12);    // or_ matched.
+  EXPECT_EQ(matchFunc(-5), -1);    // meet matched.
+  EXPECT_EQ(matchFunc(10), 100);   // app matched.
+  EXPECT_EQ(matchFunc(100), 1000); // app > meet matched.
+  EXPECT_EQ(matchFunc(5), -10);    // _ < 10 matched.
+  EXPECT_EQ(matchFunc(16), 16);    // and_ matched.
 }
 
-void test2()
+TEST(Match, test2)
 {
     auto const matchFunc = [](auto &&input) {
         Id<int> i;
@@ -94,12 +59,12 @@ void test2()
             pattern(ds('+', i, j)) = i + j,
             pattern(_)             = expr(-1));
     };
-    testMatch(std::make_tuple('/', 1, 1), 1, matchFunc);
-    testMatch(std::make_tuple('+', 2, 1), 3, matchFunc);
-    testMatch(std::make_tuple('/', 0, 1), 0, matchFunc);
-    testMatch(std::make_tuple('*', 2, 1), 2, matchFunc);
-    testMatch(std::make_tuple('/', 2, 1), -1, matchFunc);
-    testMatch(std::make_tuple('/', 2, 3), -1, matchFunc);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 1, 1)), 1);
+    EXPECT_EQ(matchFunc(std::make_tuple('+', 2, 1)), 3);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 0, 1)), 0);
+    EXPECT_EQ(matchFunc(std::make_tuple('*', 2, 1)), 2);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 2, 1)), -1);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 2, 3)), -1);
 }
 
 struct A
@@ -111,7 +76,8 @@ bool operator==(A const lhs, A const rhs)
 {
     return lhs.a == rhs.a && lhs.b == rhs.b;
 }
-void test3()
+
+TEST(Match, test3)
 {
     auto const matchFunc = [](A const &input) {
         Id<int> i;
@@ -125,8 +91,8 @@ void test3()
             pattern(dsA(i)) = expr(i),
             pattern(_) = expr(-1));
     };
-    testMatch(A{3, 1}, 3, matchFunc);
-    testMatch(A{2, 2}, -1, matchFunc);
+    EXPECT_EQ(matchFunc(A{3, 1}), 3);
+    EXPECT_EQ(matchFunc(A{2, 2}), -1);
 }
 
 enum class Kind
@@ -195,7 +161,7 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
 {
 };
 
-void test4()
+TEST(Match, test4)
 {
     auto const matchFunc = [](Num const &input) {
         return match(input)(
@@ -204,11 +170,11 @@ void test4()
             pattern(_) = expr(3));
     };
     matchit::impl::AsPointer<Two>()(std::variant<One, Two>{});
-    testMatch(One{}, 1, matchFunc);
-    testMatch(Two{}, 2, matchFunc);
+    EXPECT_EQ(matchFunc(One{}), 1);
+    EXPECT_EQ(matchFunc(Two{}), 2);
 }
 
-void test5()
+TEST(Match, test5)
 {
     auto const matchFunc = [](std::pair<int32_t, int32_t> ij) {
         return match(ij.first % 3, ij.second % 5)(
@@ -217,31 +183,31 @@ void test5()
             pattern(_, _ > 2) = expr(3),
             pattern(_) = expr(4));
     };
-    testMatch(std::make_pair(3, 5), 1, matchFunc);
-    testMatch(std::make_pair(3, 4), 2, matchFunc);
-    testMatch(std::make_pair(4, 4), 3, matchFunc);
-    testMatch(std::make_pair(4, 1), 4, matchFunc);
+    EXPECT_EQ(matchFunc(std::make_pair(3, 5)), 1);
+    EXPECT_EQ(matchFunc(std::make_pair(3, 4)), 2);
+    EXPECT_EQ(matchFunc(std::make_pair(4, 4)), 3);
+    EXPECT_EQ(matchFunc(std::make_pair(4, 1)), 4);
 }
 
 int32_t fib(int32_t n)
 {
-    assert(n > 0);
+    EXPECT_TRUE(n > 0);
     return match(n)(
         pattern(1) = expr(1),
         pattern(2) = expr(1),
         pattern(_) = [n] { return fib(n - 1) + fib(n - 2); });
 }
 
-void test6()
+TEST(Match, test6)
 {
-    compare(fib(1), 1);
-    compare(fib(2), 1);
-    compare(fib(3), 2);
-    compare(fib(4), 3);
-    compare(fib(5), 5);
+    EXPECT_EQ(fib(1), 1);
+    EXPECT_EQ(fib(2), 1);
+    EXPECT_EQ(fib(3), 2);
+    EXPECT_EQ(fib(4), 3);
+    EXPECT_EQ(fib(5), 5);
 }
 
-void test7()
+TEST(Match, test7)
 {
     auto const matchFunc = [](std::pair<int32_t, int32_t> ij) {
         Id<std::tuple<int32_t const &, int32_t const &> > id;
@@ -252,13 +218,13 @@ void test7()
         return match(ij.first % 3, ij.second % 5)(
             pattern(0, _ > 2) = expr(2),
             pattern(ds(1, _ > 2)) = expr(3),
-            pattern(at(id, ds(_, 2))) = [&id] {assert(std::get<1>(*id) == 2); static_cast<void>(id); return 4; },
+            pattern(at(id, ds(_, 2))) = [&id] {EXPECT_TRUE(std::get<1>(*id) == 2); static_cast<void>(id); return 4; },
             pattern(_) = expr(5));
     };
-    testMatch(std::make_pair(4, 2), 4, matchFunc);
+    EXPECT_EQ(matchFunc(std::make_pair(4, 2)), 4);
 }
 
-void test8()
+TEST(Match, test8)
 {
     auto const equal = [](std::pair<int32_t, std::pair<int32_t, int32_t> > ijk) {
         Id<int32_t> x;
@@ -266,12 +232,12 @@ void test8()
             pattern(ds(x, ds(_, x))) = expr(true),
             pattern(_) = expr(false));
     };
-    testMatch(std::make_pair(2, std::make_pair(1, 2)), true, equal);
-    testMatch(std::make_pair(2, std::make_pair(1, 3)), false, equal);
+    EXPECT_TRUE(equal(std::make_pair(2, std::make_pair(1, 2))));
+    EXPECT_FALSE(equal(std::make_pair(2, std::make_pair(1, 3))));
 }
 
 // optional
-void test9()
+TEST(Match, test9)
 {
     auto const optional = [](auto const &i) {
         Id<int32_t> x;
@@ -279,14 +245,14 @@ void test9()
             pattern(some(x)) = expr(true),
             pattern(none) = expr(false));
     };
-    testMatch(std::make_unique<int32_t>(2), true, optional);
-    testMatch(std::unique_ptr<int32_t>{}, false, optional);
-    testMatch(std::make_optional<int32_t>(2), true, optional);
-    testMatch(std::optional<int32_t>{}, false, optional);
+    EXPECT_EQ(optional(std::make_unique<int32_t>(2)), true);
+    EXPECT_EQ(optional(std::unique_ptr<int32_t>{}), false);
+    EXPECT_EQ(optional(std::make_optional<int32_t>(2)), true);
+    EXPECT_EQ(optional(std::optional<int32_t>{}), false);
     int32_t *p = nullptr;
-    testMatch(p, false, optional);
+    EXPECT_EQ(optional(p), false);
     int a = 3;
-    testMatch(&a, true, optional);
+    EXPECT_EQ(optional(&a), true);
 }
 
 struct Shape
@@ -314,7 +280,7 @@ bool operator==(Shape const&, Shape const&)
     return true;
 }
 
-void test10()
+TEST(Match, test10)
 {
     static_assert(matchit::impl::CanReset<Shape, Shape&>::value);
     static_assert(matchit::impl::CanReset<Shape const, Shape const&>::value);
@@ -330,12 +296,12 @@ void test10()
             pattern(none) = expr("None"));
     };
 
-    testMatch(std::make_unique<Square>(), "Square", dynCast);
-    testMatch(std::make_unique<Circle>(), "Circle", dynCast);
-    testMatch(std::unique_ptr<Circle>(), "None", dynCast);
+    EXPECT_EQ(dynCast(std::make_unique<Square>()), "Square");
+    EXPECT_EQ(dynCast(std::make_unique<Circle>()), "Circle");
+    EXPECT_EQ(dynCast(std::unique_ptr<Circle>()), "None");
 }
 
-void test11()
+TEST(Match, test11)
 {
     auto const getIf = [](auto const &i) {
         return match(i)(
@@ -348,17 +314,17 @@ void test11()
     static_assert(matchit::impl::MatchFuncDefinedV<Value, Pattern>);
 
     std::variant<Square, Circle> sc = Square{};
-    testMatch(sc, "Square", getIf);
+    EXPECT_EQ(getIf(sc), "Square");
     sc = Circle{};
-    testMatch(sc, "Circle", getIf);
+    EXPECT_EQ(getIf(sc), "Circle");
 }
 
-void test12()
+TEST(Match, test12)
 {
-    compare(matchPattern(std::array<int, 2>{1, 2}, ds(ooo(_), _)), true);
-    compare(matchPattern(std::array<int, 3>{1, 2, 3}, ds(ooo(_), _)), true);
+    EXPECT_EQ(matchPattern(std::array<int, 2>{1, 2}, ds(ooo(_), _)), true);
+    EXPECT_EQ(matchPattern(std::array<int, 3>{1, 2, 3}, ds(ooo(_), _)), true);
     Id<int> x;
-    compare(matchPattern(std::array<int, 2>{1, 2}, ds(ooo(x), _)), true);
+    EXPECT_EQ(matchPattern(std::array<int, 2>{1, 2}, ds(ooo(x), _)), true);
 }
 
 template <size_t I>
@@ -382,7 +348,7 @@ namespace std
     };
 } // namespace std
 
-void test13()
+TEST(Match, test13)
 {
     auto const dsAgg = [](auto const &v) {
         Id<int> i;
@@ -391,13 +357,13 @@ void test13()
             pattern(ds(_, i)) = expr(i));
     };
 
-    testMatch(A{1, 2}, 2, dsAgg);
-    testMatch(A{3, 2}, 2, dsAgg);
-    testMatch(A{5, 2}, 2, dsAgg);
-    testMatch(A{2, 5}, 5, dsAgg);
+    EXPECT_EQ(dsAgg(A{1, 2}), 2);
+    EXPECT_EQ(dsAgg(A{3, 2}), 2);
+    EXPECT_EQ(dsAgg(A{5, 2}), 2);
+    EXPECT_EQ(dsAgg(A{2, 5}), 5);
 }
 
-void test14()
+TEST(Match, test14)
 {
     auto const anyCast = [](auto const &i) {
         return match(i)(
@@ -407,12 +373,12 @@ void test14()
 
     std::any sc;
     sc = Square{};
-    testMatch(sc, "Square", anyCast);
+    EXPECT_EQ(anyCast(sc), "Square");
     sc = Circle{};
-    testMatch(sc, "Circle", anyCast);
+    EXPECT_EQ(anyCast(sc), "Circle");
 
-    compare(matchPattern(sc, as<Circle>(_)), true);
-    compare(matchPattern(sc, as<Square>(_)), false);
+    EXPECT_EQ(matchPattern(sc, as<Circle>(_)), true);
+    EXPECT_EQ(matchPattern(sc, as<Square>(_)), false);
     // one would write if let like
     // if (matchPattern(value, pattern))
     // {
@@ -420,7 +386,7 @@ void test14()
     // }
 }
 
-void test15()
+TEST(Match, test15)
 {
     auto const optional = [](auto const &i) {
         Id<char> c;
@@ -435,12 +401,12 @@ void test15()
     char const *z_ = "x";
     char const **z = &z_;
 
-    testMatch(x, 1, optional);
-    testMatch(y, 2, optional);
-    testMatch(z, 'x', optional);
+    EXPECT_EQ(optional(x), 1);
+    EXPECT_EQ(optional(y), 2);
+    EXPECT_EQ(optional(z), 'x');
 }
 
-void test16()
+TEST(Match, test16)
 {
     auto const notX = [](auto const &i) {
         return match(i)(
@@ -448,13 +414,13 @@ void test16()
             pattern(2) = expr(2),
             pattern(_) = expr(1));
     };
-    testMatch(1, 1, notX);
-    testMatch(2, 2, notX);
-    testMatch(3, 3, notX);
+    EXPECT_EQ(notX(1), 1);
+    EXPECT_EQ(notX(2), 2);
+    EXPECT_EQ(notX(3), 3);
 }
 
 // when
-void test17()
+TEST(Match, test17)
 {
     auto const whenX = [](auto const &x) {
         Id<int32_t> i, j;
@@ -463,12 +429,12 @@ void test17()
             pattern(_ < 5, _) = expr(5),
             pattern(_) = expr(1));
     };
-    testMatch(std::make_pair(1, 9), 3, whenX);
-    testMatch(std::make_pair(1, 7), 5, whenX);
-    testMatch(std::make_pair(7, 7), 1, whenX);
+    EXPECT_EQ(whenX(std::make_pair(1, 9)), 3);
+    EXPECT_EQ(whenX(std::make_pair(1, 7)), 5);
+    EXPECT_EQ(whenX(std::make_pair(7, 7)), 1);
 }
 
-void test18()
+TEST(Match, test18)
 {
     auto const idNotOwn = [](auto const &x) {
         Id<int32_t> i;
@@ -476,11 +442,11 @@ void test18()
             pattern(i).when(i == 5) = expr(1),
             pattern(_) = expr(2));
     };
-    testMatch(1, 2, idNotOwn);
-    testMatch(5, 1, idNotOwn);
+    EXPECT_EQ(idNotOwn(1), 2);
+    EXPECT_EQ(idNotOwn(5), 1);
 }
 
-void test19()
+TEST(Match, test19)
 {
     auto const matchFunc = [](auto &&input) {
         Id<int> j;
@@ -519,41 +485,41 @@ void test19()
 
             pattern(_) = expr(-1));
     };
-    testMatch(std::make_tuple('/', 2, 3), 1, matchFunc);
-    testMatch(std::make_tuple('/', "123", 3), 2, matchFunc);
-    testMatch(std::make_tuple('*', "123", 3), 3, matchFunc);
-    testMatch(std::make_tuple('*', "123", 5), 6, matchFunc);
-    testMatch(std::make_tuple('[', '/', ']', 2, 2, 3, 3, 5), 5, matchFunc);
-    testMatch(std::make_tuple(3, 3, 3, 3, 3), 3, matchFunc);
-    compare(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ds(ooo(3))), true);
-    compare(matchPattern(std::make_tuple("123", 3, 3, 3, 2), ds("123", ooo(3), 2)), true);
-    compare(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo(2), 3)), false);
-    compare(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ooo(3)), true);
-    compare(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(2)), false);
-    compare(matchPattern(std::make_tuple(2, 2, 2, 2, 2), ooo(2)), true);
-    compare(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo(2))), false);
-    compare(matchPattern(std::make_tuple("string"), ds(ooo(5))), false);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 2, 3)), 1);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', "123", 3)), 2);
+    EXPECT_EQ(matchFunc(std::make_tuple('*', "123", 3)), 3);
+    EXPECT_EQ(matchFunc(std::make_tuple('*', "123", 5)), 6);
+    EXPECT_EQ(matchFunc(std::make_tuple('[', '/', ']', 2, 2, 3, 3, 5)), 5);
+    EXPECT_EQ(matchFunc(std::make_tuple(3, 3, 3, 3, 3)), 3);
+    EXPECT_EQ(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ds(ooo(3))), true);
+    EXPECT_EQ(matchPattern(std::make_tuple("123", 3, 3, 3, 2), ds("123", ooo(3), 2)), true);
+    EXPECT_EQ(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo(2), 3)), false);
+    EXPECT_EQ(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ooo(3)), true);
+    EXPECT_EQ(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(2)), false);
+    EXPECT_EQ(matchPattern(std::make_tuple(2, 2, 2, 2, 2), ooo(2)), true);
+    EXPECT_EQ(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo(2))), false);
+    EXPECT_EQ(matchPattern(std::make_tuple("string"), ds(ooo(5))), false);
     // Debug<decltype(ds(ooo(2)))> x;
-    compare(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(_ > 0)), true);
-    compare(matchPattern(std::make_tuple(3, 2, -3, 2, 3), ooo(_ > 0)), false);
-    compare(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(not_(3))), false);
-    compare(matchPattern(std::make_tuple(2, 2, 2, 2, 3), ooo(not_(3))), false);
-    compare(matchPattern(std::make_tuple(3, 2, 2, 2, 2), ooo(not_(3))), false);
-    compare(matchPattern(std::make_tuple(2, 2, 2, 2, 2), ooo(not_(3))), true);
+    EXPECT_EQ(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(_ > 0)), true);
+    EXPECT_EQ(matchPattern(std::make_tuple(3, 2, -3, 2, 3), ooo(_ > 0)), false);
+    EXPECT_EQ(matchPattern(std::make_tuple(3, 2, 3, 2, 3), ooo(not_(3))), false);
+    EXPECT_EQ(matchPattern(std::make_tuple(2, 2, 2, 2, 3), ooo(not_(3))), false);
+    EXPECT_EQ(matchPattern(std::make_tuple(3, 2, 2, 2, 2), ooo(not_(3))), false);
+    EXPECT_EQ(matchPattern(std::make_tuple(2, 2, 2, 2, 2), ooo(not_(3))), true);
     {
         Id<int> i;
-        compare(matchPattern(std::make_tuple(3, 2, 2, 3, 3), ds(ooo(i), ooo(2), ooo(i))), true);
+        EXPECT_EQ(matchPattern(std::make_tuple(3, 2, 2, 3, 3), ds(ooo(i), ooo(2), ooo(i))), true);
         // Id<int> n;
         // TODO, match on segment variable length with oon(pat, n)
-        // compare(matchPattern(std::make_tuple(3, 2, 2, 3, 3), ds(oon(3, n), ooo(2), oon(3, n))), true);
+        // EXPECT_EQ(matchPattern(std::make_tuple(3, 2, 2, 3, 3), ds(oon(3, n), ooo(2), oon(3, n))), true);
     }
 }
 
-void test20()
+TEST(Match, test20)
 {
     Id<char> x;
     char y = 'y';
-    compare(matchPattern(
+    EXPECT_EQ(matchPattern(
                 std::make_tuple('+',
                                 1,
                                 std::make_tuple('^',
@@ -571,57 +537,31 @@ void test20()
                       ds('c', x),
                       2))),
             true);
-    compare(matchPattern(
+    EXPECT_EQ(matchPattern(
                 std::make_tuple('+', 1, std::make_tuple('^', std::make_tuple('s', y), 2)),
                 ds('+', 1, ds('^', ds(_, x), 2))),
             true);
-    compare(matchPattern(
+    EXPECT_EQ(matchPattern(
                 std::make_tuple('+', 1, std::make_tuple('^', std::make_tuple('s', y), 2)),
                 ds('+', 1, ds('^', ds('s', y), 2))),
             true);
-    compare(matchPattern(
+    EXPECT_EQ(matchPattern(
                 std::make_tuple('+', 1, std::make_tuple('^', std::make_tuple('s', y), 2)),
                 ds('+', 1, ds('^', ds('s', x), 2))),
             true);
-    assert(matchPattern(2, 2));
+    EXPECT_TRUE(matchPattern(2, 2));
 }
 
-void test21()
+TEST(Match, test21)
 {
     Id<std::string> strA;
     Id<const char *> strB;
-    compare(matchPattern(
+    EXPECT_EQ(matchPattern(
                 "abc",
                 strA),
             true);
-    compare(matchPattern(
+    EXPECT_EQ(matchPattern(
                 "abc",
                 strB),
             true);
-}
-
-int main()
-{
-    test1();
-    test2();
-    test3();
-    test4();
-    test5();
-    test6();
-    test7();
-    test8();
-    test9();
-    test10();
-    test11();
-    test12();
-    test13();
-    test14();
-    test15();
-    test16();
-    test17();
-    test18();
-    test19();
-    test20();
-    test21();
-    return 0;
 }

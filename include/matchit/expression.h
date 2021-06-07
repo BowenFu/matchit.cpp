@@ -1,6 +1,7 @@
 #ifndef _EXPRESSION_H_
 #define _EXPRESSION_H_
 
+#include "matchit/patterns.h"
 #include <type_traits>
 
 namespace matchit
