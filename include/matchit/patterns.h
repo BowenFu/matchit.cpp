@@ -12,17 +12,22 @@ namespace matchit
         template <typename Pattern>
         class PatternTraits;
 
-        template <typename Value, typename Pattern>
-        auto matchPattern(Value &&value, Pattern const &pattern, int32_t depth = 0)
-            -> decltype(PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth))
-        {
-            return PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth);
-        }
-
         template <typename Pattern>
         void resetId(Pattern const &pattern, int32_t depth = 0)
         {
             PatternTraits<Pattern>::resetIdImpl(pattern, depth);
+        }
+
+        template <typename Value, typename Pattern>
+        auto matchPattern(Value &&value, Pattern const &pattern, int32_t depth = 0)
+            -> decltype(PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth))
+        {
+            auto const result = PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth);
+            if (!result)
+            {
+                resetId(pattern, depth);
+            }
+            return result;
         }
 
         template <typename Pattern, typename Func>
