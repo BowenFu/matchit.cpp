@@ -545,7 +545,7 @@ namespace matchit
                     [&valueTuple, depth, &dsPat](auto const &...patterns) {
                         return apply_(
                             [depth, &patterns..., &valueTuple, &dsPat](auto const &...values) {
-                                auto constexpr nbOoo = (std::is_same_v<Ooo, Patterns> + ...);
+                                auto constexpr nbOoo = (std::is_same_v<Ooo, std::decay_t<Patterns>> + ...);
                                 static_assert(nbOoo == 0 || nbOoo == 1);
                                 if constexpr (nbOoo == 0)
                                 {
