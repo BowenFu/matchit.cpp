@@ -20,9 +20,9 @@ namespace matchit
         }
 
         template <typename Pattern>
-        void resetId(Pattern const &pattern)
+        void resetId(Pattern const &pattern, int32_t depth = 0)
         {
-            PatternTraits<Pattern>::resetIdImpl(pattern);
+            PatternTraits<Pattern>::resetIdImpl(pattern, depth);
         }
 
         template <typename Pattern, typename Func>
@@ -105,7 +105,7 @@ namespace matchit
             {
                 return pattern == std::forward<Value>(value);
             }
-            static void resetIdImpl(Pattern const &)
+            static void resetIdImpl(Pattern const &, int32_t /*depth*/)
             {
             }
         };
@@ -127,7 +127,7 @@ namespace matchit
             {
                 return true;
             }
-            static void resetIdImpl(Pattern const &)
+            static void resetIdImpl(Pattern const &, int32_t /*depth*/)
             {
             }
         };
@@ -169,11 +169,11 @@ namespace matchit
                     },
                     orPat.patterns());
             }
-            static void resetIdImpl(Or<Patterns...> const &orPat)
+            static void resetIdImpl(Or<Patterns...> const &orPat, int32_t depth)
             {
                 return std::apply(
-                    [](Patterns const &...patterns) {
-                        return (resetId(patterns), ...);
+                    [depth](Patterns const &...patterns) {
+                        return (resetId(patterns, depth), ...);
                     },
                     orPat.patterns());
             }
@@ -202,7 +202,7 @@ namespace matchit
             {
                 return meetPat(std::forward<Value>(value));
             }
-            static void resetIdImpl(Meet<Pred> const &)
+            static void resetIdImpl(Meet<Pred> const &, int32_t /*depth*/)
             {
             }
         };
@@ -245,9 +245,9 @@ namespace matchit
             {
                 return matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern(), depth + 1);
             }
-            static void resetIdImpl(App<Unary, Pattern> const &appPat)
+            static void resetIdImpl(App<Unary, Pattern> const &appPat, int32_t depth)
             {
-                return resetId(appPat.pattern());
+                return resetId(appPat.pattern(), depth);
             }
         };
 
@@ -288,11 +288,11 @@ namespace matchit
                     },
                     andPat.patterns());
             }
-            static void resetIdImpl(And<Patterns...> const &andPat)
+            static void resetIdImpl(And<Patterns...> const &andPat, int32_t depth)
             {
                 return std::apply(
-                    [](Patterns const &...patterns) {
-                        return (resetId(patterns), ...);
+                    [depth](Patterns const &...patterns) {
+                        return (resetId(patterns, depth), ...);
                     },
                     andPat.patterns());
             }
@@ -331,9 +331,9 @@ namespace matchit
             {
                 return !matchPattern(std::forward<Value>(value), notPat.pattern(), depth + 1);
             }
-            static void resetIdImpl(Not<Pattern> const &notPat)
+            static void resetIdImpl(Not<Pattern> const &notPat, int32_t depth)
             {
-                resetId(notPat.pattern());
+                resetId(notPat.pattern(), depth);
             }
         };
 
@@ -396,10 +396,11 @@ namespace matchit
         {
             using PtrT = std::unique_ptr<Type const, Deleter>;
             mutable std::shared_ptr<PtrT> mValue = std::make_shared<PtrT>();
+            mutable std::shared_ptr<int32_t> mDepth = std::make_shared<int32_t>(0);
 
         public:
             template <typename Value>
-            auto matchValue(Value &&value, int32_t/*depth*/) const
+            auto matchValue(Value &&value, int32_t depth) const
                 -> decltype(**mValue == value, IdTrait::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
             {
                 if (*mValue)
@@ -407,11 +408,15 @@ namespace matchit
                     return **mValue == value;
                 }
                 IdTrait::matchValueImpl(*mValue, std::forward<Value>(value));
+                *mDepth = depth;
                 return true;
             }
-            void reset() const
+            void reset(int32_t depth) const
             {
-                (*mValue).reset();
+                if (*mDepth >= depth)
+                {
+                    (*mValue).reset();
+                }
             }
             Type const &value() const
             {
@@ -433,9 +438,9 @@ namespace matchit
             {
                 return idPat.matchValue(std::forward<Value>(value), depth);
             }
-            static void resetIdImpl(Id<Type> const &idPat)
+            static void resetIdImpl(Id<Type> const &idPat, int32_t depth)
             {
-                idPat.reset();
+                idPat.reset(depth);
             }
         };
 
@@ -594,11 +599,11 @@ namespace matchit
             {
                 return TupleMatchHelper<ValueTuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(std::forward<ValueTuple>(valueTuple), dsPat.patterns(), depth);
             }
-            static void resetIdImpl(Ds<Patterns...> const &dsPat)
+            static void resetIdImpl(Ds<Patterns...> const &dsPat, int32_t depth)
             {
                 return std::apply(
-                    [](auto &&...patterns) {
-                        return (resetId(patterns), ...);
+                    [depth](auto &&...patterns) {
+                        return (resetId(patterns, depth), ...);
                     },
                     dsPat.patterns());
             }
@@ -750,9 +755,9 @@ namespace matchit
             {
                 return matchPattern(std::forward<Value>(value), oooPat.pattern(), depth + 1);
             }
-            static void resetIdImpl(Ooo<Pattern> const &oooPat)
+            static void resetIdImpl(Ooo<Pattern> const &oooPat, int32_t depth)
             {
-                resetId(oooPat.pattern());
+                resetId(oooPat.pattern(), depth);
             }
         };
 
@@ -788,9 +793,9 @@ namespace matchit
             {
                 return matchPattern(std::forward<Value>(value), postCheck.pattern(), depth + 1) && postCheck.check();
             }
-            static void resetIdImpl(PostCheck<Pattern, Pred> const &postCheck)
+            static void resetIdImpl(PostCheck<Pattern, Pred> const &postCheck, int32_t depth)
             {
-                resetId(postCheck.pattern());
+                resetId(postCheck.pattern(), depth);
             }
         };
 
