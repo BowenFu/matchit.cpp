@@ -12,39 +12,39 @@ using namespace matchit;
 
 bool func1()
 {
-  return true;
+    return true;
 }
 
 int64_t func2()
 {
-  return 12;
+    return 12;
 }
 
 TEST(Match, test1)
 {
-  auto const matchFunc = [](int32_t input) {
-    Id<int> ii;
-    return match(input)(
-        pattern(1) = func1,
-        pattern(2) = func2,
-        pattern(or_(56, 59)) = func2,
-        pattern(_ < 0) = expr(-1),
-        pattern(_ < 10) = expr(-10),
-        pattern(and_(_<17, _> 15)) = expr(16),
-        pattern(app(_ * _, _ > 1000)) = expr(1000),
-        pattern(app(_ * _, ii)) = expr(ii),
-        pattern(ii) = -ii,
-        pattern(_) = expr(111));
-  };
-  EXPECT_EQ(matchFunc(1), true);
-  EXPECT_EQ(matchFunc(2), 12);
-  EXPECT_EQ(matchFunc(11), 121);   // Id matched.
-  EXPECT_EQ(matchFunc(59), 12);    // or_ matched.
-  EXPECT_EQ(matchFunc(-5), -1);    // meet matched.
-  EXPECT_EQ(matchFunc(10), 100);   // app matched.
-  EXPECT_EQ(matchFunc(100), 1000); // app > meet matched.
-  EXPECT_EQ(matchFunc(5), -10);    // _ < 10 matched.
-  EXPECT_EQ(matchFunc(16), 16);    // and_ matched.
+    auto const matchFunc = [](int32_t input) {
+        Id<int> ii;
+        return match(input)(
+            pattern(1) = func1,
+            pattern(2) = func2,
+            pattern(or_(56, 59)) = func2,
+            pattern(_ < 0) = expr(-1),
+            pattern(_ < 10) = expr(-10),
+            pattern(and_(_<17, _> 15)) = expr(16),
+            pattern(app(_ * _, _ > 1000)) = expr(1000),
+            pattern(app(_ * _, ii)) = expr(ii),
+            pattern(ii) = -ii,
+            pattern(_) = expr(111));
+    };
+    EXPECT_EQ(matchFunc(1), true);
+    EXPECT_EQ(matchFunc(2), 12);
+    EXPECT_EQ(matchFunc(11), 121);   // Id matched.
+    EXPECT_EQ(matchFunc(59), 12);    // or_ matched.
+    EXPECT_EQ(matchFunc(-5), -1);    // meet matched.
+    EXPECT_EQ(matchFunc(10), 100);   // app matched.
+    EXPECT_EQ(matchFunc(100), 1000); // app > meet matched.
+    EXPECT_EQ(matchFunc(5), -10);    // _ < 10 matched.
+    EXPECT_EQ(matchFunc(16), 16);    // and_ matched.
 }
 
 TEST(Match, test2)
@@ -57,7 +57,7 @@ TEST(Match, test2)
             pattern(ds('/', 0, _)) = expr(0),
             pattern(ds('*', i, j)) = i * j,
             pattern(ds('+', i, j)) = i + j,
-            pattern(_)             = expr(-1));
+            pattern(_) = expr(-1));
     };
     EXPECT_EQ(matchFunc(std::make_tuple('/', 1, 1)), 1);
     EXPECT_EQ(matchFunc(std::make_tuple('+', 2, 1)), 3);
@@ -275,15 +275,15 @@ struct Square : Shape
     }
 };
 
-bool operator==(Shape const&, Shape const&)
+bool operator==(Shape const &, Shape const &)
 {
     return true;
 }
 
 TEST(Match, test10)
 {
-    static_assert(matchit::impl::CanReset<Shape, Shape&>::value);
-    static_assert(matchit::impl::CanReset<Shape const, Shape const&>::value);
+    static_assert(matchit::impl::CanReset<Shape, Shape &>::value);
+    static_assert(matchit::impl::CanReset<Shape const, Shape const &>::value);
 
     auto const dynCast = [](auto const &i) {
         return match(i)(
@@ -324,7 +324,7 @@ TEST(Match, test12)
 }
 
 template <size_t I>
-constexpr auto& get(A const &a)
+constexpr auto &get(A const &a)
 {
     if constexpr (I == 0)
     {
@@ -482,11 +482,11 @@ TEST(Match, test20)
     Id<std::string> strA;
     Id<const char *> strB;
     EXPECT_EQ(matchPattern(
-                "abc",
-                strA),
-            true);
+                  "abc",
+                  strA),
+              true);
     EXPECT_EQ(matchPattern(
-                "abc",
-                strB),
-            true);
+                  "abc",
+                  strB),
+              true);
 }

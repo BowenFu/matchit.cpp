@@ -371,7 +371,7 @@ namespace matchit
             {
                 ptr = std::unique_ptr<Type, Deleter>(new Type{std::forward<Value>(value)}, Deleter{true});
             }
-            template <typename Type, typename Value, std::enable_if_t<CanReset<Type, Value>::value>* = nullptr>
+            template <typename Type, typename Value, std::enable_if_t<CanReset<Type, Value>::value> * = nullptr>
             static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value &&value)
             {
                 ptr.reset(&value);
@@ -514,16 +514,16 @@ namespace matchit
             return findIdxImpl<T, Tuple>(std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple> > >{});
         }
 
-        static_assert(findIdx<Ooo, std::tuple<int, Ooo, const char*>>() == 1);
+        static_assert(findIdx<Ooo, std::tuple<int, Ooo, const char *> >() == 1);
 
         using std::get;
         template <std::size_t valueStartIdx, std::size_t patternStartIdx, std::size_t... I, typename ValueTuple, typename PatternTuple>
         decltype(auto) matchPatternMultipleImpl(ValueTuple &&valueTuple, PatternTuple &&patternTuple, int32_t depth, std::index_sequence<I...>)
         {
-            auto const func = [&](auto&& value, auto&& pattern) {
+            auto const func = [&](auto &&value, auto &&pattern) {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1);
             };
-            return (func(get<I+valueStartIdx>(valueTuple), get<I+patternStartIdx>(patternTuple)) && ...);
+            return (func(get<I + valueStartIdx>(valueTuple), get<I + patternStartIdx>(patternTuple)) && ...);
         }
 
         template <std::size_t valueStartIdx, std::size_t patternStartIdx, std::size_t size, typename ValueTuple, typename PatternTuple>
