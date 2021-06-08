@@ -535,7 +535,7 @@ namespace matchit
         }
 
         template <typename... Patterns>
-        auto constexpr nbOooV = (std::is_same_v<Ooo, std::decay_t<Patterns>> + ...);
+        auto constexpr nbOooV = ((std::is_same_v<Ooo, std::decay_t<Patterns> > ? 1 : 0) + ...);
 
         static_assert(nbOooV<int32_t&, Ooo const&, char const *, Wildcard, Ooo const> == 2);
                                 
