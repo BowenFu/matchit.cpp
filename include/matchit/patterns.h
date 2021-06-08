@@ -560,7 +560,7 @@ namespace matchit
             static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth)
             {
                 return std::apply(
-                    [&valueTuple, depth, &dsPat](Patterns const &...patterns) {
+                    [&valueTuple, depth, &dsPat](auto const &...patterns) {
                         return apply_(
                             [depth, &patterns..., &valueTuple, &dsPat](auto const &...values) {
                                 auto constexpr nbOoo = (std::is_same_v<Ooo, Patterns> + ...);
