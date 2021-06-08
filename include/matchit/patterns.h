@@ -13,10 +13,10 @@ namespace matchit
         class PatternTraits;
 
         template <typename Value, typename Pattern>
-        auto matchPattern(Value &&value, Pattern const &pattern)
-            -> decltype(PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern))
+        auto matchPattern(Value &&value, Pattern const &pattern, int32_t depth = 0)
+            -> decltype(PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth))
         {
-            return PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern);
+            return PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth);
         }
 
         template <typename Pattern>
@@ -100,7 +100,7 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, Pattern const &pattern)
+            static auto matchPatternImpl(Value &&value, Pattern const &pattern, int32_t /* depth */)
                 -> decltype(pattern == std::forward<Value>(value))
             {
                 return pattern == std::forward<Value>(value);
@@ -123,7 +123,7 @@ namespace matchit
 
         public:
             template <typename Value>
-            static bool matchPatternImpl(Value &&, Pattern const &)
+            static bool matchPatternImpl(Value &&, Pattern const &, int32_t)
             {
                 return true;
             }
@@ -160,12 +160,12 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, Or<Patterns...> const &orPat)
-                -> decltype((matchPattern(std::forward<Value>(value), std::declval<Patterns>()) || ...))
+            static auto matchPatternImpl(Value &&value, Or<Patterns...> const &orPat, int32_t depth)
+                -> decltype((matchPattern(std::forward<Value>(value), std::declval<Patterns>(), depth + 1) || ...))
             {
                 return std::apply(
-                    [&value](Patterns const &...patterns) {
-                        return (matchPattern(std::forward<Value>(value), patterns) || ...);
+                    [&value, depth](Patterns const &...patterns) {
+                        return (matchPattern(std::forward<Value>(value), patterns, depth + 1) || ...);
                     },
                     orPat.patterns());
             }
@@ -197,7 +197,7 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, Meet<Pred> const &meetPat)
+            static auto matchPatternImpl(Value &&value, Meet<Pred> const &meetPat, int32_t /* depth */)
                 -> decltype(meetPat(std::forward<Value>(value)))
             {
                 return meetPat(std::forward<Value>(value));
@@ -240,10 +240,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, App<Unary, Pattern> const &appPat)
-                -> decltype(matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern()))
+            static auto matchPatternImpl(Value &&value, App<Unary, Pattern> const &appPat, int32_t depth)
+                -> decltype(matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern(), depth + 1))
             {
-                return matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern());
+                return matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern(), depth + 1);
             }
             static void resetIdImpl(App<Unary, Pattern> const &appPat)
             {
@@ -279,12 +279,12 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, And<Patterns...> const &andPat)
-                -> decltype((matchPattern(std::forward<Value>(value), std::declval<Patterns>()) && ...))
+            static auto matchPatternImpl(Value &&value, And<Patterns...> const &andPat, int32_t depth)
+                -> decltype((matchPattern(std::forward<Value>(value), std::declval<Patterns>(), depth + 1) && ...))
             {
                 return std::apply(
-                    [&value](Patterns const &...patterns) {
-                        return (matchPattern(std::forward<Value>(value), patterns) && ...);
+                    [&value, depth](Patterns const &...patterns) {
+                        return (matchPattern(std::forward<Value>(value), patterns, depth + 1) && ...);
                     },
                     andPat.patterns());
             }
@@ -326,10 +326,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, Not<Pattern> const &notPat)
-                -> decltype(!matchPattern(std::forward<Value>(value), notPat.pattern()))
+            static auto matchPatternImpl(Value &&value, Not<Pattern> const &notPat, int32_t depth)
+                -> decltype(!matchPattern(std::forward<Value>(value), notPat.pattern(), depth + 1))
             {
-                return !matchPattern(std::forward<Value>(value), notPat.pattern());
+                return !matchPattern(std::forward<Value>(value), notPat.pattern(), depth + 1);
             }
             static void resetIdImpl(Not<Pattern> const &notPat)
             {
@@ -399,7 +399,7 @@ namespace matchit
 
         public:
             template <typename Value>
-            auto matchValue(Value &&value) const
+            auto matchValue(Value &&value, int32_t/*depth*/) const
                 -> decltype(**mValue == value, IdTrait::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
             {
                 if (*mValue)
@@ -428,10 +428,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, Id<Type> const &idPat)
-                -> decltype(idPat.matchValue(std::forward<Value>(value)))
+            static auto matchPatternImpl(Value &&value, Id<Type> const &idPat, int32_t depth)
+                -> decltype(idPat.matchValue(std::forward<Value>(value), depth))
             {
-                return idPat.matchValue(std::forward<Value>(value));
+                return idPat.matchValue(std::forward<Value>(value), depth);
             }
             static void resetIdImpl(Id<Type> const &idPat)
             {
@@ -495,7 +495,7 @@ namespace matchit
         inline constexpr bool MatchFuncDefinedV = MatchFuncDefined<Value, Pattern>::value;
 
         template <typename ValuesTuple, typename PatternsTuple>
-        bool tryOooMatch(ValuesTuple const &values, PatternsTuple const &patterns);
+        bool tryOooMatch(ValuesTuple const &values, PatternsTuple const &patterns, int32_t depth);
 
         template <typename Pattern>
         class IsOoo;
@@ -507,7 +507,7 @@ namespace matchit
         class TupleMatchHelper
         {
             template <typename VT = ValuesTuple>
-            static bool tupleMatchImpl(VT &&values, PatternsTuple const &patterns) = delete;
+            static bool tupleMatchImpl(VT &&values, PatternsTuple const &patterns, int32_t /*depth*/) = delete;
         };
 
         using std::get;
@@ -535,10 +535,10 @@ namespace matchit
         {
         public:
             template <typename VT = ValuesTuple>
-            static auto tupleMatchImpl(VT &&values, std::tuple<PatternHead, PatternTail...> const &patterns)
-                -> decltype(matchPattern(get<0>(std::forward<VT>(values)), get<0>(patterns)) && TupleMatchHelper<decltype(drop<1>(values)), decltype(drop<1>(patterns))>::tupleMatchImpl(drop<1>(values), drop<1>(patterns)))
+            static auto tupleMatchImpl(VT &&values, std::tuple<PatternHead, PatternTail...> const &patterns, int32_t depth)
+                -> decltype(matchPattern(get<0>(std::forward<VT>(values)), get<0>(patterns), depth + 1) && TupleMatchHelper<decltype(drop<1>(values)), decltype(drop<1>(patterns))>::tupleMatchImpl(drop<1>(values), drop<1>(patterns), depth))
             {
-                return matchPattern(get<0>(std::forward<VT>(values)), get<0>(patterns)) && TupleMatchHelper<decltype(drop<1>(std::forward<VT>(values))), decltype(drop<1>(patterns))>::tupleMatchImpl(drop<1>(std::forward<VT>(values)), drop<1>(patterns));
+                return matchPattern(get<0>(std::forward<VT>(values)), get<0>(patterns), depth + 1) && TupleMatchHelper<decltype(drop<1>(std::forward<VT>(values))), decltype(drop<1>(patterns))>::tupleMatchImpl(drop<1>(std::forward<VT>(values)), drop<1>(patterns), depth);
             }
         };
 
@@ -547,7 +547,7 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static bool tupleMatchImpl(VT &&values, std::tuple<PatternHead, PatternTail...> const &patterns) = delete;
+            static bool tupleMatchImpl(VT &&values, std::tuple<PatternHead, PatternTail...> const &patterns, int32_t /* depth */) = delete;
         };
 
         template <typename ValuesTuple>
@@ -555,7 +555,7 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static auto tupleMatchImpl(VT &&, std::tuple<>)
+            static auto tupleMatchImpl(VT &&, std::tuple<>, int32_t /*depth*/)
             {
                 return false;
             }
@@ -566,10 +566,10 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static auto tupleMatchImpl(VT const&values, std::tuple<PatternHead, PatternTail...> const &patterns)
-                -> decltype(tryOooMatch(values, patterns))
+            static auto tupleMatchImpl(VT const&values, std::tuple<PatternHead, PatternTail...> const &patterns, int32_t depth)
+                -> decltype(tryOooMatch(values, patterns, depth))
             {
-                return tryOooMatch(values, patterns);
+                return tryOooMatch(values, patterns, depth);
             }
         };
 
@@ -578,7 +578,7 @@ namespace matchit
         {
         public:
             template <typename VT = std::tuple<> >
-            static auto tupleMatchImpl(VT&&, std::tuple<>)
+            static auto tupleMatchImpl(VT&&, std::tuple<>, int32_t /*depth*/)
             {
                 return true;
             }
@@ -589,10 +589,10 @@ namespace matchit
         {
         public:
             template <typename ValueTuple>
-            static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat)
-                -> decltype(TupleMatchHelper<ValueTuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(std::forward<ValueTuple>(valueTuple), dsPat.patterns()))
+            static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth)
+                -> decltype(TupleMatchHelper<ValueTuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(std::forward<ValueTuple>(valueTuple), dsPat.patterns(), depth))
             {
-                return TupleMatchHelper<ValueTuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(std::forward<ValueTuple>(valueTuple), dsPat.patterns());
+                return TupleMatchHelper<ValueTuple, typename Ds<Patterns...>::Type>::tupleMatchImpl(std::forward<ValueTuple>(valueTuple), dsPat.patterns(), depth);
             }
             static void resetIdImpl(Ds<Patterns...> const &dsPat)
             {
@@ -641,7 +641,7 @@ namespace matchit
         }
 
         template <typename ValuesTuple, typename PatternsTuple>
-        bool tryOooMatch(ValuesTuple const &values, PatternsTuple const &patterns)
+        bool tryOooMatch(ValuesTuple const &values, PatternsTuple const &patterns, int32_t depth)
         {
             if constexpr (std::tuple_size_v<PatternsTuple> == 0)
             {
@@ -650,13 +650,13 @@ namespace matchit
             else if constexpr (isOooV<std::tuple_element_t<0, PatternsTuple> >)
             {
                 auto index = std::make_index_sequence<std::tuple_size_v<ValuesTuple> + 1>{};
-                return tryOooMatchImpl(values, patterns, index);
+                return tryOooMatchImpl(values, patterns, depth, index);
             }
             else if constexpr (std::tuple_size_v<ValuesTuple> >= 1)
             {
                 if constexpr (MatchFuncDefinedV<std::tuple_element_t<0, ValuesTuple>, std::tuple_element_t<0, PatternsTuple> >)
                 {
-                    return matchPattern(get<0>(values), std::get<0>(patterns)) && tryOooMatch(drop<1>(values), drop<1>(patterns));
+                    return matchPattern(get<0>(values), std::get<0>(patterns), depth + 1) && tryOooMatch(drop<1>(values), drop<1>(patterns), depth);
                 }
             }
             return false;
@@ -667,22 +667,22 @@ namespace matchit
         };
 
         template <std::size_t I, typename ValuesTuple, typename PatternsTuple>
-        bool tryOooMatchImplHelper(ValuesTuple const &values, PatternsTuple const &patterns)
+        bool tryOooMatchImplHelper(ValuesTuple const &values, PatternsTuple const &patterns, int32_t depth)
         {
             if constexpr (I == 0)
             {
-                return (tryOooMatch(values, drop<1>(patterns)));
+                return (tryOooMatch(values, drop<1>(patterns), depth));
             }
             else if constexpr (I > 0)
             {
                 if constexpr (MatchFuncDefinedV<decltype(take<I>(values)), std::tuple_element_t<0, PatternsTuple> >)
                 {
-                    if (!PatternTraits<std::decay_t<std::tuple_element_t<0, PatternsTuple>> >::matchPatternImplSingle(get<I - 1>(values), get<0>(patterns)))
+                    if (!PatternTraits<std::decay_t<std::tuple_element_t<0, PatternsTuple>> >::matchPatternImplSingle(get<I - 1>(values), get<0>(patterns), depth))
                     {
                         throw OooMatchBreak();
                     }
 
-                    if (!tryOooMatch(drop<I>(values), drop<1>(patterns)))
+                    if (!tryOooMatch(drop<I>(values), drop<1>(patterns), depth))
                     {
                         return false;
                     }
@@ -693,11 +693,11 @@ namespace matchit
         }
 
         template <typename ValuesTuple, typename PatternsTuple, std::size_t... I>
-        bool tryOooMatchImpl(ValuesTuple const &values, PatternsTuple const &patterns, std::index_sequence<I...>)
+        bool tryOooMatchImpl(ValuesTuple const &values, PatternsTuple const &patterns, int32_t depth, std::index_sequence<I...>)
         {
             try
             {
-                return ((tryOooMatchImplHelper<I>(values, patterns)) || ...);
+                return ((tryOooMatchImplHelper<I>(values, patterns, depth)) || ...);
             }
             catch (const OooMatchBreak &)
             {
@@ -734,21 +734,21 @@ namespace matchit
         {
         public:
             template <typename... Values>
-            static auto matchPatternImpl(std::tuple<Values...> const &valueTuple, Ooo<Pattern> const &oooPat)
-                -> decltype((matchPattern(std::declval<Values>(), oooPat.pattern()) && ...))
+            static auto matchPatternImpl(std::tuple<Values...> const &valueTuple, Ooo<Pattern> const &oooPat, int32_t depth)
+                -> decltype((matchPattern(std::declval<Values>(), oooPat.pattern(), depth + 1) && ...))
             {
                 return std::apply(
-                    [&oooPat](Values const &...values) {
-                        auto result = (matchPattern(values, oooPat.pattern()) && ...);
+                    [&oooPat, depth](Values const &...values) {
+                        auto result = (matchPattern(values, oooPat.pattern(), depth + 1) && ...);
                         return result;
                     },
                     valueTuple);
             }
             template <typename Value>
-            static auto matchPatternImplSingle(Value &&value, Ooo<Pattern> const &oooPat)
-                -> decltype(matchPattern(std::forward<Value>(value), oooPat.pattern()))
+            static auto matchPatternImplSingle(Value &&value, Ooo<Pattern> const &oooPat, int32_t depth)
+                -> decltype(matchPattern(std::forward<Value>(value), oooPat.pattern(), depth + 1))
             {
-                return matchPattern(std::forward<Value>(value), oooPat.pattern());
+                return matchPattern(std::forward<Value>(value), oooPat.pattern(), depth + 1);
             }
             static void resetIdImpl(Ooo<Pattern> const &oooPat)
             {
@@ -783,10 +783,10 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, PostCheck<Pattern, Pred> const &postCheck)
-                -> decltype(matchPattern(std::forward<Value>(value), postCheck.pattern()) && postCheck.check())
+            static auto matchPatternImpl(Value &&value, PostCheck<Pattern, Pred> const &postCheck, int32_t depth)
+                -> decltype(matchPattern(std::forward<Value>(value), postCheck.pattern(), depth + 1) && postCheck.check())
             {
-                return matchPattern(std::forward<Value>(value), postCheck.pattern()) && postCheck.check();
+                return matchPattern(std::forward<Value>(value), postCheck.pattern(), depth + 1) && postCheck.check();
             }
             static void resetIdImpl(PostCheck<Pattern, Pred> const &postCheck)
             {

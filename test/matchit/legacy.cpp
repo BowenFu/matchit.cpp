@@ -285,10 +285,6 @@ TEST(Match, test10)
     static_assert(matchit::impl::CanReset<Shape, Shape&>::value);
     static_assert(matchit::impl::CanReset<Shape const, Shape const&>::value);
 
-    Id<Shape> s;
-    Circle c{};
-    Shape& cc = c;
-    s.matchValue(cc);
     auto const dynCast = [](auto const &i) {
         return match(i)(
             pattern(some(as<Circle>(_))) = expr("Circle"),
