@@ -262,12 +262,11 @@ bool sumIs(std::array<int32_t, 2> const& arr, int s)
 Note that `i + j == s` will return a expr function that return the result of `*i + *j == s`.
 
 ## Ooo Pattern
-Ooo Pattern can match aribitrary number of items. It can only be used inside `ds` patterns.
+Ooo Pattern can match arbitrary number of items. It can only be used inside `ds` patterns and at most one Ooo pattern can appear in a `ds` pattern.
 ```C++
 #include <array>
 #include "matchit/core.h"
 #include "matchit/patterns.h"
-#include "matchit/expression.h"
 using namespace matchit;
 
 template <typename Tuple>
@@ -275,29 +274,22 @@ int32_t detectTuplePattern(Tuple const& tuple)
 {
     return match(tuple)
     (
-        pattern(ds(ooo(3)))             = expr(1), // all 3
-        pattern(ds(_, ooo(3)))          = expr(2), // all 3 except the first one
-        pattern(ds(ooo(3), _))          = expr(3), // all 3 except the last one
-        pattern(ds(_, ooo(3), _))       = expr(4), // all 3 except the first and the last one
-        pattern(ds(3, ooo(not_(3)), 3)) = expr(5), // all non 3 except the first and the last one
-        pattern(ds(3, ooo(_), 3))       = expr(6), // first and last being 3, mxied by 3 and non-3 in the middle.
-        pattern(_)                      = expr(7)  // mismatch
+        pattern(ds(2, ooo, 2))  = []{return 4;},
+        pattern(ds(2, ooo))     = []{return 3;},
+        pattern(ds(ooo, 2))     = []{return 2;},
+        pattern(ds(ooo))        = []{return 1;}
     );
 }
 
 int main()
 {
-    printf("%d\n", detectTuplePattern(std::make_tuple(3, 3, 3, 3, 3))); // pattern 1
-    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 3, 3, 3))); // pattern 2
-    printf("%d\n", detectTuplePattern(std::make_tuple(3, 3, 3, 2)));    // pattern 3
-    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 3, 3, 2))); // pattern 4
-    printf("%d\n", detectTuplePattern(std::make_tuple(3, 4, 2, 4, 3))); // pattern 5
-    printf("%d\n", detectTuplePattern(std::make_tuple(3, 3, 2, 3, 3))); // pattern 6
-    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 2, 3, 3))); // pattern 7
+    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 5, 7, 2)));
+    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 4, 5, 6)));
+    printf("%d\n", detectTuplePattern(std::make_tuple(3, 3, 3, 2)));
+    printf("%d\n", detectTuplePattern(std::make_tuple(3, 4, 5, 6, 7)));
     return 0;
 }
 ```
-Currently we do allow multiple `ooo` patterns inside the same `ds` pattern. But we may remove that support later if we find that it bring more potential issues than benefits. Rust and Racket forbid this kind of uses. 
 
 ## Compose Patterns
 ### Some / None Patterns
