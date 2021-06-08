@@ -20,7 +20,6 @@ namespace matchit
 
         template <typename Value, typename Pattern>
         auto matchPattern(Value &&value, Pattern const &pattern, int32_t depth = 0)
-            // -> decltype(PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth))
         {
             auto const result = PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth);
             if (!result)
@@ -106,7 +105,6 @@ namespace matchit
         public:
             template <typename Value>
             static auto matchPatternImpl(Value &&value, Pattern const &pattern, int32_t /* depth */)
-                -> decltype(pattern == std::forward<Value>(value))
             {
                 return pattern == std::forward<Value>(value);
             }
@@ -166,7 +164,6 @@ namespace matchit
         public:
             template <typename Value>
             static auto matchPatternImpl(Value &&value, Or<Patterns...> const &orPat, int32_t depth)
-                -> decltype((matchPattern(std::forward<Value>(value), std::declval<Patterns>(), depth + 1) || ...))
             {
                 return std::apply(
                     [&value, depth](Patterns const &...patterns) {
@@ -203,7 +200,6 @@ namespace matchit
         public:
             template <typename Value>
             static auto matchPatternImpl(Value &&value, Meet<Pred> const &meetPat, int32_t /* depth */)
-                -> decltype(meetPat(std::forward<Value>(value)))
             {
                 return meetPat(std::forward<Value>(value));
             }
@@ -246,7 +242,6 @@ namespace matchit
         public:
             template <typename Value>
             static auto matchPatternImpl(Value &&value, App<Unary, Pattern> const &appPat, int32_t depth)
-                -> decltype(matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern(), depth + 1))
             {
                 return matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern(), depth + 1);
             }
@@ -285,7 +280,6 @@ namespace matchit
         public:
             template <typename Value>
             static auto matchPatternImpl(Value &&value, And<Patterns...> const &andPat, int32_t depth)
-                -> decltype((matchPattern(std::forward<Value>(value), std::declval<Patterns>(), depth + 1) && ...))
             {
                 return std::apply(
                     [&value, depth](Patterns const &...patterns) {
@@ -332,7 +326,6 @@ namespace matchit
         public:
             template <typename Value>
             static auto matchPatternImpl(Value &&value, Not<Pattern> const &notPat, int32_t depth)
-                -> decltype(!matchPattern(std::forward<Value>(value), notPat.pattern(), depth + 1))
             {
                 return !matchPattern(std::forward<Value>(value), notPat.pattern(), depth + 1);
             }
@@ -367,15 +360,6 @@ namespace matchit
         {
         };
 
-        template <typename T>
-        class Debug;
-
-        // Debug<decltype(&std::declval<char&>())> x{};
-
-        template <typename Type, typename Value>
-        using t = decltype(
-            std::declval<std::unique_ptr<Type, Deleter> >().reset(&std::declval<Value>()));
-
         static_assert(CanReset<const char, char &>::value);
         static_assert(CanReset<const char, const char &>::value);
 
@@ -384,7 +368,6 @@ namespace matchit
         public:
             template <typename Type, typename Value, std::enable_if_t<!CanReset<Type, Value>::value> * = nullptr>
             static auto matchValueImpl(std::unique_ptr<Type, Deleter> &ptr, Value &&value)
-                -> decltype(ptr = std::unique_ptr<Type, Deleter>(new Type{std::forward<Value>(value)}, Deleter{true}), void())
             {
                 ptr = std::unique_ptr<Type, Deleter>(new Type{std::forward<Value>(value)}, Deleter{true});
             }
@@ -406,7 +389,6 @@ namespace matchit
         public:
             template <typename Value>
             auto matchValue(Value &&value, int32_t depth) const
-                -> decltype(**mValue == value, IdTrait::matchValueImpl(*mValue, std::forward<Value>(value)), bool{})
             {
                 if (*mValue)
                 {
@@ -444,7 +426,6 @@ namespace matchit
         public:
             template <typename Value>
             static auto matchPatternImpl(Value &&value, Id<Type> const &idPat, int32_t depth)
-                -> decltype(idPat.matchValue(std::forward<Value>(value), depth))
             {
                 return idPat.matchValue(std::forward<Value>(value), depth);
             }
@@ -627,7 +608,6 @@ namespace matchit
         public:
             template <typename Value>
             static auto matchPatternImpl(Value &&value, PostCheck<Pattern, Pred> const &postCheck, int32_t depth)
-                -> decltype(matchPattern(std::forward<Value>(value), postCheck.pattern(), depth + 1) && postCheck.check())
             {
                 return matchPattern(std::forward<Value>(value), postCheck.pattern(), depth + 1) && postCheck.check();
             }
