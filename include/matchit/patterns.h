@@ -535,6 +535,11 @@ namespace matchit
         }
 
         template <typename... Patterns>
+        auto constexpr nbOooV = (std::is_same_v<Ooo, std::decay_t<Patterns>> + ...);
+
+        static_assert(nbOooV<int32_t&, Ooo const&, char const *, Wildcard, Ooo const> == 2);
+                                
+        template <typename... Patterns>
         class PatternTraits<Ds<Patterns...> >
         {
         public:
@@ -545,13 +550,14 @@ namespace matchit
                     [&valueTuple, depth, &dsPat](auto const &...patterns) {
                         return apply_(
                             [depth, &patterns..., &valueTuple, &dsPat](auto const &...values) {
-                                auto constexpr nbOoo = (std::is_same_v<Ooo, std::decay_t<Patterns>> + ...);
+                                auto constexpr nbOoo = nbOooV<Patterns...>;
                                 static_assert(nbOoo == 0 || nbOoo == 1);
                                 if constexpr (nbOoo == 0)
                                 {
                                     static_cast<void>(valueTuple);
                                     static_cast<void>(dsPat);
 
+                                    static_assert(sizeof...(patterns) == sizeof...(values));
                                     return (matchPattern(std::forward<decltype(values)>(values), patterns, depth + 1) && ...);
                                 }
                                 else if constexpr (nbOoo == 1)
