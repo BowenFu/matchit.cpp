@@ -305,10 +305,6 @@ TEST(Match, test11)
             pattern(as<Circle>(_)) = expr("Circle"));
     };
 
-    // using Value = std::variant<Square, Circle>;
-    // using Pattern = matchit::impl::Meet<matchit::impl::AsPointer<Square> >;
-    // static_assert(matchit::impl::MatchFuncDefinedV<Value, Pattern>);
-
     std::variant<Square, Circle> sc = Square{};
     EXPECT_EQ(getIf(sc), "Square");
     sc = Circle{};
