@@ -3,7 +3,6 @@
 
 #include <variant>
 #include <any>
-#include "./patterns.h"
 
 namespace matchit
 {

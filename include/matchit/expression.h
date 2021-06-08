@@ -1,7 +1,6 @@
 #ifndef _EXPRESSION_H_
 #define _EXPRESSION_H_
 
-#include "matchit/patterns.h"
 #include <type_traits>
 
 namespace matchit
@@ -21,6 +20,8 @@ namespace matchit
             return Nullary<T>{t};
         }
 
+        template <typename T>
+        class Id;
         template <typename T>
         auto expr(Id<T> const &id)
         {
