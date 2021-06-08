@@ -59,12 +59,12 @@ TEST(Match, test2)
             pattern(ds('+', i, j)) = i + j,
             pattern(_)             = expr(-1));
     };
-    ASSERT_EQ(matchFunc(std::make_tuple('/', 1, 1)), 1);
-    ASSERT_EQ(matchFunc(std::make_tuple('+', 2, 1)), 3);
-    ASSERT_EQ(matchFunc(std::make_tuple('/', 0, 1)), 0);
-    ASSERT_EQ(matchFunc(std::make_tuple('*', 2, 1)), 2);
-    ASSERT_EQ(matchFunc(std::make_tuple('/', 2, 1)), -1);
-    ASSERT_EQ(matchFunc(std::make_tuple('/', 2, 3)), -1);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 1, 1)), 1);
+    EXPECT_EQ(matchFunc(std::make_tuple('+', 2, 1)), 3);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 0, 1)), 0);
+    EXPECT_EQ(matchFunc(std::make_tuple('*', 2, 1)), 2);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 2, 1)), -1);
+    EXPECT_EQ(matchFunc(std::make_tuple('/', 2, 3)), -1);
 }
 
 struct A
