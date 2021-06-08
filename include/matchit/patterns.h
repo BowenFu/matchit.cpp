@@ -418,7 +418,7 @@ namespace matchit
             }
             void reset(int32_t depth) const
             {
-                if (*mDepth >= depth)
+                if (*mDepth - depth >= 0)
                 {
                     (*mValue).reset();
                 }
