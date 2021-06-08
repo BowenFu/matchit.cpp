@@ -420,7 +420,12 @@ namespace matchit
             }
             Type const &value() const
             {
+                assert(*mValue);
                 return **mValue;
+            }
+            bool hasValue() const
+            {
+                return *mValue != nullptr;
             }
             Type const &operator*() const
             {
