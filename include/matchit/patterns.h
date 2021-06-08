@@ -523,6 +523,7 @@ namespace matchit
             auto const func = [&](auto &&value, auto &&pattern) {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1);
             };
+            static_cast<void>(func);
             return (func(get<I + valueStartIdx>(valueTuple), get<I + patternStartIdx>(patternTuple)) && ...);
         }
 
