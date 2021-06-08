@@ -704,6 +704,7 @@ namespace matchit
                     return true;
                 }
             }
+            static_cast<void>(depth);
             throw OooMatchBreak();
         }
 
