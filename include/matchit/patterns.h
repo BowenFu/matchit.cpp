@@ -498,23 +498,79 @@ namespace matchit
         }
 
         template <typename T>
-        class OooBinder
+        class Span
         {
         public:
+            T const* mData;
+            size_t mSize;
+        };
+
+        template <typename T>
+        auto makeSpan(T const* data, size_t size)
+        {
+            return Span<T>{data, size};
+        }
+
+        template <typename T>
+        bool operator==(Span<T> const &lhs, Span<T> const &rhs)
+        {
+            return lhs.mData == rhs.mData && lhs.mSize == rhs.mSize;
+        }
+
+        template <typename T>
+        class OooBinder
+        {
             Id<T> mId;
+        public:
+            OooBinder(Id<T> const& id)
+            : mId{id}
+            {}
+            decltype(auto) binder() const
+            {
+                return mId;
+            }
         };
 
         class Ooo
         {
         public:
             template <typename T>
-            auto operator()(Id<T> id)
+            auto operator()(Id<T> id) const
             {
                 return OooBinder<T>{id};
             }
         };
 
         constexpr Ooo ooo;
+
+        template <>
+        class PatternTraits<Ooo>
+        {
+        public:
+            template <typename Value>
+            static auto matchPatternImpl(Value &&, Ooo, int32_t /*depth*/)
+            {
+                return true;
+            }
+            static void processIdImpl(Ooo, int32_t /*depth*/, IdProcess)
+            {
+            }
+        };
+
+        template <typename Pattern>
+        class PatternTraits<OooBinder<Pattern> >
+        {
+        public:
+            template <typename Value>
+            static auto matchPatternImpl(Value &&value, OooBinder<Pattern> const &oooBinderPat, int32_t depth)
+            {
+                return matchPattern(std::forward<Value>(value), oooBinderPat.binder(), depth + 1);
+            }
+            static void processIdImpl(OooBinder<Pattern> const &oooBinderPat, int32_t depth, IdProcess idProcess)
+            {
+                processId(oooBinderPat.binder(), depth, idProcess);
+            }
+        };
 
         using std::get;
         namespace detail
@@ -585,8 +641,20 @@ namespace matchit
                 valueVec, valueStartIdx, patternTuple, depth, std::make_index_sequence<size>{});
         }
 
+        template <typename T>
+        class IsOoo : public std::false_type {};
+
+        template <>
+        class IsOoo<Ooo> : public std::true_type {};
+
+        template <typename T>
+        class IsOoo<OooBinder<T>> : public std::true_type {};
+
+        template <typename T>
+        auto constexpr isOooV = IsOoo<T>::value;
+
         template <typename... Patterns>
-        auto constexpr nbOooV = ((std::is_same_v<Ooo, std::decay_t<Patterns> > ? 1 : 0) + ...);
+        auto constexpr nbOooV = ((isOooV<std::decay_t<Patterns> > ? 1 : 0) + ...);
 
         static_assert(nbOooV<int32_t&, Ooo const&, char const *, Wildcard, Ooo const> == 2);
                                 
@@ -596,6 +664,7 @@ namespace matchit
         public:
             template <typename ValueTuple>
             static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth)
+            -> decltype(std::tuple_size<std::decay_t<ValueTuple>>::value, bool{})
             {
                 auto constexpr nbOoo = nbOooV<Patterns...>;
                 static_assert(nbOoo == 0 || nbOoo == 1);
@@ -624,29 +693,37 @@ namespace matchit
                 }
             }
 
-            template <typename Value>
-            static auto matchPatternImpl(std::vector<Value> &&valueVec, Ds<Patterns...> const &dsPat, int32_t depth)
+            template <typename ValueVec>
+            static auto matchPatternImpl(ValueVec &&valueVec, Ds<Patterns...> const &dsPat, int32_t depth)
+            -> decltype(std::declval<ValueVec>().capacity(), bool{})
             {
                 auto constexpr nbOoo = nbOooV<Patterns...>;
                 static_assert(nbOoo == 0 || nbOoo == 1);
+                auto constexpr nbPat = sizeof...(Patterns);
 
                 if constexpr (nbOoo == 0)
                 {
                     // size mismatch for dynamic array is not an error;
-                    auto constexpr nbPat = sizeof...(Patterns);
                     if (valueVec.size() != nbPat)
                     {
                         return false;
                     }
-                    return matchPatternVec<0, nbPat>(valueVec, 0, dsPat.patterns(), depth);
+                    return matchPatternVec<0, nbPat>(std::forward<ValueVec>(valueVec), 0, dsPat.patterns(), depth);
                 }
                 else if constexpr (nbOoo == 1)
                 {
+                    if (valueVec.size() < nbPat - 1)
+                    {
+                        return false;
+                    }
                     auto constexpr idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
-                    auto result = matchPatternVec<0, idxOoo>(valueVec, 0, dsPat.patterns(), depth);
+                    auto result = matchPatternVec<0, idxOoo>(std::forward<ValueVec>(valueVec), 0, dsPat.patterns(), depth);
                     auto const valLen = valueVec.size();
                     auto constexpr patLen = sizeof...(Patterns);
-                    return result && matchPatternVec<idxOoo + 1, patLen - idxOoo - 1>(valueVec, valLen - patLen + idxOoo + 1, dsPat.patterns(), depth);
+                    auto const spanSize = valLen - (patLen - 1);
+                    return result &&
+                           matchPattern(makeSpan(&valueVec[idxOoo], spanSize), std::get<idxOoo>(dsPat.patterns())) &&
+                           matchPatternVec<idxOoo + 1, patLen - idxOoo - 1>(std::forward<ValueVec>(valueVec), valLen - patLen + idxOoo + 1, dsPat.patterns(), depth);
                 }
             }
 
@@ -713,6 +790,8 @@ namespace matchit
     using impl::ooo;
     using impl::or_;
     using impl::pattern;
+    using impl::Span;
+    using impl::makeSpan;
 } // namespace matchit
 
 #endif // _PATTERNS_H_
