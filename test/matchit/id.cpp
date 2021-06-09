@@ -7,14 +7,14 @@ using namespace matchit;
 TEST(Id, matchValue)
 {
   Id<int32_t> x;
-  x.matchValue(1, 0);
+  x.matchValue(1);
   EXPECT_EQ(*x, 1);
 }
 
 TEST(Id, resetId)
 {
   Id<int32_t> x;
-  x.matchValue(1, 0);
+  x.matchValue(1);
   EXPECT_EQ(*x, 1);
   x.reset(1);
   EXPECT_EQ(*x, 1);
@@ -69,4 +69,13 @@ TEST(Id, resetAfterFailure4)
                            app(_ / 5 + 1, x))));
   EXPECT_TRUE(matched);
   EXPECT_EQ(*x, 5);
+}
+
+TEST(Id, resetAfterFailure5)
+{
+  Id<int32_t> x;
+  matchPattern(10, and_(and_(or_(x)), and_(10)));
+  EXPECT_EQ(*x, 10);
+  matchPattern(10, and_(and_(or_(x)), and_(1)));
+  EXPECT_FALSE(x.hasValue());
 }

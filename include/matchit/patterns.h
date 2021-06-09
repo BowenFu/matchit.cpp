@@ -12,20 +12,24 @@ namespace matchit
         template <typename Pattern>
         class PatternTraits;
 
-        template <typename Pattern>
-        void resetId(Pattern const &pattern, int32_t depth = 0)
+        enum class IdProcess
         {
-            PatternTraits<Pattern>::resetIdImpl(pattern, depth);
+            kCANCEL,
+            kCONFIRM
+        };
+
+        template <typename Pattern>
+        void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess)
+        {
+            PatternTraits<Pattern>::processIdImpl(pattern, depth, idProcess);
         }
 
         template <typename Value, typename Pattern>
         auto matchPattern(Value &&value, Pattern const &pattern, int32_t depth = 0)
         {
             auto const result = PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth);
-            if (!result)
-            {
-                resetId(pattern, depth);
-            }
+            auto const process = result ? IdProcess::kCONFIRM : IdProcess::kCANCEL;
+            processId(pattern, depth, process);
             return result;
         }
 
@@ -42,7 +46,7 @@ namespace matchit
             template <typename Value>
             bool matchValue(Value &&value) const
             {
-                resetId(mPattern);
+                processId(mPattern, 0, IdProcess::kCANCEL);
                 return matchPattern(std::forward<Value>(value), mPattern);
             }
             auto execute() const
@@ -108,7 +112,7 @@ namespace matchit
             {
                 return pattern == std::forward<Value>(value);
             }
-            static void resetIdImpl(Pattern const &, int32_t /*depth*/)
+            static void processIdImpl(Pattern const &, int32_t /*depth*/, IdProcess)
             {
             }
         };
@@ -130,7 +134,7 @@ namespace matchit
             {
                 return true;
             }
-            static void resetIdImpl(Pattern const &, int32_t /*depth*/)
+            static void processIdImpl(Pattern const &, int32_t /*depth*/, IdProcess)
             {
             }
         };
@@ -171,11 +175,11 @@ namespace matchit
                     },
                     orPat.patterns());
             }
-            static void resetIdImpl(Or<Patterns...> const &orPat, int32_t depth)
+            static void processIdImpl(Or<Patterns...> const &orPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
-                    [depth](Patterns const &...patterns) {
-                        return (resetId(patterns, depth), ...);
+                    [depth, idProcess](Patterns const &...patterns) {
+                        return (processId(patterns, depth, idProcess), ...);
                     },
                     orPat.patterns());
             }
@@ -203,7 +207,7 @@ namespace matchit
             {
                 return meetPat(std::forward<Value>(value));
             }
-            static void resetIdImpl(Meet<Pred> const &, int32_t /*depth*/)
+            static void processIdImpl(Meet<Pred> const &, int32_t /*depth*/, IdProcess)
             {
             }
         };
@@ -245,9 +249,9 @@ namespace matchit
             {
                 return matchPattern(std::invoke(appPat.unary(), std::forward<Value>(value)), appPat.pattern(), depth + 1);
             }
-            static void resetIdImpl(App<Unary, Pattern> const &appPat, int32_t depth)
+            static void processIdImpl(App<Unary, Pattern> const &appPat, int32_t depth, IdProcess idProcess)
             {
-                return resetId(appPat.pattern(), depth);
+                return processId(appPat.pattern(), depth, idProcess);
             }
         };
 
@@ -287,11 +291,11 @@ namespace matchit
                     },
                     andPat.patterns());
             }
-            static void resetIdImpl(And<Patterns...> const &andPat, int32_t depth)
+            static void processIdImpl(And<Patterns...> const &andPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
-                    [depth](Patterns const &...patterns) {
-                        return (resetId(patterns, depth), ...);
+                    [depth, idProcess](Patterns const &...patterns) {
+                        return (processId(patterns, depth, idProcess), ...);
                     },
                     andPat.patterns());
             }
@@ -329,9 +333,9 @@ namespace matchit
             {
                 return !matchPattern(std::forward<Value>(value), notPat.pattern(), depth + 1);
             }
-            static void resetIdImpl(Not<Pattern> const &notPat, int32_t depth)
+            static void processIdImpl(Not<Pattern> const &notPat, int32_t depth, IdProcess idProcess)
             {
-                resetId(notPat.pattern(), depth);
+                processId(notPat.pattern(), depth, idProcess);
             }
         };
 
@@ -388,14 +392,13 @@ namespace matchit
 
         public:
             template <typename Value>
-            auto matchValue(Value &&value, int32_t depth) const
+            auto matchValue(Value &&value) const
             {
                 if (*mValue)
                 {
                     return **mValue == value;
                 }
                 IdTrait::matchValueImpl(*mValue, std::forward<Value>(value));
-                *mDepth = depth;
                 return true;
             }
             void reset(int32_t depth) const
@@ -403,6 +406,15 @@ namespace matchit
                 if (*mDepth - depth >= 0)
                 {
                     (*mValue).reset();
+                    *mDepth = depth;
+                }
+            }
+            void confirm(int32_t depth) const
+            {
+                if (*mDepth > depth || *mDepth == 0)
+                {
+                    assert(depth == *mDepth - 1 || depth == *mDepth || *mDepth == 0);
+                    *mDepth = depth;
                 }
             }
             Type const &value() const
@@ -425,13 +437,22 @@ namespace matchit
         {
         public:
             template <typename Value>
-            static auto matchPatternImpl(Value &&value, Id<Type> const &idPat, int32_t depth)
+            static auto matchPatternImpl(Value &&value, Id<Type> const &idPat, int32_t /* depth */)
             {
-                return idPat.matchValue(std::forward<Value>(value), depth);
+                return idPat.matchValue(std::forward<Value>(value));
             }
-            static void resetIdImpl(Id<Type> const &idPat, int32_t depth)
+            static void processIdImpl(Id<Type> const &idPat, int32_t depth, IdProcess idProcess)
             {
-                idPat.reset(depth);
+                switch (idProcess)
+                {
+                case IdProcess::kCANCEL:
+                    idPat.reset(depth);
+                    break;
+
+                case IdProcess::kCONFIRM:
+                    idPat.confirm(depth);
+                    break;
+                }
             }
         };
 
@@ -573,11 +594,11 @@ namespace matchit
                 }
             }
 
-            static void resetIdImpl(Ds<Patterns...> const &dsPat, int32_t depth)
+            static void processIdImpl(Ds<Patterns...> const &dsPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
-                    [depth](auto &&...patterns) {
-                        return (resetId(patterns, depth), ...);
+                    [depth, idProcess](auto &&...patterns) {
+                        return (processId(patterns, depth, idProcess), ...);
                     },
                     dsPat.patterns());
             }
@@ -616,80 +637,12 @@ namespace matchit
             {
                 return matchPattern(std::forward<Value>(value), postCheck.pattern(), depth + 1) && postCheck.check();
             }
-            static void resetIdImpl(PostCheck<Pattern, Pred> const &postCheck, int32_t depth)
+            static void processIdImpl(PostCheck<Pattern, Pred> const &postCheck, int32_t depth, IdProcess idProcess)
             {
-                resetId(postCheck.pattern(), depth);
+                processId(postCheck.pattern(), depth, idProcess);
             }
         };
 
-        // static_assert(MatchFuncDefinedV<char[4], Id<const char *> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<>, Wildcard>);
-        // static_assert(MatchFuncDefinedV<std::tuple<>, Ds<> >);
-        // static_assert(!MatchFuncDefinedV<std::tuple<>, Ds<int> >);
-
-        // static_assert(MatchFuncDefinedV<const std::tuple<char, std::tuple<char, char>, int> &,
-        //                                 const Ds<char, Ds<char, Id<char> >, int> &>);
-        // static_assert(!MatchFuncDefinedV<const int &, const Ds<char, Ds<char, Id<char> >, int> &>);
-
-        // static_assert(MatchFuncDefinedV<char, char>);
-        // static_assert(MatchFuncDefinedV<int, char>);
-        // static_assert(MatchFuncDefinedV<char, int>);
-
-        // static_assert(MatchFuncDefinedV<std::tuple<char>, Ds<char> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, int, std::tuple<char, int> >,
-        //                                 Ds<char, int, Ds<char, int> > >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, int, std::tuple<char, std::tuple<char, char>, int> >,
-        //                                 Ds<char, int, Ds<char, Ds<char, char>, int> > >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, int, std::tuple<char, std::tuple<char, char>, int> >,
-        //                                 Ds<char, int, Ds<char, Ds<char, Id<char> >, int> > >);
-        // static_assert(MatchFuncDefinedV<const std::tuple<char, std::tuple<char, char>, int> &,
-        //                                 const Ds<char, Ds<char, char>, int> &>);
-        // static_assert(MatchFuncDefinedV<char &,
-        //                                 Id<char> >);
-        // static_assert(MatchFuncDefinedV<const std::tuple<char, char> &,
-        //                                 const Ds<char, Id<char> > &>);
-        // static_assert(MatchFuncDefinedV<const std::tuple<char, std::tuple<char, char> > &,
-        //                                 const Ds<char, Ds<char, Id<char> > > &>);
-        // static_assert(MatchFuncDefinedV<const std::tuple<std::tuple<char, char>, int> &,
-        //                                 const Ds<Ds<char, Id<char> >, int> &>);
-        // static_assert(MatchFuncDefinedV<const std::tuple<int, std::tuple<char, char>, int> &,
-        //                                 const Ds<int, Ds<char, Id<char> >, int> &>);
-        // static_assert(MatchFuncDefinedV<const std::tuple<char, std::tuple<char, char>, char> &,
-        //                                 const Ds<char, Ds<char, Id<char> >, char> &>);
-        // static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<int, int>, int>,
-        //                                 Ds<int, Ds<int, Id<int> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, char>, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, Id<char> > >);
-        // static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, int>, Ds<int, Ds<char, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int64_t>, Ds<char, Ds<char, Id<char> >, int64_t> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, long>, Ds<char, Ds<char, Id<char> >, long> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, unsigned>, Ds<char, Ds<char, Id<char> >, unsigned> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, unsigned> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, Wildcard> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, char> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, Ds<char, Ds<char, Id<char> >, char> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, std::tuple<char, char>, int> >, Ds<Ds<char, Ds<char, Id<char> >, int> > >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, Id<char> > >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<int, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<Wildcard, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<char, char>);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, char>, Ds<char, char> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char>, Ds<char> >);
-        // static_assert(!MatchFuncDefinedV<std::tuple<char>, char>);
-        // static_assert(MatchFuncDefinedV<std::tuple<char>, Ooo<char> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char>, Wildcard>);
-        // static_assert(MatchFuncDefinedV<std::tuple<std::tuple<char, char>, int>, Ds<Ds<char, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<bool, std::tuple<char, char>, int>, Ds<bool, Ds<char, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, int>, Ds<int, Ds<char, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<int, std::tuple<char, char>, char>, Ds<int, Ds<char, Id<char> >, char> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, char>, Ds<char, Ds<char, Id<char> >, char> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char>, int>, Ds<char, Ds<char, Id<char> >, int> >);
-        // static_assert(MatchFuncDefinedV<std::tuple<char, std::tuple<char, char> >, Ds<char, Ds<char, Id<char> > > >);
-        // static_assert(MatchFuncDefinedV<std::tuple<int, int, int, int, int>, Ds<Ooo<int> > >);
     } // namespace impl
 
     // export symbols
