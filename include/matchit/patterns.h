@@ -497,8 +497,21 @@ namespace matchit
             return Ds<Patterns...>{patterns...};
         }
 
+        template <typename T>
+        class OooBinder
+        {
+        public:
+            Id<T> mId;
+        };
+
         class Ooo
         {
+        public:
+            template <typename T>
+            auto operator()(Id<T> id)
+            {
+                return OooBinder<T>{id};
+            }
         };
 
         constexpr Ooo ooo;
@@ -545,7 +558,7 @@ namespace matchit
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1);
             };
             static_cast<void>(func);
-            return (func(get<I + valueStartIdx>(valueTuple), get<I + patternStartIdx>(patternTuple)) && ...);
+            return (func(get<I + valueStartIdx>(valueTuple), std::get<I + patternStartIdx>(patternTuple)) && ...);
         }
 
         template <std::size_t valueStartIdx, std::size_t patternStartIdx, std::size_t size, typename ValueTuple, typename PatternTuple>
@@ -553,6 +566,23 @@ namespace matchit
         {
             return matchPatternMultipleImpl<valueStartIdx, patternStartIdx>(
                 valueTuple, patternTuple, depth, std::make_index_sequence<size>{});
+        }
+
+        template <std::size_t patternStartIdx, std::size_t... I, typename ValueVec, typename PatternTuple>
+        decltype(auto) matchPatternVecImpl(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, std::index_sequence<I...>)
+        {
+            auto const func = [&](auto &&value, auto &&pattern) {
+                return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1);
+            };
+            static_cast<void>(func);
+            return (func(valueVec.at(I + valueStartIdx), std::get<I + patternStartIdx>(patternTuple)) && ...);
+        }
+
+        template <std::size_t patternStartIdx, std::size_t size, typename ValueVec, typename PatternTuple>
+        decltype(auto) matchPatternVec(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth)
+        {
+            return matchPatternVecImpl<patternStartIdx>(
+                valueVec, valueStartIdx, patternTuple, depth, std::make_index_sequence<size>{});
         }
 
         template <typename... Patterns>
@@ -591,6 +621,32 @@ namespace matchit
                     auto constexpr valLen = std::tuple_size_v<std::decay_t<ValueTuple>>;
                     auto constexpr patLen = sizeof...(Patterns);
                     return result && matchPatternMultiple<valLen - patLen + idxOoo + 1, idxOoo + 1, patLen - idxOoo - 1>(valueTuple, dsPat.patterns(), depth);
+                }
+            }
+
+            template <typename Value>
+            static auto matchPatternImpl(std::vector<Value> &&valueVec, Ds<Patterns...> const &dsPat, int32_t depth)
+            {
+                auto constexpr nbOoo = nbOooV<Patterns...>;
+                static_assert(nbOoo == 0 || nbOoo == 1);
+
+                if constexpr (nbOoo == 0)
+                {
+                    // size mismatch for dynamic array is not an error;
+                    auto constexpr nbPat = sizeof...(Patterns);
+                    if (valueVec.size() != nbPat)
+                    {
+                        return false;
+                    }
+                    return matchPatternVec<0, nbPat>(valueVec, 0, dsPat.patterns(), depth);
+                }
+                else if constexpr (nbOoo == 1)
+                {
+                    auto constexpr idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
+                    auto result = matchPatternVec<0, idxOoo>(valueVec, 0, dsPat.patterns(), depth);
+                    auto const valLen = valueVec.size();
+                    auto constexpr patLen = sizeof...(Patterns);
+                    return result && matchPatternVec<idxOoo + 1, patLen - idxOoo - 1>(valueVec, valLen - patLen + idxOoo + 1, dsPat.patterns(), depth);
                 }
             }
 
