@@ -552,11 +552,9 @@ namespace matchit
                 if constexpr (nbOoo == 0)
                 {
                     return std::apply(
-                        [&valueTuple, depth, &dsPat](auto const &...patterns) {
+                        [&valueTuple, depth](auto const &...patterns) {
                             return apply_(
-                                [depth, &patterns..., &valueTuple, &dsPat](auto const &...values) {
-                                    static_cast<void>(valueTuple);
-                                    static_cast<void>(dsPat);
+                                [depth, &patterns...](auto const &...values) {
 
                                     static_assert(sizeof...(patterns) == sizeof...(values));
                                     return (matchPattern(std::forward<decltype(values)>(values), patterns, depth + 1) && ...);
