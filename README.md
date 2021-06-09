@@ -6,7 +6,7 @@
 
 [badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
 
-[godbolt]: https://godbolt.org/z/bjo41j793
+[godbolt]: https://godbolt.org/z/jMd5KhK1K
 
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
@@ -73,7 +73,7 @@ bool contains(Map const& map, Key const& key)
 }
 ```
 Note that the expression `map.end()` can be be used inside `pattern`.
-expr is a helper function that can be used to generate a expr function that return a value.
+expr is a helper function that can be used to generate a nullary function that return a value.
 
 ## Wildcard Pattern
 The wildcard `_` will match any patterns, as we see from the example above. It is a common practice to use it as the last pattern, playing the same role in our library as `default case` does for `switch` statements.
