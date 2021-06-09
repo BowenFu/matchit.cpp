@@ -546,33 +546,33 @@ namespace matchit
             template <typename ValueTuple>
             static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth)
             {
-                return std::apply(
-                    [&valueTuple, depth, &dsPat](auto const &...patterns) {
-                        return apply_(
-                            [depth, &patterns..., &valueTuple, &dsPat](auto const &...values) {
-                                auto constexpr nbOoo = nbOooV<Patterns...>;
-                                static_assert(nbOoo == 0 || nbOoo == 1);
-                                if constexpr (nbOoo == 0)
-                                {
+                auto constexpr nbOoo = nbOooV<Patterns...>;
+                static_assert(nbOoo == 0 || nbOoo == 1);
+
+                if constexpr (nbOoo == 0)
+                {
+                    return std::apply(
+                        [&valueTuple, depth, &dsPat](auto const &...patterns) {
+                            return apply_(
+                                [depth, &patterns..., &valueTuple, &dsPat](auto const &...values) {
                                     static_cast<void>(valueTuple);
                                     static_cast<void>(dsPat);
 
                                     static_assert(sizeof...(patterns) == sizeof...(values));
                                     return (matchPattern(std::forward<decltype(values)>(values), patterns, depth + 1) && ...);
-                                }
-                                else if constexpr (nbOoo == 1)
-                                {
-                                    (static_cast<void>(patterns), ...);
-                                    auto constexpr idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
-                                    auto result = matchPatternMultiple<0, 0, idxOoo>(valueTuple, dsPat.patterns(), depth);
-                                    auto constexpr valLen = sizeof...(values);
-                                    auto constexpr patLen = sizeof...(patterns);
-                                    return result && matchPatternMultiple<valLen - patLen + idxOoo + 1, idxOoo + 1, patLen - idxOoo - 1>(valueTuple, dsPat.patterns(), depth);
-                                }
-                            },
-                            valueTuple);
-                    },
-                    dsPat.patterns());
+                                },
+                                valueTuple);
+                        },
+                        dsPat.patterns());
+                }
+                else if constexpr (nbOoo == 1)
+                {
+                    auto constexpr idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
+                    auto result = matchPatternMultiple<0, 0, idxOoo>(valueTuple, dsPat.patterns(), depth);
+                    auto constexpr valLen = std::tuple_size_v<std::decay_t<ValueTuple>>;
+                    auto constexpr patLen = sizeof...(Patterns);
+                    return result && matchPatternMultiple<valLen - patLen + idxOoo + 1, idxOoo + 1, patLen - idxOoo - 1>(valueTuple, dsPat.patterns(), depth);
+                }
             }
 
             static void resetIdImpl(Ds<Patterns...> const &dsPat, int32_t depth)
