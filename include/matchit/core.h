@@ -5,20 +5,11 @@
 #include <cstdint>
 #include <algorithm>
 #include <cassert>
-#include <any>
-#include <vector>
 
 namespace matchit
 {
     namespace impl
     {
-        template <typename... PatternPair>
-        class PatternPairsRetType
-        {
-        public:
-            using RetType = std::common_type_t<typename PatternPair::RetType...>;
-        };
-
         template <typename Value, bool byRef>
         class ValueType
         {
@@ -33,41 +24,8 @@ namespace matchit
             using ValueT = Value &&;
         };
 
-        enum class IdProcess : int32_t
-        {
-            kCANCEL,
-            kCONFIRM
-        };
-
-
-        template <typename Pattern>
-        void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess);
-
-        class Context
-        {
-        public:
-            std::vector<std::any> mMemHolder;
-        };
-
-        template<typename Pattern>
-        class ScopeGuard
-        {
-        public:
-            ScopeGuard(Pattern& pattern)
-            : mPattern{pattern}
-            {
-            }
-            ScopeGuard(ScopeGuard const&) = delete;
-            ScopeGuard(ScopeGuard&&) = delete;
-            auto operator=(ScopeGuard const&) = delete;
-            auto operator=(ScopeGuard&&) = delete;
-            ~ScopeGuard()
-            {
-                processId(mPattern, 0, IdProcess::kCANCEL);
-            }
-        private:
-            Pattern& mPattern;
-        };
+        template <typename Value, typename... Patterns>
+        auto matchPatterns(Value&& value, Patterns const &...patterns);
 
         template <typename Value, bool byRef>
         class MatchHelper
@@ -86,41 +44,7 @@ namespace matchit
             template <typename... PatternPair>
             auto operator()(PatternPair const &...patterns)
             {
-                using RetType = typename PatternPairsRetType<PatternPair...>::RetType;
-                if constexpr (!std::is_same_v<RetType, void>)
-                {
-                    RetType result{};
-                    auto const func = [this, &result](auto const &pattern) -> bool {
-                        Context context;
-                        ScopeGuard<decltype(pattern)> guard{pattern};
-                        if (pattern.matchValue(std::forward<ValueRefT>(mValue), context))
-                        {
-                            result = pattern.execute();
-                            return true;
-                        }
-                        return false;
-                    };
-                    bool const matched = (func(patterns) || ...);
-                    assert(matched);
-                    static_cast<void>(matched);
-                    return result;
-                }
-                else if constexpr (std::is_same_v<RetType, void>)
-                {
-                    auto const func = [this](auto const &pattern) -> bool {
-                        Context context;
-                        ScopeGuard<decltype(pattern)> guard{pattern};
-                        if (pattern.matchValue(std::forward<ValueRefT>(mValue), context))
-                        {
-                            pattern.execute();
-                            return true;
-                        }
-                        return false;
-                    };
-                    bool const matched = (func(patterns) || ...);
-                    assert(matched);
-                    static_cast<void>(matched);
-                }
+                return matchPatterns(std::forward<ValueRefT>(mValue), patterns...);
             }
         };
 
@@ -139,7 +63,6 @@ namespace matchit
 
     // export symbols
     using impl::match;
-    using impl::Context;
 
 } // namespace matchit
 #endif // _CORE_H_

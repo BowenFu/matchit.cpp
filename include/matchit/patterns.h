@@ -4,7 +4,8 @@
 #include <memory>
 #include <tuple>
 #include <functional>
-#include "core.h"
+#include <vector>
+#include <any>
 
 namespace matchit
 {
@@ -13,12 +14,50 @@ namespace matchit
         template <typename Pattern>
         class PatternTraits;
 
+        template <typename... PatternPair>
+        class PatternPairsRetType
+        {
+        public:
+            using RetType = std::common_type_t<typename PatternPair::RetType...>;
+        };
+
+        enum class IdProcess : int32_t
+        {
+            kCANCEL,
+            kCONFIRM
+        };
+
         template <typename Pattern>
         void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess)
         {
             PatternTraits<Pattern>::processIdImpl(pattern, depth, idProcess);
         }
 
+        class Context
+        {
+        public:
+            std::vector<std::any> mMemHolder;
+        };
+
+        template<typename Pattern>
+        class ScopeGuard
+        {
+        public:
+            ScopeGuard(Pattern& pattern)
+            : mPattern{pattern}
+            {
+            }
+            ScopeGuard(ScopeGuard const&) = delete;
+            ScopeGuard(ScopeGuard&&) = delete;
+            auto operator=(ScopeGuard const&) = delete;
+            auto operator=(ScopeGuard&&) = delete;
+            ~ScopeGuard()
+            {
+                processId(mPattern, 0, IdProcess::kCANCEL);
+            }
+        private:
+            Pattern& mPattern;
+        };
 
         template <typename Value, typename Pattern>
         auto matchPattern(Value &&value, Pattern const &pattern, int32_t depth, Context& context)
@@ -27,6 +66,46 @@ namespace matchit
             auto const process = result ? IdProcess::kCONFIRM : IdProcess::kCANCEL;
             processId(pattern, depth, process);
             return result;
+        }
+
+        template <typename Value, typename... PatternPairs>
+        auto matchPatterns(Value&& value, PatternPairs const &...patterns)
+        {
+            using RetType = typename PatternPairsRetType<PatternPairs...>::RetType;
+            if constexpr (!std::is_same_v<RetType, void>)
+            {
+                RetType result{};
+                auto const func = [&result, &value](auto const &pattern) -> bool {
+                    Context context;
+                    ScopeGuard<decltype(pattern)> guard{pattern};
+                    if (pattern.matchValue(std::forward<Value>(value), context))
+                    {
+                        result = pattern.execute();
+                        return true;
+                    }
+                    return false;
+                };
+                bool const matched = (func(patterns) || ...);
+                assert(matched);
+                static_cast<void>(matched);
+                return result;
+            }
+            else if constexpr (std::is_same_v<RetType, void>)
+            {
+                auto const func = [&value](auto const &pattern) -> bool {
+                    Context context;
+                    ScopeGuard<decltype(pattern)> guard{pattern};
+                    if (pattern.matchValue(std::forward<Value>(value), context))
+                    {
+                        pattern.execute();
+                        return true;
+                    }
+                    return false;
+                };
+                bool const matched = (func(patterns) || ...);
+                assert(matched);
+                static_cast<void>(matched);
+            }
         }
 
         template <typename Pattern, typename Func>
@@ -806,6 +885,7 @@ namespace matchit
     using impl::pattern;
     using impl::Span;
     using impl::makeSpan;
+    using impl::Context;
 } // namespace matchit
 
 #endif // _PATTERNS_H_
