@@ -13,12 +13,6 @@ namespace matchit
         template <typename Pattern>
         class PatternTraits;
 
-        enum class IdProcess
-        {
-            kCANCEL,
-            kCONFIRM
-        };
-
         template <typename Pattern>
         void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess)
         {
@@ -48,7 +42,6 @@ namespace matchit
             template <typename Value>
             bool matchValue(Value &&value, Context& context) const
             {
-                processId(mPattern, 0, IdProcess::kCANCEL);
                 return matchPattern(std::forward<Value>(value), mPattern, /*depth*/ 0, context);
             }
             auto execute() const

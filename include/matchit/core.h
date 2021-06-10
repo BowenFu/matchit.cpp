@@ -33,10 +33,40 @@ namespace matchit
             using ValueT = Value &&;
         };
 
+        enum class IdProcess : int32_t
+        {
+            kCANCEL,
+            kCONFIRM
+        };
+
+
+        template <typename Pattern>
+        void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess);
+
         class Context
         {
         public:
             std::vector<std::any> mMemHolder;
+        };
+
+        template<typename Pattern>
+        class ScopeGuard
+        {
+        public:
+            ScopeGuard(Pattern& pattern)
+            : mPattern{pattern}
+            {
+            }
+            ScopeGuard(ScopeGuard const&) = delete;
+            ScopeGuard(ScopeGuard&&) = delete;
+            auto operator=(ScopeGuard const&) = delete;
+            auto operator=(ScopeGuard&&) = delete;
+            ~ScopeGuard()
+            {
+                processId(mPattern, 0, IdProcess::kCANCEL);
+            }
+        private:
+            Pattern& mPattern;
         };
 
         template <typename Value, bool byRef>
@@ -62,6 +92,7 @@ namespace matchit
                     RetType result{};
                     auto const func = [this, &result](auto const &pattern) -> bool {
                         Context context;
+                        ScopeGuard<decltype(pattern)> guard{pattern};
                         if (pattern.matchValue(std::forward<ValueRefT>(mValue), context))
                         {
                             result = pattern.execute();
@@ -78,6 +109,7 @@ namespace matchit
                 {
                     auto const func = [this](auto const &pattern) -> bool {
                         Context context;
+                        ScopeGuard<decltype(pattern)> guard{pattern};
                         if (pattern.matchValue(std::forward<ValueRefT>(mValue), context))
                         {
                             pattern.execute();
