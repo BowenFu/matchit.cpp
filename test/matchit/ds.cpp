@@ -51,12 +51,12 @@ TEST(Ds, vecOooBinder1)
 
 TEST(Ds, vecOooBinder2)
 {
-  // Note: id only available inside match scope.
-  Id<Span<int32_t>> span2;
+  // Note: id only valid inside match scope.
+  Id<Span<int32_t>> span;
   match(std::vector<int32_t>{123, 456})(
-      pattern(ds(ooo(span2))) = [&] {
-        EXPECT_EQ(span2.value().mSize, 2);
-        EXPECT_EQ(span2.value().mData[0], 123);
-        EXPECT_EQ(span2.value().mData[1], 456);
+      pattern(ds(ooo(span))) = [&] {
+        EXPECT_EQ(span.value().mSize, 2);
+        EXPECT_EQ(span.value().mData[0], 123);
+        EXPECT_EQ(span.value().mData[1], 456);
       });
 }

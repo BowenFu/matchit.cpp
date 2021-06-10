@@ -237,6 +237,8 @@ auto eval(std::tuple<char, T1, T2> const& expr)
 Note that we overload some operators for `Id`, so `i + j` will return a expr function that return the value of `*i + *j`.
 We suggest using this only for very short and simple functions. Otherwise the normal lambda expressions are preferred.
 
+Update : we support Destructure Pattern for `std::vector` now.
+
 ## Match Guard
 Match Guard can be used to cast extra restrictions on a pattern.
 The syntax is
@@ -290,6 +292,19 @@ int main()
     printf("%d\n", detectTuplePattern(std::make_tuple(3, 4, 5, 6, 7)));
     return 0;
 }
+```
+
+Update : we also support binding a span to the ooo pattern now.
+Sample codes can be
+```C++
+  // Note: id only valid inside match scope.
+  Id<Span<int32_t>> span;
+  match(std::vector<int32_t>{123, 456})(
+      pattern(ds(ooo(span))) = [&] {
+        EXPECT_EQ(span.value().mSize, 2);
+        EXPECT_EQ(span.value().mData[0], 123);
+        EXPECT_EQ(span.value().mData[1], 456);
+      });
 ```
 
 ## Compose Patterns
