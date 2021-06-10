@@ -44,17 +44,49 @@ TEST(Id, resetAfterFailure2)
 TEST(Id, resetAfterFailure3)
 {
   Id<int32_t> x;
-  Context context;
-  matchPattern(10, and_(x, app(_ / 2, x)), 0, context);
-  EXPECT_FALSE(x.hasValue());
-  matchPattern(10, and_(x, app(_ / 2, not_(x))), 0, context);
-  EXPECT_EQ(*x, 10);
-  matchPattern(10, or_(and_(not_(x), not_(x)), app(_ / 2, x)), 0, context);
-  EXPECT_EQ(*x, 5);
-  matchPattern(10, or_(and_(not_(x), x), app(_ / 2, x)), 0, context);
-  EXPECT_EQ(*x, 5);
-  matchPattern(10, or_(and_(x, not_(x)), app(_ / 2, x)), 0, context);
-  EXPECT_EQ(*x, 5);
+  auto result = match(10)(
+      pattern(and_(x, app(_ / 2, x))) = expr(true),
+      pattern(_) = expr(false));
+  EXPECT_FALSE(result);
+  result = match(10)(
+      pattern(and_(x, app(_ / 2, not_(x)))) = [&]
+      {
+        EXPECT_EQ(*x, 10);
+        return true;
+      },
+      pattern(_) = expr(false));
+  EXPECT_TRUE(result);
+}
+
+TEST(Id, resetAfterFailure33)
+{
+  Id<int32_t> x;
+  auto result = match(10)(
+      pattern(or_(and_(not_(x), not_(x)), app(_ / 2, x))) = [&]
+      {
+        EXPECT_EQ(*x, 5);
+        return true;
+      },
+      pattern(_) = expr(false));
+  EXPECT_TRUE(result);
+
+  result = match(10)(
+      pattern(or_(and_(x, not_(x)), app(_ / 2, x))) = [&]
+      {
+        EXPECT_EQ(*x, 5);
+        return true;
+      },
+      pattern(_) = expr(false));
+  EXPECT_TRUE(result);
+
+  result = match(10)(
+      pattern(or_(and_(not_(x), x), app(_ / 2, x))) = [&]
+      {
+        EXPECT_EQ(*x, 5);
+        return true;
+      },
+      pattern(_) = expr(false));
+  EXPECT_TRUE(result);
 }
 
 TEST(Id, resetAfterFailure4)
