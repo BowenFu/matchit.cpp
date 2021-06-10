@@ -6,7 +6,7 @@
 
 [badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
 
-[godbolt]: https://godbolt.org/z/bjo41j793
+[godbolt]: https://godbolt.org/z/jMd5KhK1K
 
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
@@ -37,9 +37,8 @@ match(VALUE)
 ```
 
 This is an expression and will be evaluated to some value returned by handlers.
-Now let's go through all kinds of patterns in the library.
-
 We can match multiple values at the same time:
+
 ```C++
 #include "matchit/core.h"
 #include "matchit/patterns.h"
@@ -53,6 +52,8 @@ int32_t gcd(int32_t a, int32_t b)
     );
 }
 ```
+
+Now let's go through all kinds of patterns in the library.
 
 ## Expression Pattern
 The value passed to `match` will be matched against the value evaluated from the expression with `pattern == value`.
@@ -73,11 +74,11 @@ bool contains(Map const& map, Key const& key)
 }
 ```
 Note that the expression `map.end()` can be be used inside `pattern`.
-expr is a helper function that can be used to generate a expr function that return a value.
+expr is a helper function that can be used to generate a nullary function that return a value.
 
 ## Wildcard Pattern
 The wildcard `_` will match any patterns, as we see from the example above. It is a common practice to use it as the last pattern, playing the same role in our library as `default case` does for `switch` statements.
-It can be used inside other patterns (that accpet subpatterns) as well.
+It can be used inside other patterns (that accept subpatterns) as well.
 
 ## Predicate Pattern
 Predicate Pattern can be used to cast some restrictions on the value to be matched.
@@ -236,6 +237,8 @@ auto eval(std::tuple<char, T1, T2> const& expr)
 Note that we overload some operators for `Id`, so `i + j` will return a expr function that return the value of `*i + *j`.
 We suggest using this only for very short and simple functions. Otherwise the normal lambda expressions are preferred.
 
+Update : we support Destructure Pattern for `std::vector` now.
+
 ## Match Guard
 Match Guard can be used to cast extra restrictions on a pattern.
 The syntax is
@@ -289,6 +292,19 @@ int main()
     printf("%d\n", detectTuplePattern(std::make_tuple(3, 4, 5, 6, 7)));
     return 0;
 }
+```
+
+Update : we also support binding a span to the ooo pattern now.
+Sample codes can be
+```C++
+  // Note: id only valid inside match scope.
+  Id<Span<int32_t>> span;
+  match(std::vector<int32_t>{123, 456})(
+      pattern(ds(ooo(span))) = [&] {
+        EXPECT_EQ(span.value().mSize, 2);
+        EXPECT_EQ(span.value().mData[0], 123);
+        EXPECT_EQ(span.value().mData[1], 456);
+      });
 ```
 
 ## Compose Patterns

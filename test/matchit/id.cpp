@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "matchit/core.h"
 #include "matchit/patterns.h"
+#include "matchit/utility.h"
 #include "matchit/expression.h"
 using namespace matchit;
 
@@ -25,37 +26,73 @@ TEST(Id, resetId)
 TEST(Id, resetAfterFailure)
 {
   Id<int32_t> x;
-  matchPattern(10, x);
+  Context context;
+  matchPattern(10, x, 0, context);
   EXPECT_EQ(*x, 10);
-  matchPattern(10, not_(x));
+  matchPattern(10, not_(x), 0, context);
   EXPECT_FALSE(x.hasValue());
 }
 
 TEST(Id, resetAfterFailure2)
 {
   Id<int32_t> x;
-  matchPattern(10, and_(x, not_(x)));
+  Context context;
+  matchPattern(10, and_(x, not_(x)), 0, context);
   EXPECT_FALSE(x.hasValue());
 }
 
 TEST(Id, resetAfterFailure3)
 {
   Id<int32_t> x;
-  matchPattern(10, and_(x, app(_ / 2, x)));
-  EXPECT_FALSE(x.hasValue());
-  matchPattern(10, and_(x, app(_ / 2, not_(x))));
-  EXPECT_EQ(*x, 10);
-  matchPattern(10, or_(and_(not_(x), not_(x)), app(_ / 2, x)));
-  EXPECT_EQ(*x, 5);
-  matchPattern(10, or_(and_(not_(x), x), app(_ / 2, x)));
-  EXPECT_EQ(*x, 5);
-  matchPattern(10, or_(and_(x, not_(x)), app(_ / 2, x)));
-  EXPECT_EQ(*x, 5);
+  auto result = match(10)(
+      pattern(and_(x, app(_ / 2, x))) = expr(true),
+      pattern(_) = expr(false));
+  EXPECT_FALSE(result);
+  result = match(10)(
+      pattern(and_(x, app(_ / 2, not_(x)))) = [&]
+      {
+        EXPECT_EQ(*x, 10);
+        return true;
+      },
+      pattern(_) = expr(false));
+  EXPECT_TRUE(result);
+}
+
+TEST(Id, resetAfterFailure33)
+{
+  Id<int32_t> x;
+  auto result = match(10)(
+      pattern(or_(and_(not_(x), not_(x)), app(_ / 2, x))) = [&]
+      {
+        EXPECT_EQ(*x, 5);
+        return true;
+      },
+      pattern(_) = expr(false));
+  EXPECT_TRUE(result);
+
+  result = match(10)(
+      pattern(or_(and_(x, not_(x)), app(_ / 2, x))) = [&]
+      {
+        EXPECT_EQ(*x, 5);
+        return true;
+      },
+      pattern(_) = expr(false));
+  EXPECT_TRUE(result);
+
+  result = match(10)(
+      pattern(or_(and_(not_(x), x), app(_ / 2, x))) = [&]
+      {
+        EXPECT_EQ(*x, 5);
+        return true;
+      },
+      pattern(_) = expr(false));
+  EXPECT_TRUE(result);
 }
 
 TEST(Id, resetAfterFailure4)
 {
   Id<int32_t> x;
+  Context context;
   auto const matched =
       matchPattern(std::make_tuple(10, 20),
                    or_(
@@ -66,7 +103,8 @@ TEST(Id, resetAfterFailure4)
                        // first / 2 == second / 5 + 1
                        ds(
                            app(_ / 2, x),
-                           app(_ / 5 + 1, x))));
+                           app(_ / 5 + 1, x))),
+                   0, context);
   EXPECT_TRUE(matched);
   EXPECT_EQ(*x, 5);
 }
@@ -74,8 +112,44 @@ TEST(Id, resetAfterFailure4)
 TEST(Id, resetAfterFailure5)
 {
   Id<int32_t> x;
-  matchPattern(10, and_(and_(or_(x)), and_(10)));
+  Context context;
+  matchPattern(10, and_(and_(or_(x)), and_(10)), 0, context);
   EXPECT_EQ(*x, 10);
-  matchPattern(10, and_(and_(or_(x)), and_(1)));
+  matchPattern(10, and_(and_(or_(x)), and_(1)), 0, context);
   EXPECT_FALSE(x.hasValue());
+}
+
+TEST(Id, matchMultipleTimes1)
+{
+  Id<int32_t> z;
+  Context context;
+  matchPattern(10, and_(z, z), 0, context);
+  EXPECT_EQ(*z, 10);
+}
+
+TEST(Id, matchMultipleTimes2)
+{
+  Id<std::unique_ptr<int32_t>> x;
+  auto result = match(std::make_unique<int32_t>(10))(
+      pattern(and_(x)) = [&] { return std::move(*x); });
+  EXPECT_EQ(*result, 10);
+}
+
+TEST(Id, matchMultipleTimes3)
+{
+  Id<std::unique_ptr<int32_t>> x1;
+  Id<std::unique_ptr<int32_t>> x2;
+  auto result = match(std::make_unique<int32_t>(10))(
+      pattern(and_(x1, x2)) = [&] { return std::move(*x2); });
+  EXPECT_EQ(*result, 10);
+}
+
+TEST(Id, AppToId)
+{
+  Id<int32_t> ii;
+  auto const result = match(11)
+  (
+    pattern(app(_ * _, ii)) = expr(ii)
+  );
+  EXPECT_EQ(result, 121);
 }

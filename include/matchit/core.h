@@ -10,13 +10,6 @@ namespace matchit
 {
     namespace impl
     {
-        template <typename... PatternPair>
-        class PatternPairsRetType
-        {
-        public:
-            using RetType = std::common_type_t<typename PatternPair::RetType...>;
-        };
-
         template <typename Value, bool byRef>
         class ValueType
         {
@@ -30,6 +23,9 @@ namespace matchit
         public:
             using ValueT = Value &&;
         };
+
+        template <typename Value, typename... Patterns>
+        auto matchPatterns(Value&& value, Patterns const &...patterns);
 
         template <typename Value, bool byRef>
         class MatchHelper
@@ -48,37 +44,7 @@ namespace matchit
             template <typename... PatternPair>
             auto operator()(PatternPair const &...patterns)
             {
-                using RetType = typename PatternPairsRetType<PatternPair...>::RetType;
-                if constexpr (!std::is_same_v<RetType, void>)
-                {
-                    RetType result{};
-                    auto const func = [this, &result](auto const &pattern) -> bool {
-                        if (pattern.matchValue(std::forward<ValueRefT>(mValue)))
-                        {
-                            result = pattern.execute();
-                            return true;
-                        }
-                        return false;
-                    };
-                    bool const matched = (func(patterns) || ...);
-                    assert(matched);
-                    static_cast<void>(matched);
-                    return result;
-                }
-                else if constexpr (std::is_same_v<RetType, void>)
-                {
-                    auto const func = [this](auto const &pattern) -> bool {
-                        if (pattern.matchValue(std::forward<ValueRefT>(mValue)))
-                        {
-                            pattern.execute();
-                            return true;
-                        }
-                        return false;
-                    };
-                    bool const matched = (func(patterns) || ...);
-                    assert(matched);
-                    static_cast<void>(matched);
-                }
+                return matchPatterns(std::forward<ValueRefT>(mValue), patterns...);
             }
         };
 
