@@ -36,7 +36,7 @@ TEST(Match, test1)
             pattern(ii) = -ii,
             pattern(_) = expr(111));
     };
-    EXPECT_EQ(matchFunc(1), true);
+    EXPECT_EQ(matchFunc(1), 1);
     EXPECT_EQ(matchFunc(2), 12);
     EXPECT_EQ(matchFunc(11), 121);   // Id matched.
     EXPECT_EQ(matchFunc(59), 12);    // or_ matched.

@@ -87,22 +87,29 @@ TEST(Id, resetAfterFailure5)
   EXPECT_FALSE(x.hasValue());
 }
 
-TEST(Id, matchMultipleTimes)
+TEST(Id, matchMultipleTimes1)
 {
   Id<int32_t> z;
   Context context;
   matchPattern(10, and_(z, z), 0, context);
   EXPECT_EQ(*z, 10);
+}
 
+TEST(Id, matchMultipleTimes2)
+{
+  Id<std::unique_ptr<int32_t>> x;
+  auto result = match(std::make_unique<int32_t>(10))(
+      pattern(and_(x)) = [&] { return std::move(*x); });
+  EXPECT_EQ(*result, 10);
+}
+
+TEST(Id, matchMultipleTimes3)
+{
   Id<std::unique_ptr<int32_t>> x1;
   Id<std::unique_ptr<int32_t>> x2;
-  matchPattern(std::make_unique<int32_t>(10), and_(x1, x2), 0, context);
-  EXPECT_EQ(*(*x1), 10);
-  EXPECT_EQ(*(*x2), 10); // should equal to x1 after fixing the rvalue issue.
-
-  Id<std::unique_ptr<int32_t>> y;
-  matchPattern(std::make_unique<int32_t>(10), and_(y), 0, context);
-  EXPECT_EQ(*(*y), 10);
+  auto result = match(std::make_unique<int32_t>(10))(
+      pattern(and_(x1, x2)) = [&] { return std::move(*x2); });
+  EXPECT_EQ(*result, 10);
 }
 
 TEST(Id, AppToId)

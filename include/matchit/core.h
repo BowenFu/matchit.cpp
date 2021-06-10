@@ -35,6 +35,7 @@ namespace matchit
 
         class Context
         {
+        public:
             std::vector<std::any> mMemHolder;
         };
 
