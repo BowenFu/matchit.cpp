@@ -38,7 +38,7 @@ TEST(Ds, vecOoo)
   EXPECT_TRUE(matchPattern(std::vector<int32_t>{123, 456}, ds(123, ooo, 456), 0, context));
 }
 
-TEST(Ds, vecOooBinder)
+TEST(Ds, vecOooBinder1)
 {
   auto const vec = std::vector<int32_t>{123, 456};
   Id<Span<int32_t>> span;
@@ -47,15 +47,16 @@ TEST(Ds, vecOooBinder)
   EXPECT_EQ(span.value().mSize, 2);
   EXPECT_EQ(span.value().mData[0], 123);
   EXPECT_EQ(span.value().mData[1], 456);
+}
 
-  #if 0
-  // FIXME, need to handle span for rvalue, store an vector instead.
+TEST(Ds, vecOooBinder2)
+{
+  // Note: id only available inside match scope.
   Id<Span<int32_t>> span2;
-  EXPECT_TRUE(matchPattern(std::vector<int32_t>{123, 456}, ds(ooo(span2))));
-  // This line overwrite the temp memory released above.
-  EXPECT_TRUE(matchPattern(std::vector<int32_t>{789, 321}, ds(ooo)));
-  EXPECT_EQ(span2.value().mSize, 2);
-  EXPECT_EQ(span2.value().mData[0], 123);
-  EXPECT_EQ(span2.value().mData[1], 456);
-  #endif
+  match(std::vector<int32_t>{123, 456})(
+      pattern(ds(ooo(span2))) = [&] {
+        EXPECT_EQ(span2.value().mSize, 2);
+        EXPECT_EQ(span2.value().mData[0], 123);
+        EXPECT_EQ(span2.value().mData[1], 456);
+      });
 }
