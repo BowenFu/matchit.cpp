@@ -313,10 +313,11 @@ TEST(Match, test11)
 
 TEST(Match, test12)
 {
-    EXPECT_EQ(matchPattern(std::array<int, 2>{1, 2}, ds(ooo, _)), true);
-    EXPECT_EQ(matchPattern(std::array<int, 3>{1, 2, 3}, ds(ooo, _)), true);
+    Context context;
+    EXPECT_EQ(matchPattern(std::array<int, 2>{1, 2}, ds(ooo, _), 0, context), true);
+    EXPECT_EQ(matchPattern(std::array<int, 3>{1, 2, 3}, ds(ooo, _), 0, context), true);
     Id<int> x;
-    EXPECT_EQ(matchPattern(std::array<int, 2>{1, 2}, ds(ooo, _)), true);
+    EXPECT_EQ(matchPattern(std::array<int, 2>{1, 2}, ds(ooo, _), 0, context), true);
 }
 
 template <size_t I>
@@ -369,8 +370,9 @@ TEST(Match, test14)
     sc = Circle{};
     EXPECT_EQ(anyCast(sc), "Circle");
 
-    EXPECT_EQ(matchPattern(sc, as<Circle>(_)), true);
-    EXPECT_EQ(matchPattern(sc, as<Square>(_)), false);
+    Context context;
+    EXPECT_EQ(matchPattern(sc, as<Circle>(_), 0, context), true);
+    EXPECT_EQ(matchPattern(sc, as<Square>(_), 0, context), false);
     // one would write if let like
     // if (matchPattern(value, pattern))
     // {
@@ -466,23 +468,29 @@ TEST(Match, test19)
     };
     EXPECT_EQ(matchFunc(std::make_tuple('/', 2, 3)), 1);
     EXPECT_EQ(matchFunc(std::make_tuple(3, 3, 3, 3, 3)), 3);
-    EXPECT_EQ(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ds(ooo)), true);
-    EXPECT_EQ(matchPattern(std::make_tuple("123", 3, 3, 3, 2), ds("123", ooo, 2)), true);
-    EXPECT_EQ(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo, 3)), true);
-    EXPECT_EQ(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo)), true);
-    EXPECT_EQ(matchPattern(std::make_tuple("string"), ds(ooo)), true);
+    Context context;
+    EXPECT_EQ(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ds(ooo), 0, context), true);
+    EXPECT_EQ(matchPattern(std::make_tuple("123", 3, 3, 3, 2), ds("123", ooo, 2), 0, context), true);
+    EXPECT_EQ(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo, 3), 0, context), true);
+    EXPECT_EQ(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo), 0, context), true);
+    EXPECT_EQ(matchPattern(std::make_tuple("string"), ds(ooo), 0, context), true);
 }
 
 TEST(Match, test20)
 {
     Id<std::string> strA;
     Id<const char *> strB;
+    Context context;
     EXPECT_EQ(matchPattern(
                   "abc",
-                  strA),
+                  strA,
+                  0,
+                  context),
               true);
     EXPECT_EQ(matchPattern(
                   "abc",
-                  strB),
+                  strB,
+                  0,
+                  context),
               true);
 }

@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <algorithm>
 #include <cassert>
+#include <any>
+#include <vector>
 
 namespace matchit
 {
@@ -31,6 +33,11 @@ namespace matchit
             using ValueT = Value &&;
         };
 
+        class Context
+        {
+            std::vector<std::any> mMemHolder;
+        };
+
         template <typename Value, bool byRef>
         class MatchHelper
         {
@@ -53,7 +60,8 @@ namespace matchit
                 {
                     RetType result{};
                     auto const func = [this, &result](auto const &pattern) -> bool {
-                        if (pattern.matchValue(std::forward<ValueRefT>(mValue)))
+                        Context context;
+                        if (pattern.matchValue(std::forward<ValueRefT>(mValue), context))
                         {
                             result = pattern.execute();
                             return true;
@@ -68,7 +76,8 @@ namespace matchit
                 else if constexpr (std::is_same_v<RetType, void>)
                 {
                     auto const func = [this](auto const &pattern) -> bool {
-                        if (pattern.matchValue(std::forward<ValueRefT>(mValue)))
+                        Context context;
+                        if (pattern.matchValue(std::forward<ValueRefT>(mValue), context))
                         {
                             pattern.execute();
                             return true;
@@ -97,6 +106,7 @@ namespace matchit
 
     // export symbols
     using impl::match;
+    using impl::Context;
 
 } // namespace matchit
 #endif // _CORE_H_
