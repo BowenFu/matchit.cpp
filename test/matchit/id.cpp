@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "matchit/core.h"
 #include "matchit/patterns.h"
+#include "matchit/utility.h"
 #include "matchit/expression.h"
 using namespace matchit;
 
@@ -78,4 +79,21 @@ TEST(Id, resetAfterFailure5)
   EXPECT_EQ(*x, 10);
   matchPattern(10, and_(and_(or_(x)), and_(1)));
   EXPECT_FALSE(x.hasValue());
+}
+
+TEST(Id, matchMultipleTimes)
+{
+  Id<int32_t> z;
+  matchPattern(10, and_(z, z));
+  EXPECT_EQ(*z, 10);
+
+  Id<std::unique_ptr<int32_t>> x1;
+  Id<std::unique_ptr<int32_t>> x2;
+  matchPattern(std::make_unique<int32_t>(10), and_(x1, x2));
+  EXPECT_EQ(*(*x1), 10);
+  EXPECT_EQ(*(*x2), 10); // should equal to x1 after fixing the rvalue issue.
+
+  Id<std::unique_ptr<int32_t>> y;
+  matchPattern(std::make_unique<int32_t>(10), and_(y));
+  EXPECT_EQ(*(*y), 10);
 }

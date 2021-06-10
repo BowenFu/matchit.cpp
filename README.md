@@ -37,9 +37,8 @@ match(VALUE)
 ```
 
 This is an expression and will be evaluated to some value returned by handlers.
-Now let's go through all kinds of patterns in the library.
-
 We can match multiple values at the same time:
+
 ```C++
 #include "matchit/core.h"
 #include "matchit/patterns.h"
@@ -53,6 +52,8 @@ int32_t gcd(int32_t a, int32_t b)
     );
 }
 ```
+
+Now let's go through all kinds of patterns in the library.
 
 ## Expression Pattern
 The value passed to `match` will be matched against the value evaluated from the expression with `pattern == value`.
@@ -77,7 +78,7 @@ expr is a helper function that can be used to generate a nullary function that r
 
 ## Wildcard Pattern
 The wildcard `_` will match any patterns, as we see from the example above. It is a common practice to use it as the last pattern, playing the same role in our library as `default case` does for `switch` statements.
-It can be used inside other patterns (that accpet subpatterns) as well.
+It can be used inside other patterns (that accept subpatterns) as well.
 
 ## Predicate Pattern
 Predicate Pattern can be used to cast some restrictions on the value to be matched.
