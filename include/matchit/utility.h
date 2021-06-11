@@ -15,7 +15,7 @@ namespace matchit
         };
 
         auto constexpr some = [](auto const pat) {
-            auto constexpr deref = [](auto &&x) { return *x; };
+            auto constexpr deref = [](auto &&x) -> decltype(*x) { return *x; };
             return and_(app(cast<bool>, true), app(deref, pat));
         };
 
@@ -66,10 +66,19 @@ namespace matchit
             return app(asPointer, some(pat));
         };
 
+        template <typename Value, typename Pattern>
+        auto matched(Value&& v, Pattern&& p)
+        {
+            return match(std::forward<Value>(v))(
+                pattern(std::forward<Pattern>(p)) = [] { return true; },
+                pattern(_) = [] { return false; });
+        }
+
     } // namespace impl
     using impl::as;
     using impl::none;
     using impl::some;
+    using impl::matched;
 } // namespace matchit
 
 #endif // _UTILITY_H_

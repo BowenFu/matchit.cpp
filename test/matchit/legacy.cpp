@@ -4,11 +4,14 @@
 #include <array>
 #include <any>
 #include <iostream>
+#include <type_traits>
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/utility.h"
 #include "matchit/expression.h"
 using namespace matchit;
+
+std::tuple<> xxx();
 
 bool func1()
 {
@@ -161,18 +164,18 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
 {
 };
 
-TEST(Match, test4)
-{
-    auto const matchFunc = [](Num const &input) {
-        return match(input)(
-            pattern(as<One>(_)) = expr(1),
-            pattern(kind<Kind::kTWO>) = expr(2),
-            pattern(_) = expr(3));
-    };
-    matchit::impl::AsPointer<Two>()(std::variant<One, Two>{});
-    EXPECT_EQ(matchFunc(One{}), 1);
-    EXPECT_EQ(matchFunc(Two{}), 2);
-}
+// TEST(Match, test4)
+// {
+//     auto const matchFunc = [](Num const &input) {
+//         return match(input)(
+//             pattern(as<One>(_)) = expr(1),
+//             pattern(kind<Kind::kTWO>) = expr(2),
+//             pattern(_) = expr(3));
+//     };
+//     matchit::impl::AsPointer<Two>()(std::variant<One, Two>{});
+//     EXPECT_EQ(matchFunc(One{}), 1);
+//     EXPECT_EQ(matchFunc(Two{}), 2);
+// }
 
 TEST(Match, test5)
 {
@@ -285,6 +288,11 @@ TEST(Match, test10)
     static_assert(matchit::impl::CanReset<Shape, Shape &>::value);
     static_assert(matchit::impl::CanReset<Shape const, Shape const &>::value);
 
+    // using PatT = decltype(some(as<Circle>(_)));
+    // using PatT = decltype(as<Circle>(_));
+    // using zz = impl::TypeSetTuple<Square&, PatT>;
+    // impl::Debug<zz> zzz;
+
     auto const dynCast = [](auto const &i) {
         return match(i)(
             pattern(some(as<Circle>(_))) = expr("Circle"),
@@ -313,11 +321,10 @@ TEST(Match, test11)
 
 TEST(Match, test12)
 {
-    Context context;
-    EXPECT_EQ(matchPattern(std::array<int, 2>{1, 2}, ds(ooo, _), 0, context), true);
-    EXPECT_EQ(matchPattern(std::array<int, 3>{1, 2, 3}, ds(ooo, _), 0, context), true);
+    EXPECT_TRUE(matched(std::array<int, 2>{1, 2}, ds(ooo, _)));
     Id<int> x;
-    EXPECT_EQ(matchPattern(std::array<int, 2>{1, 2}, ds(ooo, _), 0, context), true);
+    EXPECT_TRUE(matched(std::array<int, 3>{1, 2, 3}, ds(ooo, _)));
+    EXPECT_TRUE(matched(std::array<int, 2>{1, 2}, ds(ooo, _)));
 }
 
 template <size_t I>
@@ -370,14 +377,13 @@ TEST(Match, test14)
     sc = Circle{};
     EXPECT_EQ(anyCast(sc), "Circle");
 
-    Context context;
-    EXPECT_EQ(matchPattern(sc, as<Circle>(_), 0, context), true);
-    EXPECT_EQ(matchPattern(sc, as<Square>(_), 0, context), false);
-    // one would write if let like
-    // if (matchPattern(value, pattern))
-    // {
-    //     ...
-    // }
+    EXPECT_TRUE(matched(sc, as<Circle>(_)));
+    EXPECT_FALSE(matched(sc, as<Square>(_)));
+//     // one would write if let like
+//     // if (matched(value, pattern))
+//     // {
+//     //     ...
+//     // }
 }
 
 TEST(Match, test15)
@@ -468,29 +474,21 @@ TEST(Match, test19)
     };
     EXPECT_EQ(matchFunc(std::make_tuple('/', 2, 3)), 1);
     EXPECT_EQ(matchFunc(std::make_tuple(3, 3, 3, 3, 3)), 3);
-    Context context;
-    EXPECT_EQ(matchPattern(std::make_tuple(3, 3, 3, 3, 3), ds(ooo), 0, context), true);
-    EXPECT_EQ(matchPattern(std::make_tuple("123", 3, 3, 3, 2), ds("123", ooo, 2), 0, context), true);
-    EXPECT_EQ(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo, 3), 0, context), true);
-    EXPECT_EQ(matchPattern(std::make_tuple("string", 3, 3, 3, 3), ds(ooo), 0, context), true);
-    EXPECT_EQ(matchPattern(std::make_tuple("string"), ds(ooo), 0, context), true);
+    EXPECT_TRUE(matched(std::make_tuple(3, 3, 3, 3, 3), ds(ooo)));
+    EXPECT_TRUE(matched(std::make_tuple("123", 3, 3, 3, 2), ds("123", ooo, 2)));
+    EXPECT_TRUE(matched(std::make_tuple("string", 3, 3, 3, 3), ds(ooo, 3)));
+    EXPECT_TRUE(matched(std::make_tuple("string", 3, 3, 3, 3), ds(ooo)));
+    EXPECT_TRUE(matched(std::make_tuple("string"), ds(ooo)));
 }
 
 TEST(Match, test20)
 {
     Id<std::string> strA;
     Id<const char *> strB;
-    Context context;
-    EXPECT_EQ(matchPattern(
+    EXPECT_TRUE(matched(
                   "abc",
-                  strA,
-                  0,
-                  context),
-              true);
-    EXPECT_EQ(matchPattern(
+                  strA));
+    EXPECT_TRUE(matched(
                   "abc",
-                  strB,
-                  0,
-                  context),
-              true);
+                  strB));
 }
