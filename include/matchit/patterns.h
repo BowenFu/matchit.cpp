@@ -12,34 +12,49 @@ namespace matchit
 {
     namespace impl
     {
-
-        template <std::size_t i, class Tuple, std::size_t... is>
-        constexpr auto element_as_tuple(Tuple &, std::index_sequence<is...>)
+        template <typename T, typename... Ts>
+        class WithinTypes
         {
-            if constexpr (!(std::is_same_v<std::tuple_element_t<i, std::decay_t<Tuple>>,
-                                           std::tuple_element_t<is, std::decay_t<Tuple>> > ||
-                            ...))
-                return std::declval<std::tuple<std::decay_t<std::tuple_element_t<i, std::decay_t<Tuple>>>>>();
-            else
-                return std::make_tuple();
-        }
+        public:
+            constexpr static auto value = (std::is_same_v<T, Ts> || ...);
+        };
 
-        template <class Tuple, std::size_t... is>
-        constexpr auto make_tuple_unique(Tuple &&tuple, std::index_sequence<is...>)
+        template <typename T, typename Tuple>
+        class PrependUnique;
+
+        template <typename T, typename... Ts>
+        class PrependUnique<T, std::tuple<Ts...>>
         {
-            return std::tuple_cat(element_as_tuple<is>(tuple,
-                                                       std::make_index_sequence<is>{})...);
-        }
+            auto static constexpr unique = !WithinTypes<T, Ts...>::value;
+        public:
+            using type = std::conditional_t<unique, std::tuple<T, Ts...>, std::tuple<Ts...>>;
+        };
+
+        template <typename T, typename Tuple>
+        using PrependUniqueT = typename PrependUnique<T, Tuple>::type;
+        
+        template <typename Tuple>
+        class Unique;
 
         template <typename Tuple>
-        constexpr auto make_tuple_unique(Tuple && tuple)
-        {
-            constexpr auto size = std::tuple_size_v<Tuple>;
-            return make_tuple_unique(tuple, std::make_index_sequence<size>{});
-        }
+        using UniqueT = typename Unique<Tuple>::type;
 
-        template <typename Tuple>
-        using TypeSet = decltype(make_tuple_unique(std::declval<Tuple>()));
+        template <>
+        class Unique<std::tuple<>>
+        {
+        public:
+            using type = std::tuple<>;
+        };
+
+        template <typename T, typename... Ts>
+        class Unique<std::tuple<T, Ts...>>
+        {
+        public:
+            using type = PrependUniqueT<T, UniqueT<std::tuple<Ts...>>>;
+        };
+
+        static_assert(std::is_same_v<std::tuple<int32_t>, UniqueT<std::tuple<int32_t, int32_t>>>);
+        static_assert(std::is_same_v<std::tuple<std::tuple<>, int32_t>, UniqueT<std::tuple<int32_t, std::tuple<>, int32_t>>>);
 
         template <typename Pattern>
         class PatternTraits;
@@ -1022,7 +1037,7 @@ namespace matchit
         static_assert(std::is_same_v<PatternTraits<And<App<decltype(x), Wildcard>>>::template AppResultTuple<int32_t>, std::tuple<int32_t> >);
 
         template <typename Value, typename... Patterns>
-        using TypeSetTuple = TypeSet<decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Value>>()...))>;
+        using TypeSetTuple = UniqueT<decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Value>>()...))>;
 
         template <typename Value, typename... PatternPairs>
         auto matchPatterns(Value &&value, PatternPairs const &...patterns)
