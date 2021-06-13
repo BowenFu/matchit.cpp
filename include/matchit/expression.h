@@ -97,7 +97,7 @@ namespace matchit
         };
 
         template <typename T, typename... Args>
-        auto eval(T const &t, Args const &...args)
+        constexpr auto eval(T const &t, Args const &...args)
         {
             return EvalTraits<T>::evalImpl(t, args...);
         }
@@ -119,14 +119,14 @@ namespace matchit
 
 #define UN_OP_FOR_NULLARY(op)                                                     \
     template <typename T, std::enable_if_t<IsNullaryOrId<T>::value, bool> = true> \
-    auto operator op(T const &t)                                                  \
+    constexpr auto operator op(T const &t)                                                  \
     {                                                                             \
         return nullary([&] { return op eval(t); });                               \
     }
 
 #define BIN_OP_FOR_NULLARY(op)                                                                                           \
     template <typename T, typename U, std::enable_if_t<IsNullaryOrId<T>::value || IsNullaryOrId<U>::value, bool> = true> \
-    auto operator op(T const &t, U const &u)                                                                             \
+    constexpr auto operator op(T const &t, U const &u)                                                                             \
     {                                                                                                                    \
         return nullary([&] { return eval(t) op eval(u); });                                                              \
     }
@@ -168,23 +168,23 @@ namespace matchit
 
         // unary is an alias of meet.
         template <typename T>
-        auto unary(T&& t)
+        constexpr auto unary(T&& t)
         {
             return meet(std::forward<T>(t));
         }
 
 #define UN_OP_FOR_UNARY(op)                                                              \
     template <typename T, std::enable_if_t<IsUnaryOrWildcard<T>::value, bool> = true> \
-    auto operator op(T const &t)                                                         \
+    constexpr auto operator op(T const &t)                                                         \
     {                                                                                    \
-        return unary([&](auto &&arg) { return op eval(t, arg); });                       \
+        return unary([&](auto &&arg) constexpr { return op eval(t, arg); });                       \
     }
 
-#define BIN_OP_FOR_UNARY(op)                                                                                                           \
+#define BIN_OP_FOR_UNARY(op)                                                                                                     \
     template <typename T, typename U, std::enable_if_t<IsUnaryOrWildcard<T>::value || IsUnaryOrWildcard<U>::value, bool> = true> \
-    auto operator op(T const &t, U const &u)                                                                                           \
-    {                                                                                                                                  \
-        return unary([&](auto &&arg) { return eval(t, arg) op eval(u, arg); });                                                        \
+    constexpr auto operator op(T const &t, U const &u)                                                                           \
+    {                                                                                                                            \
+        return unary([&](auto &&arg) constexpr { return eval(t, arg) op eval(u, arg); });                                        \
     }
 
         UN_OP_FOR_UNARY(!)
