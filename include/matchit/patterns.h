@@ -560,7 +560,7 @@ namespace matchit
 
         template <typename Type, typename Value>
         struct CanRef<Type, Value, std::void_t<decltype(std::declval<ValueVariant<Type>&>() = &std::declval<Value>())> >
-            : std::negation<std::is_rvalue_reference<Value>>
+            : std::is_lvalue_reference<Value>
         {
         };
 
@@ -670,7 +670,6 @@ namespace matchit
                 template <typename Value>
                 static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::true_type /* CanRef */)
                 {
-                    static_assert(std::is_lvalue_reference_v<Value>);
                     v = &value;
                 }
             };
