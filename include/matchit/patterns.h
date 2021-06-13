@@ -570,7 +570,6 @@ namespace matchit
         static_assert(CanRef<std::unique_ptr<int32_t> const, std::unique_ptr<int32_t> const &>::value);
         static_assert(CanRef<std::tuple<int &, int &> const, std::tuple<int &, int &> const &>::value);
         static_assert(!CanRef<std::unique_ptr<int32_t>, std::unique_ptr<int32_t>&&>::value);
-        static_assert(!CanRef<std::unique_ptr<int32_t>, std::unique_ptr<int32_t>>::value);
 
         template <typename... Ts>
         class Overload : public Ts...
