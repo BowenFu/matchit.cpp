@@ -891,37 +891,45 @@ namespace matchit
             static_assert(nbOoo == 0 || nbOoo == 1);
 
         public:
+            template <typename PsTuple, typename VsTuple>
+            class PairPV;
+
             template <typename... Ps, typename... Vs>
-            static auto pairPV(std::tuple<Ps...> const&, std::tuple<Vs...> const&)
+            class PairPV<std::tuple<Ps...>, std::tuple<Vs...>>
             {
-                return std::tuple_cat(std::declval<typename PatternTraits<Ps>::template AppResultTuple<Vs> >()...);
-            }
+            public:
+                using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Ps>::template AppResultTuple<Vs> >()...));
+            };
+
+            template <std::size_t nbOoos, typename ValueTuple>
+            class AppResultForTupleHelper;
 
             template <typename... Values>
-            static auto appResultForTupleHelper(std::tuple<Values...>&& t)
+            class AppResultForTupleHelper<0, std::tuple<Values...>>
             {
-                if constexpr(nbOoo == 0)
-                {
-                    static_cast<void>(t);
-                    return std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Values> >()...);
-                }
-                else
-                {
-                    auto constexpr idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
-                    decltype(auto) ps0 = take<idxOoo>(std::declval<std::tuple<Patterns...>>());
-                    decltype(auto) vs0 = take<idxOoo>(std::declval<std::tuple<Values...>>());
-                    auto firstHalfTuple = pairPV(ps0, vs0);
-                    decltype(auto) ps1 = drop<idxOoo + 1>(std::declval<std::tuple<Patterns...> >());
-                    constexpr auto diff = sizeof...(Values) - sizeof...(Patterns);
-                    decltype(auto) vs1 = drop<idxOoo + 1 + diff>(std::declval<std::tuple<Values...> >());
-                    auto secondHalfTuple = pairPV(ps1, vs1);
-                    return std::tuple_cat(firstHalfTuple, secondHalfTuple);
-                }
-            }
+            public:
+                using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Values> >()...));
+            };
+
+            template <typename... Values>
+            class AppResultForTupleHelper<1, std::tuple<Values...>>
+            {
+                auto constexpr static idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
+                using Ps0 = SubTypesT<0, idxOoo, std::tuple<Patterns...> >;
+                using Vs0 = SubTypesT<0, idxOoo, std::tuple<Values...> >;
+                using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
+                using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...> >;
+                constexpr static auto diff = sizeof...(Values) - sizeof...(Patterns);
+                using Vs1 = SubTypesT<idxOoo + 1 + diff, sizeof...(Values), std::tuple<Values...> >;
+                using SecondHalfTuple = typename PairPV<Ps1, Vs1>::type;
+
+            public:
+                using type =  decltype(std::tuple_cat(std::declval<FirstHalfTuple>(), std::declval<SecondHalfTuple>()));
+            };
 
             // TODO fix me.
             template <typename Tuple>
-            using AppResultForTuple = decltype(appResultForTupleHelper(drop<0>(std::declval<Tuple>())));
+            using AppResultForTuple = typename AppResultForTupleHelper<nbOoo, decltype(drop<0>(std::declval<Tuple>()))>::type;
 
             template <typename Vector>
             using SpanTuple = std::conditional_t<nbOoo == 1, std::tuple<Span<typename Vector::value_type>>, std::tuple<>>;
