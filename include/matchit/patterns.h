@@ -853,6 +853,37 @@ namespace matchit
             return subtuple<0, len>(std::forward<Tuple>(t));
         }
 
+        template <std::size_t start, typename Indices, typename Tuple>
+        class IndexedTypes;
+
+        template <typename Tuple, std::size_t start, std::size_t... I>
+        class IndexedTypes<start, std::index_sequence<I...>, Tuple>
+        {
+        public:
+            using type = std::tuple<std::decay_t<decltype(std::get<start + I>(std::declval<Tuple>()))>...>;
+        };
+
+        template <std::size_t start, std::size_t end, class Tuple>
+        class SubTypes
+        {
+            auto constexpr static tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple> >;
+            static_assert(start <= end);
+            static_assert(end <= tupleSize);
+
+            using Indices = std::make_index_sequence<end - start>;
+
+        public:
+            using type = typename IndexedTypes<start, Indices, Tuple>::type;
+        };
+
+        template <std::size_t start, std::size_t end, class Tuple>
+        using SubTypesT = typename SubTypes<start, end, Tuple>::type;
+
+        static_assert(std::is_same_v<std::tuple<std::nullptr_t>, SubTypesT<3, 4, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
+        static_assert(std::is_same_v<std::tuple<char>, SubTypesT<0, 1, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
+        static_assert(std::is_same_v<std::tuple<>, SubTypesT<1, 1, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
+        static_assert(std::is_same_v<std::tuple<int32_t, std::nullptr_t>, SubTypesT<2, 4, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
+
         template <typename... Patterns>
         class PatternTraits<Ds<Patterns...> >
         {
