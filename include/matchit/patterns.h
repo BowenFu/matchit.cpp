@@ -619,7 +619,7 @@ namespace matchit
                                 return *p;
                             },
                             [](std::monostate const &) -> Type const & {
-                                assert(false && "invalid state!");
+                                // assert(false && "invalid state!");
                                 return *reinterpret_cast<Type const*>(1);
                             }),
                         mValue);

@@ -189,17 +189,51 @@ TEST(Id, AppToId2)
 
 TEST(Id, AppToId3)
 {
-  Id<std::unique_ptr<int32_t>> ii;
-  auto const result = match(std::make_unique<int32_t>(11))(
+  Id<std::shared_ptr<int32_t>> ii;
+  auto const result = match(std::make_shared<int32_t>(11))(
       pattern(ii) = [&] { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, AppToId4)
 {
+  Id<std::shared_ptr<int32_t>> ii;
+  auto const result = match(11)(
+      pattern(app(
+          [](auto &&x) { return std::make_shared<int32_t>(x); }, ii)) = [&] { return ii.move(); });
+  EXPECT_EQ(*result, 11);
+}
+
+TEST(Id, AppToId5)
+{
+  Id<std::unique_ptr<int32_t>> ii;
+  auto const result = match(std::make_unique<int32_t>(11))(
+      pattern(ii) = [&] { return ii.move(); });
+  EXPECT_EQ(*result, 11);
+}
+
+TEST(Id, AppToId6)
+{
   Id<std::unique_ptr<int32_t>> ii;
   auto const result = match(11)(
       pattern(app(
           [](auto &&x) { return std::make_unique<int32_t>(x); }, ii)) = [&] { return ii.move(); });
+  EXPECT_EQ(*result, 11);
+}
+
+TEST(Id, AppToId7)
+{
+  Id<std::optional<int32_t>> ii;
+  auto const result = match(std::make_optional(11))(
+      pattern(ii) = [&] { return ii.move(); });
+  EXPECT_EQ(*result, 11);
+}
+
+TEST(Id, AppToId8)
+{
+  Id<std::optional<int32_t>> ii;
+  auto const result = match(11)(
+      pattern(app(
+          [](auto &&x) { return std::make_optional(x); }, ii)) = [&] { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
