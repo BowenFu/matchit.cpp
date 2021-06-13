@@ -2,7 +2,7 @@
 #include "matchit/patterns.h"
 using namespace matchit;
 
-int32_t factorial(int32_t n)
+constexpr int32_t factorial(int32_t n)
 {
     assert(n >= 0);
     return match(n)(
@@ -10,6 +10,8 @@ int32_t factorial(int32_t n)
         pattern(_) = [n] { return n * factorial(n - 1); }
     );
 }
+
+static_assert(factorial(3) == 6);
 
 int main()
 {

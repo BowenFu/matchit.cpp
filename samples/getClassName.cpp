@@ -11,7 +11,7 @@ struct Shape
 struct Circle : Shape {};
 struct Square : Shape {};
 
-auto getClassName(Shape const &s)
+constexpr auto getClassName(Shape const &s)
 {
     return match(s)(
         pattern(as<Circle>(_)) = [] { return "Circle"; },

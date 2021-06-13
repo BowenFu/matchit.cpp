@@ -11,9 +11,7 @@ constexpr bool isLarge(int32_t value)
     );
 }
 
-constexpr auto y = [](int32_t x) { return x * x; };
-static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(y), impl::Wildcard> >::template AppResultTuple<int32_t>, std::tuple<> >);
-
+// app with projection returning scalar types is supported by constexpr match.
 static_assert(isLarge(100));
 
 int main()
