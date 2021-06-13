@@ -117,11 +117,11 @@ namespace matchit
         template <typename Pattern>
         class PatternTraits;
 
-        template <typename... PatternPair>
+        template <typename... PatternPairs>
         class PatternPairsRetType
         {
         public:
-            using RetType = std::common_type_t<typename PatternPair::RetType...>;
+            using RetType = std::common_type_t<typename PatternPairs::RetType...>;
         };
 
         enum class IdProcess : int32_t
@@ -131,7 +131,7 @@ namespace matchit
         };
 
         template <typename Pattern>
-        void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess)
+        constexpr void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess)
         {
             PatternTraits<Pattern>::processIdImpl(pattern, depth, idProcess);
         }
@@ -143,6 +143,12 @@ namespace matchit
             std::vector<std::variant<std::monostate, Ts...> > mMemHolder;
         };
 
+        // For constexpr
+        template <>
+        class Context<>
+        {
+        };
+
         template <typename T>
         class ContextTrait;
 
@@ -151,27 +157,6 @@ namespace matchit
         {
         public:
             using ContextT = Context<Ts...>;
-        };
-
-        template <typename Pattern>
-        class ScopeGuard
-        {
-        public:
-            constexpr ScopeGuard(Pattern &pattern)
-                : mPattern{pattern}
-            {
-            }
-            ScopeGuard(ScopeGuard const &) = delete;
-            ScopeGuard(ScopeGuard &&) = delete;
-            auto operator=(ScopeGuard const &) = delete;
-            auto operator=(ScopeGuard &&) = delete;
-            ~ScopeGuard()
-            {
-                processId(mPattern, 0, IdProcess::kCANCEL);
-            }
-
-        private:
-            Pattern &mPattern;
         };
 
         template <typename Value, typename Pattern, typename ConctextT>
@@ -1170,35 +1155,35 @@ namespace matchit
 
             if constexpr (!std::is_same_v<RetType, void>)
             {
-                RetType result{};
-                auto const func = [&result, &value](auto const &pattern) -> bool {
+                constexpr auto const func = [](auto const &pattern, auto && value, RetType &result) constexpr -> bool {
                     auto context = typename ContextTrait<TypeSetT>::ContextT{};
-                    ScopeGuard<decltype(pattern)> guard{pattern};
                     if (pattern.matchValue(std::forward<Value>(value), context))
                     {
                         result = pattern.execute();
+                        processId(pattern, 0, IdProcess::kCANCEL);
                         return true;
                     }
                     return false;
                 };
-                bool const matched = (func(patterns) || ...);
+                RetType result{};
+                bool const matched = (func(patterns, value, result) || ...);
                 assert(matched);
                 static_cast<void>(matched);
                 return result;
             }
             else
             {
-                auto const func = [&value](auto const &pattern) -> bool {
+                auto const func = [](auto const &pattern, auto&& value) -> bool {
                     auto context = typename ContextTrait<TypeSetT>::ContextT{};
-                    ScopeGuard<decltype(pattern)> guard{pattern};
                     if (pattern.matchValue(std::forward<Value>(value), context))
                     {
                         pattern.execute();
+                        processId(pattern, 0, IdProcess::kCANCEL);
                         return true;
                     }
                     return false;
                 };
-                bool const matched = (func(patterns) || ...);
+                bool const matched = (func(patterns, value) || ...);
                 assert(matched);
                 static_cast<void>(matched);
             }

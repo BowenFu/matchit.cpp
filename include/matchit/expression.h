@@ -15,7 +15,7 @@ namespace matchit
         };
 
         template <typename T>
-        auto nullary(T t)
+        constexpr auto nullary(T t)
         {
             return Nullary<T>{t};
         }
@@ -23,15 +23,15 @@ namespace matchit
         template <typename T>
         class Id;
         template <typename T>
-        auto expr(Id<T> const &id)
+        constexpr auto expr(Id<T> const &id)
         {
-            return nullary([&] { return *id; });
+            return nullary([&] () constexpr { return *id; });
         }
 
         template <typename T>
-        auto expr(T const &v)
+        constexpr auto expr(T const &v)
         {
-            return nullary([&] { return v; });
+            return nullary([&] () constexpr { return v; });
         }
 
         // for constant
