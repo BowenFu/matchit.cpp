@@ -602,7 +602,7 @@ namespace matchit
                             [](Type const *) {
                                 return true;
                             },
-                            [](auto &&) {
+                            [](std::monostate const &) {
                                 return false;
                             }),
                         mValue);
@@ -617,7 +617,7 @@ namespace matchit
                             [](Type const *p) -> Type const & {
                                 return *p;
                             },
-                            [](auto &&) -> Type const & {
+                            [](std::monostate const &) -> Type const & {
                                 throw "invalid state!";
                             }),
                         mValue);
@@ -630,7 +630,10 @@ namespace matchit
                             [](Type &v) -> Type& {
                                 return v;
                             },
-                            [](auto &&) -> Type& {
+                            [](Type const *) -> Type & {
+                                throw "invalid state!";
+                            },
+                            [](std::monostate &) -> Type & {
                                 throw "invalid state!";
                             }),
                         mValue);
