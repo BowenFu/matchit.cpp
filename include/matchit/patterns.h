@@ -570,6 +570,7 @@ namespace matchit
         static_assert(CanRef<const char, const char &>::value);
         static_assert(CanRef<std::unique_ptr<int32_t> const, std::unique_ptr<int32_t> const &>::value);
         static_assert(CanRef<std::tuple<int &, int &> const, std::tuple<int &, int &> const &>::value);
+        static_assert(!CanRef<std::unique_ptr<int32_t>, std::unique_ptr<int32_t>&&>::value);
 
         template <typename... Ts>
         class Overload : public Ts...
@@ -659,12 +660,12 @@ namespace matchit
             class IdTrait
             {
             public:
-                template <typename Value, std::enable_if_t<!std::is_rvalue_reference_v<Value> && !CanRef<Type, Value>::value> * = nullptr>
+                template <typename Value, std::enable_if_t<!CanRef<Type, Value>::value> * = nullptr>
                 static auto matchValueImpl(ValueVariant<Type> &v, Value &&value)
                 {
                     v = std::forward<Value>(value);
                 }
-                template <typename Value, std::enable_if_t<CanRef<Type, Value>::value> * = nullptr>
+                template <typename Value, std::enable_if_t<!std::is_rvalue_reference_v<Value> && CanRef<Type, Value>::value> * = nullptr>
                 static auto matchValueImpl(ValueVariant<Type> &v, Value &&value)
                 {
                     v = &value;
