@@ -599,7 +599,7 @@ namespace matchit
                 int32_t mDepth;
 
             public:
-                ValueVariant<Type> mValue;
+                ValueVariant<Type> mVariant;
                 constexpr auto hasValue() const
                 {
                     return std::visit(
@@ -613,7 +613,7 @@ namespace matchit
                             [](std::monostate const &) {
                                 return false;
                             }),
-                        mValue);
+                        mVariant);
                 }
                 constexpr decltype(auto) value() const
                 {
@@ -629,7 +629,7 @@ namespace matchit
                                 assert(false && "invalid state!");
                                 return *reinterpret_cast<Type const *>(1);
                             }),
-                        mValue);
+                        mVariant);
                 }
 
                 constexpr decltype(auto) mutableValue()
@@ -647,13 +647,13 @@ namespace matchit
                                 assert(false && "invalid state!");
                                 return *reinterpret_cast<Type *>(1);
                             }),
-                        mValue);
+                        mVariant);
                 }
                 constexpr void reset(int32_t depth)
                 {
                     if (mDepth - depth >= 0)
                     {
-                        mValue = {};
+                        mVariant = {};
                         mDepth = depth;
                     }
                 }
@@ -681,9 +681,37 @@ namespace matchit
                 }
             };
 
-            mutable std::shared_ptr<Block> mBlock = std::make_shared<Block>();
+            mutable std::variant<Block, Block *> mBlock = Block{};
 
         public:
+            constexpr Id() = default;
+
+            constexpr Id(Id const &id)
+            {
+                mBlock = std::visit(
+                    overload(
+                        [](Block &v) -> Block * {
+                            return &v;
+                        },
+                        [](Block *p) -> Block * {
+                            return p;
+                        }),
+                    id.mBlock);
+            }
+
+            constexpr Block& block() const
+            {
+                return std::visit(
+                    overload(
+                        [](Block &v) -> Block & {
+                            return v;
+                        },
+                        [](Block *p) -> Block & {
+                            return *p;
+                        }),
+                    mBlock);
+            }
+
             template <typename Value>
             constexpr auto matchValue(Value &&v) const
             {
@@ -691,24 +719,24 @@ namespace matchit
                 {
                     return value() == v;
                 }
-                IdTrait::matchValueImpl(mBlock->mValue, std::forward<Value>(v), StorePointer<Type, Value>{});
+                IdTrait::matchValueImpl(block().mVariant, std::forward<Value>(v), StorePointer<Type, Value>{});
                 return true;
             }
             constexpr void reset(int32_t depth) const
             {
-                return mBlock->reset(depth);
+                return block().reset(depth);
             }
             constexpr void confirm(int32_t depth) const
             {
-                return mBlock->confirm(depth);
+                return block().confirm(depth);
             }
             constexpr bool hasValue() const
             {
-                return mBlock->hasValue();
+                return block().hasValue();
             }
             constexpr Type const &value() const
             {
-                return mBlock->value();
+                return block().value();
             }
             constexpr Type const &operator*() const
             {
@@ -716,7 +744,7 @@ namespace matchit
             }
             constexpr Type &&move()
             {
-                return std::move(mBlock->mutableValue());
+                return std::move(block().mutableValue());
             }
         };
 
