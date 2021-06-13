@@ -187,8 +187,15 @@ TEST(Id, AppToId2)
   EXPECT_EQ(result, 11);
 }
 
-// TODO: fix *Id
 TEST(Id, AppToId3)
+{
+  Id<std::unique_ptr<int32_t>> ii;
+  auto const result = match(std::make_unique<int32_t>(11))(
+      pattern(ii) = [&] { return ii.move(); });
+  EXPECT_EQ(*result, 11);
+}
+
+TEST(Id, AppToId4)
 {
   Id<std::unique_ptr<int32_t>> ii;
   auto const result = match(11)(
