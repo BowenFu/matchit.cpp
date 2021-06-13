@@ -19,13 +19,13 @@ static_assert(fib(3) == 2);
 static_assert(fib(4) == 3);
 static_assert(fib(5) == 5);
 
-// template <typename Value>
-// constexpr auto eval(Value &&input)
-// {
-//   return match(input)(
-//       pattern(ds('/', 1, 1)) = expr(1),
-//       pattern(ds('/', 0, _)) = expr(0),
-//       pattern(_) = expr(-1));
-// }
+template <typename Value>
+constexpr auto eval(Value &&input)
+{
+  return match(input)(
+      pattern(ds('/', 1, 1)) = expr(1),
+      pattern(ds('/', 0, _)) = expr(0),
+      pattern(_) = expr(-1));
+}
 
-// static_assert(eval(std::make_tuple('/', 0, 5)) == 0);
+static_assert(eval(std::make_tuple('/', 0, 5)) == 0);

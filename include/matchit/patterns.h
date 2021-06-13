@@ -141,7 +141,7 @@ namespace matchit
         class Variant<std::tuple<T, Ts...>>
         {
         public:
-            // using type = std::conditional_t<sizeof...(Ts) == 0 && std::is_default_constructible_v<T>, T, std::variant<std::monostate, T, Ts...>>;
+            // using type = std::conditional_t<sizeof...(Ts) == 0 && std::is_default_constructible_v<T>, std::tuple<T>, std::variant<std::monostate, T, Ts...>>;
             using type = std::variant<std::monostate, T, Ts...>;
         };
 
