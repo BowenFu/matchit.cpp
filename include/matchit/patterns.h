@@ -560,7 +560,7 @@ namespace matchit
 
         template <typename Type, typename Value>
         struct CanRef<Type, Value, std::void_t<decltype(std::declval<ValueVariant<Type>&>() = &std::declval<Value>())> >
-            : std::true_type
+            : std::negation<std::is_rvalue_reference<Value>>
         {
         };
 
@@ -667,7 +667,7 @@ namespace matchit
                 {
                     v = std::forward<Value>(value);
                 }
-                template <typename Value, std::enable_if_t<!std::is_rvalue_reference_v<Value> && CanRef<Type, Value>::value> * = nullptr>
+                template <typename Value, std::enable_if_t<CanRef<Type, Value>::value> * = nullptr>
                 static auto matchValueImpl(ValueVariant<Type> &v, Value &&value)
                 {
                     v = &value;
