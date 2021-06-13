@@ -137,11 +137,12 @@ namespace matchit
         template <typename Tuple>
         class Variant;
 
-        template <typename... Ts>
-        class Variant<std::tuple<Ts...>>
+        template <typename T, typename... Ts>
+        class Variant<std::tuple<T, Ts...>>
         {
         public:
-            using type = std::variant<std::monostate, Ts...>;
+            // using type = std::conditional_t<sizeof...(Ts) == 0 && std::is_default_constructible_v<T>, T, std::variant<std::monostate, T, Ts...>>;
+            using type = std::variant<std::monostate, T, Ts...>;
         };
 
         template <typename... Ts>
@@ -163,6 +164,11 @@ namespace matchit
             {
                 return mMemHolder[mSize - 1];
             }
+        };
+
+        template <>
+        class Context<>
+        {
         };
 
         template <typename T>
@@ -433,7 +439,7 @@ namespace matchit
                 else
                 {
                     context.emplace_back(invoke_(appPat.unary(), value));
-                    decltype(auto) result = std::get<std::decay_t<AppResult<Value>>>(context.back());
+                    decltype(auto) result = get<std::decay_t<AppResult<Value>>>(context.back());
                     return matchPattern(std::forward<AppResult<Value>>(result), appPat.pattern(), depth + 1, context);
                 }
             }
