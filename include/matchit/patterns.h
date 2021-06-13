@@ -590,9 +590,9 @@ namespace matchit
         private:
             class Block
             {
+                int32_t mDepth;
             public:
                 ValueVariant<Type> mValue;
-                int32_t mDepth;
                 auto hasValue() const
                 {
                     return std::visit(
@@ -670,6 +670,7 @@ namespace matchit
                 template <typename Value>
                 static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::true_type /* CanRef */)
                 {
+                    static_assert(std::is_lvalue_reference_v<Value>);
                     v = &value;
                 }
             };
