@@ -618,7 +618,7 @@ namespace matchit
                                 return *p;
                             },
                             [](auto &&) -> Type const & {
-                                std::terminate();
+                                throw "invalid state!";
                             }),
                         mValue);
                 }
@@ -631,7 +631,7 @@ namespace matchit
                                 return v;
                             },
                             [](auto &&) -> Type& {
-                                std::terminate();
+                                throw "invalid state!";
                             }),
                         mValue);
                 }
