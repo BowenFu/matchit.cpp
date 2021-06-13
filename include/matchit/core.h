@@ -25,7 +25,7 @@ namespace matchit
         };
 
         template <typename Value, typename... Patterns>
-        auto matchPatterns(Value&& value, Patterns const &...patterns);
+        constexpr auto matchPatterns(Value&& value, Patterns const &...patterns);
 
         template <typename Value, bool byRef>
         class MatchHelper
