@@ -618,7 +618,7 @@ namespace matchit
                                 return *p;
                             },
                             [](auto &&) -> Type const & {
-                                assert(false);
+                                std::terminate();
                             }),
                         mValue);
                 }
@@ -631,7 +631,7 @@ namespace matchit
                                 return v;
                             },
                             [](auto &&) -> Type& {
-                                assert(false);
+                                std::terminate();
                             }),
                         mValue);
                 }
