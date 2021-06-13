@@ -7,6 +7,7 @@
 #include <vector>
 #include <variant>
 #include <type_traits>
+#include <exception>
 
 namespace matchit
 {
@@ -618,7 +619,7 @@ namespace matchit
                                 return *p;
                             },
                             [](std::monostate const &) -> Type const & {
-                                throw "invalid state!";
+                                throw std::runtime_error("invalid state!");
                             }),
                         mValue);
                 }
@@ -631,10 +632,10 @@ namespace matchit
                                 return v;
                             },
                             [](Type const *) -> Type & {
-                                throw "invalid state!";
+                                throw std::runtime_error("Cannot get mutableValue for pointer type!");
                             },
                             [](std::monostate &) -> Type & {
-                                throw "invalid state!";
+                                throw std::runtime_error("invalid state!");
                             }),
                         mValue);
                 }
