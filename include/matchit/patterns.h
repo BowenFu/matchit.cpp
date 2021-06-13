@@ -7,7 +7,7 @@
 #include <vector>
 #include <variant>
 #include <type_traits>
-#include <exception>
+#include <stdexcept>
 
 namespace matchit
 {
