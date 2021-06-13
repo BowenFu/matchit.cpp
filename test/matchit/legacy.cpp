@@ -213,10 +213,10 @@ TEST(Match, test6)
 TEST(Match, test7)
 {
     auto const matchFunc = [](std::pair<int32_t, int32_t> ij) {
-        Id<std::tuple<int32_t const &, int32_t const &> > id;
+        Id<std::tuple<int32_t &, int32_t &> > id;
         // delegate at to and_
         auto const at = [](auto &&id, auto &&pattern) {
-            return and_(id, pattern);
+            return and_(pattern, id);
         };
         return match(ij.first % 3, ij.second % 5)(
             pattern(0, _ > 2) = expr(2),
@@ -285,8 +285,8 @@ bool operator==(Shape const &, Shape const &)
 
 TEST(Match, test10)
 {
-    static_assert(matchit::impl::CanReset<Shape, Shape &>::value);
-    static_assert(matchit::impl::CanReset<Shape const, Shape const &>::value);
+    static_assert(matchit::impl::CanRef<Shape, Shape &>::value);
+    static_assert(matchit::impl::CanRef<Shape const, Shape const &>::value);
 
     auto const dynCast = [](auto const &i) {
         return match(i)(
