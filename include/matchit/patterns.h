@@ -6,6 +6,7 @@
 #include <functional>
 #include <vector>
 #include <variant>
+#include <array>
 #include <type_traits>
 
 namespace matchit
