@@ -164,18 +164,18 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
 {
 };
 
-// TEST(Match, test4)
-// {
-//     auto const matchFunc = [](Num const &input) {
-//         return match(input)(
-//             pattern(as<One>(_)) = expr(1),
-//             pattern(kind<Kind::kTWO>) = expr(2),
-//             pattern(_) = expr(3));
-//     };
-//     matchit::impl::AsPointer<Two>()(std::variant<One, Two>{});
-//     EXPECT_EQ(matchFunc(One{}), 1);
-//     EXPECT_EQ(matchFunc(Two{}), 2);
-// }
+TEST(Match, test4)
+{
+    auto const matchFunc = [](Num const &input) {
+        return match(input)(
+            pattern(as<One>(_)) = expr(1),
+            pattern(kind<Kind::kTWO>) = expr(2),
+            pattern(_) = expr(3));
+    };
+    matchit::impl::AsPointer<Two>()(std::variant<One, Two>{});
+    EXPECT_EQ(matchFunc(One{}), 1);
+    EXPECT_EQ(matchFunc(Two{}), 2);
+}
 
 TEST(Match, test5)
 {
@@ -287,11 +287,6 @@ TEST(Match, test10)
 {
     static_assert(matchit::impl::CanReset<Shape, Shape &>::value);
     static_assert(matchit::impl::CanReset<Shape const, Shape const &>::value);
-
-    // using PatT = decltype(some(as<Circle>(_)));
-    // using PatT = decltype(as<Circle>(_));
-    // using zz = impl::TypeSetTuple<Square&, PatT>;
-    // impl::Debug<zz> zzz;
 
     auto const dynCast = [](auto const &i) {
         return match(i)(
