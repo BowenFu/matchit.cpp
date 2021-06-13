@@ -188,11 +188,11 @@ TEST(Id, AppToId2)
 }
 
 // TODO: fix *Id
-// TEST(Id, AppToId3)
-// {
-//   Id<std::unique_ptr<int32_t>> ii;
-//   auto const result = match(11)(
-//       pattern(app(
-//           [](auto &&x) { return std::make_unique<int32_t>(x); }, ii)) = [&] { return std::move(*ii); });
-//   EXPECT_EQ(*result, 11);
-// }
+TEST(Id, AppToId3)
+{
+  Id<std::unique_ptr<int32_t>> ii;
+  auto const result = match(11)(
+      pattern(app(
+          [](auto &&x) { return std::make_unique<int32_t>(x); }, ii)) = [&] { return ii.move(); });
+  EXPECT_EQ(*result, 11);
+}
