@@ -570,6 +570,7 @@ namespace matchit
         static_assert(CanRef<std::unique_ptr<int32_t> const, std::unique_ptr<int32_t> const &>::value);
         static_assert(CanRef<std::tuple<int &, int &> const, std::tuple<int &, int &> const &>::value);
         static_assert(!CanRef<std::unique_ptr<int32_t>, std::unique_ptr<int32_t>&&>::value);
+        static_assert(!CanRef<std::unique_ptr<int32_t>, std::unique_ptr<int32_t>>::value);
 
         template <typename... Ts>
         class Overload : public Ts...
@@ -619,7 +620,7 @@ namespace matchit
                                 return *p;
                             },
                             [](std::monostate const &) -> Type const & {
-                                // assert(false && "invalid state!");
+                                assert(false && "invalid state!");
                                 return *reinterpret_cast<Type const*>(1);
                             }),
                         mValue);
@@ -662,13 +663,13 @@ namespace matchit
             class IdTrait
             {
             public:
-                template <typename Value, std::enable_if_t<!CanRef<Type, Value>::value> * = nullptr>
-                static auto matchValueImpl(ValueVariant<Type> &v, Value &&value)
+                template <typename Value>
+                static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::false_type /* CanRef */)
                 {
                     v = std::forward<Value>(value);
                 }
-                template <typename Value, std::enable_if_t<CanRef<Type, Value>::value> * = nullptr>
-                static auto matchValueImpl(ValueVariant<Type> &v, Value &&value)
+                template <typename Value>
+                static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::true_type /* CanRef */)
                 {
                     v = &value;
                 }
@@ -684,7 +685,7 @@ namespace matchit
                 {
                     return value() == v;
                 }
-                IdTrait::matchValueImpl(mBlock->mValue, std::forward<Value>(v));
+                IdTrait::matchValueImpl(mBlock->mValue, std::forward<Value>(v), CanRef<Type, Value>{});
                 return true;
             }
             void reset(int32_t depth) const
