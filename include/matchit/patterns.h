@@ -619,7 +619,6 @@ namespace matchit
                             },
                             [](auto &&) -> Type const & {
                                 assert(false);
-                                return *(static_cast<Type *>(nullptr));
                             }),
                         mValue);
                 }
@@ -633,7 +632,6 @@ namespace matchit
                             },
                             [](auto &&) -> Type& {
                                 assert(false);
-                                return *(static_cast<Type*>(nullptr));
                             }),
                         mValue);
                 }
