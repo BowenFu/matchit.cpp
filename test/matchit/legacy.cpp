@@ -285,8 +285,8 @@ bool operator==(Shape const &, Shape const &)
 
 TEST(Match, test10)
 {
-    static_assert(matchit::impl::CanRef<Shape, Shape &>::value);
-    static_assert(matchit::impl::CanRef<Shape const, Shape const &>::value);
+    static_assert(matchit::impl::StorePointer<Shape, Shape &>::value);
+    static_assert(matchit::impl::StorePointer<Shape const, Shape const &>::value);
 
     auto const dynCast = [](auto const &i) {
         return match(i)(

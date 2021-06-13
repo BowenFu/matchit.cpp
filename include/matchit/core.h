@@ -25,7 +25,7 @@ namespace matchit
         };
 
         template <typename Value, typename... Patterns>
-        auto matchPatterns(Value&& value, Patterns const &...patterns);
+        constexpr auto matchPatterns(Value&& value, Patterns const &...patterns);
 
         template <typename Value, bool byRef>
         class MatchHelper
@@ -37,25 +37,25 @@ namespace matchit
 
         public:
             template <typename V>
-            explicit MatchHelper(V &&value)
+            constexpr explicit MatchHelper(V &&value)
                 : mValue{std::forward<V>(value)}
             {
             }
             template <typename... PatternPair>
-            auto operator()(PatternPair const &...patterns)
+            constexpr auto operator()(PatternPair const &...patterns)
             {
                 return matchPatterns(std::forward<ValueRefT>(mValue), patterns...);
             }
         };
 
         template <typename Value>
-        auto match(Value &&value)
+        constexpr auto match(Value &&value)
         {
             return MatchHelper<Value, true>{std::forward<Value>(value)};
         }
 
         template <typename First, typename... Values>
-        auto match(First &&first, Values &&...values)
+        constexpr auto match(First &&first, Values &&...values)
         {
             return MatchHelper<decltype(std::forward_as_tuple(first, values...)), false>{std::forward_as_tuple(first, values...)};
         }

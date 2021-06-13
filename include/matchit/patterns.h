@@ -6,6 +6,7 @@
 #include <functional>
 #include <vector>
 #include <variant>
+#include <array>
 #include <type_traits>
 
 namespace matchit
@@ -23,12 +24,12 @@ namespace matchit
         class PrependUnique;
 
         template <typename T, typename... Ts>
-        class PrependUnique<T, std::tuple<Ts...> >
+        class PrependUnique<T, std::tuple<Ts...>>
         {
-            auto static constexpr unique = !WithinTypes<T, Ts...>::value;
+            constexpr static auto unique = !WithinTypes<T, Ts...>::value;
 
         public:
-            using type = std::conditional_t<unique, std::tuple<T, Ts...>, std::tuple<Ts...> >;
+            using type = std::conditional_t<unique, std::tuple<T, Ts...>, std::tuple<Ts...>>;
         };
 
         template <typename T, typename Tuple>
@@ -41,41 +42,23 @@ namespace matchit
         using UniqueT = typename Unique<Tuple>::type;
 
         template <>
-        class Unique<std::tuple<> >
+        class Unique<std::tuple<>>
         {
         public:
             using type = std::tuple<>;
         };
 
         template <typename T, typename... Ts>
-        class Unique<std::tuple<T, Ts...> >
+        class Unique<std::tuple<T, Ts...>>
         {
         public:
-            using type = PrependUniqueT<T, UniqueT<std::tuple<Ts...> > >;
+            using type = PrependUniqueT<T, UniqueT<std::tuple<Ts...>>>;
         };
 
-        static_assert(std::is_same_v<std::tuple<int32_t>, UniqueT<std::tuple<int32_t, int32_t> > >);
-        static_assert(std::is_same_v<std::tuple<std::tuple<>, int32_t>, UniqueT<std::tuple<int32_t, std::tuple<>, int32_t> > >);
+        static_assert(std::is_same_v<std::tuple<int32_t>, UniqueT<std::tuple<int32_t, int32_t>>>);
+        static_assert(std::is_same_v<std::tuple<std::tuple<>, int32_t>, UniqueT<std::tuple<int32_t, std::tuple<>, int32_t>>>);
 
         using std::get;
-        namespace detail
-        {
-            template <class F, class Tuple, std::size_t... I>
-            constexpr decltype(auto) apply_impl(F &&f, Tuple &&t, std::index_sequence<I...>)
-            {
-                // This implementation is valid since C++20 (via P1065R2)
-                // In C++17, a constexpr counterpart of std::invoke is actually needed here
-                return std::invoke(std::forward<F>(f), get<I>(std::forward<Tuple>(t))...);
-            }
-        } // namespace detail
-
-        template <class F, class Tuple>
-        constexpr decltype(auto) apply_(F &&f, Tuple &&t)
-        {
-            return detail::apply_impl(
-                std::forward<F>(f), std::forward<Tuple>(t),
-                std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple> > >{});
-        }
 
         namespace detail
         {
@@ -90,7 +73,7 @@ namespace matchit
         template <std::size_t start, std::size_t end, class Tuple>
         constexpr decltype(auto) subtuple(Tuple &&t)
         {
-            auto constexpr tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple> >;
+            constexpr auto tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple>>;
             static_assert(start <= end);
             static_assert(end <= tupleSize);
             return detail::subtupleImpl<start>(
@@ -101,7 +84,7 @@ namespace matchit
         template <std::size_t start, class Tuple>
         constexpr decltype(auto) drop(Tuple &&t)
         {
-            auto constexpr tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple> >;
+            constexpr auto tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple>>;
             static_assert(start <= tupleSize);
             return subtuple<start, tupleSize>(std::forward<Tuple>(t));
         }
@@ -109,19 +92,35 @@ namespace matchit
         template <std::size_t len, class Tuple>
         constexpr decltype(auto) take(Tuple &&t)
         {
-            auto constexpr tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple> >;
+            constexpr auto tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple>>;
             static_assert(len <= tupleSize);
             return subtuple<0, len>(std::forward<Tuple>(t));
+        }
+
+        template <class F, class Tuple>
+        constexpr decltype(auto) apply_(F &&f, Tuple &&t)
+        {
+            return std::apply(
+                std::forward<F>(f), drop<0>(std::forward<Tuple>(t)));
+        }
+
+        // as constexpr
+        template <class F, class... Args>
+        constexpr std::invoke_result_t<F, Args...>
+        invoke_(F &&f, Args &&...args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
+        {
+            return std::apply(
+                std::forward<F>(f), std::forward_as_tuple(std::forward<Args>(args)...));
         }
 
         template <typename Pattern>
         class PatternTraits;
 
-        template <typename... PatternPair>
+        template <typename... PatternPairs>
         class PatternPairsRetType
         {
         public:
-            using RetType = std::common_type_t<typename PatternPair::RetType...>;
+            using RetType = std::common_type_t<typename PatternPairs::RetType...>;
         };
 
         enum class IdProcess : int32_t
@@ -131,51 +130,60 @@ namespace matchit
         };
 
         template <typename Pattern>
-        void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess)
+        constexpr void processId(Pattern const &pattern, int32_t depth, IdProcess idProcess)
         {
             PatternTraits<Pattern>::processIdImpl(pattern, depth, idProcess);
         }
 
+        template <typename Tuple>
+        class Variant;
+
+        template <typename T, typename... Ts>
+        class Variant<std::tuple<T, Ts...>>
+        {
+        public:
+            // using type = std::conditional_t<sizeof...(Ts) == 0 && std::is_default_constructible_v<T>, std::tuple<T>, std::variant<std::monostate, T, Ts...>>;
+            using type = std::variant<std::monostate, T, Ts...>;
+        };
+
         template <typename... Ts>
         class Context
         {
+            using ElementT = typename Variant<UniqueT<std::tuple<Ts...>>>::type;
+            using ContainerT = std::array<ElementT, sizeof...(Ts)>;
+            ContainerT mMemHolder;
+            size_t mSize = 0;
+
         public:
-            std::vector<std::variant<std::monostate, Ts...> > mMemHolder;
+            template <typename T>
+            constexpr void emplace_back(T &&t)
+            {
+                mMemHolder[mSize] = std::forward<T>(t);
+                ++mSize;
+            }
+            constexpr auto back() -> ElementT &
+            {
+                return mMemHolder[mSize - 1];
+            }
+        };
+
+        template <>
+        class Context<>
+        {
         };
 
         template <typename T>
         class ContextTrait;
 
         template <typename... Ts>
-        class ContextTrait<std::tuple<Ts...> >
+        class ContextTrait<std::tuple<Ts...>>
         {
         public:
             using ContextT = Context<Ts...>;
         };
 
-        template <typename Pattern>
-        class ScopeGuard
-        {
-        public:
-            ScopeGuard(Pattern &pattern)
-                : mPattern{pattern}
-            {
-            }
-            ScopeGuard(ScopeGuard const &) = delete;
-            ScopeGuard(ScopeGuard &&) = delete;
-            auto operator=(ScopeGuard const &) = delete;
-            auto operator=(ScopeGuard &&) = delete;
-            ~ScopeGuard()
-            {
-                processId(mPattern, 0, IdProcess::kCANCEL);
-            }
-
-        private:
-            Pattern &mPattern;
-        };
-
         template <typename Value, typename Pattern, typename ConctextT>
-        auto matchPattern(Value &&value, Pattern const &pattern, int32_t depth, ConctextT &context)
+        constexpr auto matchPattern(Value &&value, Pattern const &pattern, int32_t depth, ConctextT &context)
         {
             auto const result = PatternTraits<Pattern>::matchPatternImpl(std::forward<Value>(value), pattern, depth, context);
             auto const process = result ? IdProcess::kCONFIRM : IdProcess::kCANCEL;
@@ -193,16 +201,16 @@ namespace matchit
             using RetType = std::invoke_result_t<Func>;
             using PatternT = Pattern;
 
-            PatternPair(Pattern const &pattern, Func const &func)
+            constexpr PatternPair(Pattern const &pattern, Func const &func)
                 : mPattern{pattern}, mHandler{func}
             {
             }
             template <typename Value, typename ContextT>
-            bool matchValue(Value &&value, ContextT &context) const
+            constexpr bool matchValue(Value &&value, ContextT &context) const
             {
                 return matchPattern(std::forward<Value>(value), mPattern, /*depth*/ 0, context);
             }
-            auto execute() const
+            constexpr auto execute() const
             {
                 return mHandler();
             }
@@ -219,19 +227,19 @@ namespace matchit
         class PatternHelper
         {
         public:
-            explicit PatternHelper(Pattern const &pattern)
+            constexpr explicit PatternHelper(Pattern const &pattern)
                 : mPattern{pattern}
             {
             }
             template <typename Func>
-            auto operator=(Func const &func)
+            constexpr auto operator=(Func const &func)
             {
                 return PatternPair<Pattern, Func>{mPattern, func};
             }
             template <typename Pred>
-            auto when(Pred const &pred)
+            constexpr auto when(Pred const &pred)
             {
-                return PatternHelper<PostCheck<Pattern, Pred> >(PostCheck(mPattern, pred));
+                return PatternHelper<PostCheck<Pattern, Pred>>(PostCheck(mPattern, pred));
             }
 
         private:
@@ -239,21 +247,21 @@ namespace matchit
         };
 
         template <typename Pattern>
-        auto pattern(Pattern const &p)
+        constexpr auto pattern(Pattern const &p)
         {
-            return PatternHelper<std::decay_t<Pattern> >{p};
+            return PatternHelper<std::decay_t<Pattern>>{p};
         }
 
         template <typename... Patterns>
         class Ds;
 
         template <typename... Patterns>
-        auto ds(Patterns const &...patterns) -> Ds<Patterns...>;
+        constexpr auto ds(Patterns const &...patterns) -> Ds<Patterns...>;
 
         template <typename First, typename... Patterns>
-        auto pattern(First const &f, Patterns const &...ps)
+        constexpr auto pattern(First const &f, Patterns const &...ps)
         {
-            return PatternHelper<Ds<First, Patterns...> >{ds(f, ps...)};
+            return PatternHelper<Ds<First, Patterns...>>{ds(f, ps...)};
         }
 
         template <typename Pattern>
@@ -264,11 +272,11 @@ namespace matchit
             using AppResultTuple = std::tuple<>;
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, Pattern const &pattern, int32_t /* depth */, ContextT & /*context*/)
+            constexpr static auto matchPatternImpl(Value &&value, Pattern const &pattern, int32_t /* depth */, ContextT & /*context*/)
             {
                 return pattern == std::forward<Value>(value);
             }
-            static void processIdImpl(Pattern const &, int32_t /*depth*/, IdProcess)
+            constexpr static void processIdImpl(Pattern const &, int32_t /*depth*/, IdProcess)
             {
             }
         };
@@ -289,11 +297,11 @@ namespace matchit
             using AppResultTuple = std::tuple<>;
 
             template <typename Value, typename ContextT>
-            static bool matchPatternImpl(Value &&, Pattern const &, int32_t, ContextT &)
+            constexpr static bool matchPatternImpl(Value &&, Pattern const &, int32_t, ContextT &)
             {
                 return true;
             }
-            static void processIdImpl(Pattern const &, int32_t /*depth*/, IdProcess)
+            constexpr static void processIdImpl(Pattern const &, int32_t /*depth*/, IdProcess)
             {
             }
         };
@@ -302,11 +310,11 @@ namespace matchit
         class Or
         {
         public:
-            explicit Or(Patterns const &...patterns)
+            constexpr explicit Or(Patterns const &...patterns)
                 : mPatterns{patterns...}
             {
             }
-            auto const &patterns() const
+            constexpr auto const &patterns() const
             {
                 return mPatterns;
             }
@@ -316,20 +324,20 @@ namespace matchit
         };
 
         template <typename... Patterns>
-        auto or_(Patterns const &...patterns)
+        constexpr auto or_(Patterns const &...patterns)
         {
             return Or<Patterns...>{patterns...};
         }
 
         template <typename... Patterns>
-        class PatternTraits<Or<Patterns...> >
+        class PatternTraits<Or<Patterns...>>
         {
         public:
             template <typename Value>
             using AppResultTuple = decltype(std::tuple_cat(typename PatternTraits<Patterns>::template AppResultTuple<Value>{}...));
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, Or<Patterns...> const &orPat, int32_t depth, ContextT &context)
+            constexpr static auto matchPatternImpl(Value &&value, Or<Patterns...> const &orPat, int32_t depth, ContextT &context)
             {
                 constexpr auto patSize = sizeof...(Patterns);
                 return std::apply(
@@ -339,7 +347,7 @@ namespace matchit
                            take<patSize - 1>(orPat.patterns())) ||
                        matchPattern(std::forward<Value>(value), get<patSize - 1>(orPat.patterns()), depth + 1, context);
             }
-            static void processIdImpl(Or<Patterns...> const &orPat, int32_t depth, IdProcess idProcess)
+            constexpr static void processIdImpl(Or<Patterns...> const &orPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
                     [depth, idProcess](Patterns const &...patterns) {
@@ -357,24 +365,24 @@ namespace matchit
         };
 
         template <typename Pred>
-        auto meet(Pred const &pred)
+        constexpr auto meet(Pred const &pred)
         {
             return Meet<Pred>{pred};
         }
 
         template <typename Pred>
-        class PatternTraits<Meet<Pred> >
+        class PatternTraits<Meet<Pred>>
         {
         public:
             template <typename Value>
             using AppResultTuple = std::tuple<>;
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, Meet<Pred> const &meetPat, int32_t /* depth */, ContextT &)
+            constexpr static auto matchPatternImpl(Value &&value, Meet<Pred> const &meetPat, int32_t /* depth */, ContextT &)
             {
                 return meetPat(std::forward<Value>(value));
             }
-            static void processIdImpl(Meet<Pred> const &, int32_t /*depth*/, IdProcess)
+            constexpr static void processIdImpl(Meet<Pred> const &, int32_t /*depth*/, IdProcess)
             {
             }
         };
@@ -387,11 +395,11 @@ namespace matchit
                 : mUnary{std::forward<Unary>(unary)}, mPattern{pattern}
             {
             }
-            auto const &unary() const
+            constexpr auto const &unary() const
             {
                 return mUnary;
             }
-            auto const &pattern() const
+            constexpr auto const &pattern() const
             {
                 return mPattern;
             }
@@ -407,38 +415,36 @@ namespace matchit
             return App<Unary, Pattern>{std::forward<Unary>(unary), pattern};
         }
 
-        auto constexpr y = 1;
+        constexpr auto y = 1;
         static_assert(std::holds_alternative<int32_t const *>(std::variant<std::monostate, const int32_t *>{&y}));
 
-        // Debug<std::decay_t<const int32_t*>> z;
-
         template <typename Unary, typename Pattern>
-        class PatternTraits<App<Unary, Pattern> >
+        class PatternTraits<App<Unary, Pattern>>
         {
+        public:
             template <typename Value>
             using AppResult = std::invoke_result_t<Unary, Value>;
             template <typename Value>
-            using AppResultCurTuple = std::conditional_t<std::is_lvalue_reference_v<AppResult<Value> >, std::tuple<>, std::tuple<AppResult<Value> > >;
+            using AppResultCurTuple = std::conditional_t<std::is_lvalue_reference_v<AppResult<Value>>, std::tuple<>, std::tuple<AppResult<Value>>>;
 
-        public:
             template <typename Value>
-            using AppResultTuple = decltype(std::tuple_cat(std::declval<AppResultCurTuple<Value> >(), std::declval<typename PatternTraits<Pattern>::template AppResultTuple<AppResult<Value> > >()));
+            using AppResultTuple = decltype(std::tuple_cat(std::declval<AppResultCurTuple<Value>>(), std::declval<typename PatternTraits<Pattern>::template AppResultTuple<AppResult<Value>>>()));
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, App<Unary, Pattern> const &appPat, int32_t depth, ContextT &context)
+            constexpr static auto matchPatternImpl(Value &&value, App<Unary, Pattern> const &appPat, int32_t depth, ContextT &context)
             {
-                if constexpr (std::is_lvalue_reference_v<AppResult<Value> >)
+                if constexpr (std::is_lvalue_reference_v<AppResult<Value>>)
                 {
                     return matchPattern(std::invoke(appPat.unary(), value), appPat.pattern(), depth + 1, context);
                 }
                 else
                 {
-                    context.mMemHolder.emplace_back(std::invoke(appPat.unary(), value));
-                    decltype(auto) result = std::get<std::decay_t<AppResult<Value> > >(context.mMemHolder.back());
+                    context.emplace_back(invoke_(appPat.unary(), value));
+                    decltype(auto) result = get<std::decay_t<AppResult<Value>>>(context.back());
                     return matchPattern(std::forward<AppResult<Value>>(result), appPat.pattern(), depth + 1, context);
                 }
             }
-            static void processIdImpl(App<Unary, Pattern> const &appPat, int32_t depth, IdProcess idProcess)
+            constexpr static void processIdImpl(App<Unary, Pattern> const &appPat, int32_t depth, IdProcess idProcess)
             {
                 return processId(appPat.pattern(), depth, idProcess);
             }
@@ -448,11 +454,11 @@ namespace matchit
         class And
         {
         public:
-            explicit And(Patterns const &...patterns)
+            constexpr explicit And(Patterns const &...patterns)
                 : mPatterns{patterns...}
             {
             }
-            auto const &patterns() const
+            constexpr auto const &patterns() const
             {
                 return mPatterns;
             }
@@ -468,14 +474,14 @@ namespace matchit
         }
 
         template <typename... Patterns>
-        class PatternTraits<And<Patterns...> >
+        class PatternTraits<And<Patterns...>>
         {
         public:
             template <typename Value>
-            using AppResultTuple = decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Value> >()...));
+            using AppResultTuple = decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Value>>()...));
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, And<Patterns...> const &andPat, int32_t depth, ContextT &context)
+            constexpr static auto matchPatternImpl(Value &&value, And<Patterns...> const &andPat, int32_t depth, ContextT &context)
             {
                 constexpr auto patSize = sizeof...(Patterns);
                 return std::apply(
@@ -485,7 +491,7 @@ namespace matchit
                            take<patSize - 1>(andPat.patterns())) &&
                        matchPattern(std::forward<Value>(value), get<patSize - 1>(andPat.patterns()), depth + 1, context);
             }
-            static void processIdImpl(And<Patterns...> const &andPat, int32_t depth, IdProcess idProcess)
+            constexpr static void processIdImpl(And<Patterns...> const &andPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
                     [depth, idProcess](Patterns const &...patterns) {
@@ -519,18 +525,18 @@ namespace matchit
         }
 
         template <typename Pattern>
-        class PatternTraits<Not<Pattern> >
+        class PatternTraits<Not<Pattern>>
         {
         public:
             template <typename Value>
             using AppResultTuple = typename PatternTraits<Pattern>::template AppResultTuple<Value>;
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, Not<Pattern> const &notPat, int32_t depth, ContextT &context)
+            constexpr static auto matchPatternImpl(Value &&value, Not<Pattern> const &notPat, int32_t depth, ContextT &context)
             {
                 return !matchPattern(std::forward<Value>(value), notPat.pattern(), depth + 1, context);
             }
-            static void processIdImpl(Not<Pattern> const &notPat, int32_t depth, IdProcess idProcess)
+            constexpr static void processIdImpl(Not<Pattern> const &notPat, int32_t depth, IdProcess idProcess)
             {
                 processId(notPat.pattern(), depth, idProcess);
             }
@@ -550,26 +556,26 @@ namespace matchit
             bool mOwn{false};
         };
 
-        template <typename Ptr, typename Value, typename = std::void_t<> >
-        struct CanRef : std::false_type
+        template <typename Ptr, typename Value, typename = std::void_t<>>
+        struct StorePointer : std::false_type
         {
         };
 
         template <typename Type>
-        using ValueVariant = std::conditional_t<std::is_abstract_v<Type>, std::variant<std::monostate, Type const *>, std::variant<std::monostate, Type, Type const *> >;
+        using ValueVariant = std::conditional_t<std::is_abstract_v<Type>, std::variant<std::monostate, Type const *>, std::variant<std::monostate, Type, Type const *>>;
 
         template <typename Type, typename Value>
-        struct CanRef<Type, Value, std::void_t<decltype(std::declval<ValueVariant<Type>&>() = &std::declval<Value>())> >
+        struct StorePointer<Type, Value, std::void_t<decltype(std::declval<ValueVariant<Type> &>() = &std::declval<Value>())>>
             : std::is_lvalue_reference<Value>
         {
         };
 
-        static_assert(CanRef<char, char &>::value);
-        static_assert(CanRef<const char, char &>::value);
-        static_assert(CanRef<const char, const char &>::value);
-        static_assert(CanRef<std::unique_ptr<int32_t> const, std::unique_ptr<int32_t> const &>::value);
-        static_assert(CanRef<std::tuple<int &, int &> const, std::tuple<int &, int &> const &>::value);
-        static_assert(!CanRef<std::unique_ptr<int32_t>, std::unique_ptr<int32_t>&&>::value);
+        static_assert(StorePointer<char, char &>::value);
+        static_assert(StorePointer<const char, char &>::value);
+        static_assert(StorePointer<const char, const char &>::value);
+        static_assert(StorePointer<std::unique_ptr<int32_t> const, std::unique_ptr<int32_t> const &>::value);
+        static_assert(StorePointer<std::tuple<int &, int &> const, std::tuple<int &, int &> const &>::value);
+        static_assert(!StorePointer<std::unique_ptr<int32_t>, std::unique_ptr<int32_t> &&>::value);
 
         template <typename... Ts>
         class Overload : public Ts...
@@ -591,9 +597,10 @@ namespace matchit
             class Block
             {
                 int32_t mDepth;
+
             public:
                 ValueVariant<Type> mValue;
-                auto hasValue() const
+                constexpr auto hasValue() const
                 {
                     return std::visit(
                         overload(
@@ -608,7 +615,7 @@ namespace matchit
                             }),
                         mValue);
                 }
-                decltype(auto) value() const
+                constexpr decltype(auto) value() const
                 {
                     return std::visit(
                         overload(
@@ -620,12 +627,12 @@ namespace matchit
                             },
                             [](std::monostate const &) -> Type const & {
                                 assert(false && "invalid state!");
-                                return *reinterpret_cast<Type const*>(1);
+                                return *reinterpret_cast<Type const *>(1);
                             }),
                         mValue);
                 }
 
-                decltype(auto) mutableValue()
+                constexpr decltype(auto) mutableValue()
                 {
                     return std::visit(
                         overload(
@@ -634,15 +641,15 @@ namespace matchit
                             },
                             [](Type const *) -> Type & {
                                 assert(false && "Cannot get mutableValue for pointer type!");
-                                return *reinterpret_cast<Type*>(1);
+                                return *reinterpret_cast<Type *>(1);
                             },
                             [](std::monostate &) -> Type & {
                                 assert(false && "invalid state!");
-                                return *reinterpret_cast<Type*>(1);
+                                return *reinterpret_cast<Type *>(1);
                             }),
                         mValue);
                 }
-                void reset(int32_t depth)
+                constexpr void reset(int32_t depth)
                 {
                     if (mDepth - depth >= 0)
                     {
@@ -650,7 +657,7 @@ namespace matchit
                         mDepth = depth;
                     }
                 }
-                void confirm(int32_t depth)
+                constexpr void confirm(int32_t depth)
                 {
                     if (mDepth > depth || mDepth == 0)
                     {
@@ -663,12 +670,12 @@ namespace matchit
             {
             public:
                 template <typename Value>
-                static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::false_type /* CanRef */)
+                constexpr static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::false_type /* StorePointer */)
                 {
                     v = std::forward<Value>(value);
                 }
                 template <typename Value>
-                static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::true_type /* CanRef */)
+                constexpr static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::true_type /* StorePointer */)
                 {
                     v = &value;
                 }
@@ -678,54 +685,54 @@ namespace matchit
 
         public:
             template <typename Value>
-            auto matchValue(Value &&v) const
+            constexpr auto matchValue(Value &&v) const
             {
                 if (hasValue())
                 {
                     return value() == v;
                 }
-                IdTrait::matchValueImpl(mBlock->mValue, std::forward<Value>(v), CanRef<Type, Value>{});
+                IdTrait::matchValueImpl(mBlock->mValue, std::forward<Value>(v), StorePointer<Type, Value>{});
                 return true;
             }
-            void reset(int32_t depth) const
+            constexpr void reset(int32_t depth) const
             {
                 return mBlock->reset(depth);
             }
-            void confirm(int32_t depth) const
+            constexpr void confirm(int32_t depth) const
             {
                 return mBlock->confirm(depth);
             }
-            bool hasValue() const
+            constexpr bool hasValue() const
             {
                 return mBlock->hasValue();
             }
-            Type const &value() const
+            constexpr Type const &value() const
             {
                 return mBlock->value();
             }
-            Type const &operator*() const
+            constexpr Type const &operator*() const
             {
                 return value();
             }
-            Type &&move()
+            constexpr Type &&move()
             {
                 return std::move(mBlock->mutableValue());
             }
         };
 
         template <typename Type>
-        class PatternTraits<Id<Type> >
+        class PatternTraits<Id<Type>>
         {
         public:
             template <typename Value>
             using AppResultTuple = std::tuple<>;
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, Id<Type> const &idPat, int32_t /* depth */, ContextT &)
+            constexpr static auto matchPatternImpl(Value &&value, Id<Type> const &idPat, int32_t /* depth */, ContextT &)
             {
                 return idPat.matchValue(std::forward<Value>(value));
             }
-            static void processIdImpl(Id<Type> const &idPat, int32_t depth, IdProcess idProcess)
+            constexpr static void processIdImpl(Id<Type> const &idPat, int32_t depth, IdProcess idProcess)
             {
                 switch (idProcess)
                 {
@@ -744,11 +751,11 @@ namespace matchit
         class Ds
         {
         public:
-            explicit Ds(Patterns const &...patterns)
+            constexpr explicit Ds(Patterns const &...patterns)
                 : mPatterns{patterns...}
             {
             }
-            auto const &patterns() const
+            constexpr auto const &patterns() const
             {
                 return mPatterns;
             }
@@ -760,7 +767,7 @@ namespace matchit
                 using type = std::conditional_t<
                     !std::is_pointer_v<T>,
                     T,
-                    std::add_pointer_t<std::add_const_t<std::remove_pointer_t<T> > > >;
+                    std::add_pointer_t<std::add_const_t<std::remove_pointer_t<T>>>>;
             };
             template <typename T>
             using AddConstToPointerT = typename AddConstToPointer<T>::type;
@@ -769,14 +776,14 @@ namespace matchit
             static_assert(std::is_same_v<AddConstToPointerT<int32_t>, int32_t>);
 
         public:
-            using Type = std::tuple<AddConstToPointerT<std::decay_t<Patterns> >...>;
+            using Type = std::tuple<AddConstToPointerT<std::decay_t<Patterns>>...>;
 
         private:
             Type mPatterns;
         };
 
         template <typename... Patterns>
-        auto ds(Patterns const &...patterns) -> Ds<Patterns...>
+        constexpr auto ds(Patterns const &...patterns) -> Ds<Patterns...>
         {
             return Ds<Patterns...>{patterns...};
         }
@@ -790,7 +797,7 @@ namespace matchit
         };
 
         template <typename T>
-        auto makeSpan(T const *data, size_t size)
+        constexpr auto makeSpan(T const *data, size_t size)
         {
             return Span<T>{data, size};
         }
@@ -821,7 +828,7 @@ namespace matchit
         {
         public:
             template <typename T>
-            auto operator()(Id<T> id) const
+            constexpr auto operator()(Id<T> id) const
             {
                 return OooBinder<T>{id};
             }
@@ -837,28 +844,28 @@ namespace matchit
             using AppResultTuple = std::tuple<>;
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&, Ooo, int32_t /*depth*/, ContextT &)
+            constexpr static auto matchPatternImpl(Value &&, Ooo, int32_t /*depth*/, ContextT &)
             {
                 return true;
             }
-            static void processIdImpl(Ooo, int32_t /*depth*/, IdProcess)
+            constexpr static void processIdImpl(Ooo, int32_t /*depth*/, IdProcess)
             {
             }
         };
 
         template <typename Pattern>
-        class PatternTraits<OooBinder<Pattern> >
+        class PatternTraits<OooBinder<Pattern>>
         {
         public:
             template <typename Value>
             using AppResultTuple = typename PatternTraits<Pattern>::template AppResultTuple<Value>;
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, OooBinder<Pattern> const &oooBinderPat, int32_t depth, ContextT &context)
+            constexpr static auto matchPatternImpl(Value &&value, OooBinder<Pattern> const &oooBinderPat, int32_t depth, ContextT &context)
             {
                 return matchPattern(std::forward<Value>(value), oooBinderPat.binder(), depth + 1, context);
             }
-            static void processIdImpl(OooBinder<Pattern> const &oooBinderPat, int32_t depth, IdProcess idProcess)
+            constexpr static void processIdImpl(OooBinder<Pattern> const &oooBinderPat, int32_t depth, IdProcess idProcess)
             {
                 processId(oooBinderPat.binder(), depth, idProcess);
             }
@@ -873,14 +880,14 @@ namespace matchit
         template <typename T, typename Tuple>
         constexpr size_t findIdx()
         {
-            return findIdxImpl<T, Tuple>(std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple> > >{});
+            return findIdxImpl<T, Tuple>(std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
         }
 
-        static_assert(findIdx<Ooo, std::tuple<int, Ooo, const char *> >() == 1);
+        static_assert(findIdx<Ooo, std::tuple<int, Ooo, const char *>>() == 1);
 
         using std::get;
         template <std::size_t valueStartIdx, std::size_t patternStartIdx, std::size_t... I, typename ValueTuple, typename PatternTuple, typename ContextT>
-        decltype(auto) matchPatternMultipleImpl(ValueTuple &&valueTuple, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
+        constexpr decltype(auto) matchPatternMultipleImpl(ValueTuple &&valueTuple, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
         {
             auto const func = [&](auto &&value, auto &&pattern) {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1, context);
@@ -890,14 +897,14 @@ namespace matchit
         }
 
         template <std::size_t valueStartIdx, std::size_t patternStartIdx, std::size_t size, typename ValueTuple, typename PatternTuple, typename ContextT>
-        decltype(auto) matchPatternMultiple(ValueTuple &&valueTuple, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
+        constexpr decltype(auto) matchPatternMultiple(ValueTuple &&valueTuple, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
         {
             return matchPatternMultipleImpl<valueStartIdx, patternStartIdx>(
                 std::forward<ValueTuple>(valueTuple), patternTuple, depth, context, std::make_index_sequence<size>{});
         }
 
         template <std::size_t patternStartIdx, std::size_t... I, typename ValueVec, typename PatternTuple, typename ContextT>
-        decltype(auto) matchPatternVecImpl(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
+        constexpr decltype(auto) matchPatternVecImpl(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
         {
             auto const func = [&](auto &&value, auto &&pattern) {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1, context);
@@ -907,7 +914,7 @@ namespace matchit
         }
 
         template <std::size_t patternStartIdx, std::size_t size, typename ValueVec, typename PatternTuple, typename ContextT>
-        decltype(auto) matchPatternVec(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
+        constexpr decltype(auto) matchPatternVec(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
         {
             return matchPatternVecImpl<patternStartIdx>(
                 std::forward<ValueVec>(valueVec), valueStartIdx, patternTuple, depth, context, std::make_index_sequence<size>{});
@@ -924,15 +931,15 @@ namespace matchit
         };
 
         template <typename T>
-        class IsOoo<OooBinder<T> > : public std::true_type
+        class IsOoo<OooBinder<T>> : public std::true_type
         {
         };
 
         template <typename T>
-        auto constexpr isOooV = IsOoo<T>::value;
+        constexpr auto isOooV = IsOoo<T>::value;
 
         template <typename... Patterns>
-        auto constexpr nbOooV = ((isOooV<std::decay_t<Patterns> > ? 1 : 0) + ...);
+        constexpr auto nbOooV = ((isOooV<std::decay_t<Patterns>> ? 1 : 0) + ...);
 
         static_assert(nbOooV<int32_t &, Ooo const &, char const *, Wildcard, Ooo const> == 2);
 
@@ -949,7 +956,7 @@ namespace matchit
         template <std::size_t start, std::size_t end, class Tuple>
         class SubTypes
         {
-            auto constexpr static tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple> >;
+            constexpr static auto tupleSize = std::tuple_size_v<std::remove_reference_t<Tuple>>;
             static_assert(start <= end);
             static_assert(end <= tupleSize);
 
@@ -962,15 +969,15 @@ namespace matchit
         template <std::size_t start, std::size_t end, class Tuple>
         using SubTypesT = typename SubTypes<start, end, Tuple>::type;
 
-        static_assert(std::is_same_v<std::tuple<std::nullptr_t>, SubTypesT<3, 4, std::tuple<char, bool, int32_t, std::nullptr_t> > >);
-        static_assert(std::is_same_v<std::tuple<char>, SubTypesT<0, 1, std::tuple<char, bool, int32_t, std::nullptr_t> > >);
-        static_assert(std::is_same_v<std::tuple<>, SubTypesT<1, 1, std::tuple<char, bool, int32_t, std::nullptr_t> > >);
-        static_assert(std::is_same_v<std::tuple<int32_t, std::nullptr_t>, SubTypesT<2, 4, std::tuple<char, bool, int32_t, std::nullptr_t> > >);
+        static_assert(std::is_same_v<std::tuple<std::nullptr_t>, SubTypesT<3, 4, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
+        static_assert(std::is_same_v<std::tuple<char>, SubTypesT<0, 1, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
+        static_assert(std::is_same_v<std::tuple<>, SubTypesT<1, 1, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
+        static_assert(std::is_same_v<std::tuple<int32_t, std::nullptr_t>, SubTypesT<2, 4, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
 
         template <typename... Patterns>
-        class PatternTraits<Ds<Patterns...> >
+        class PatternTraits<Ds<Patterns...>>
         {
-            auto constexpr static nbOoo = nbOooV<Patterns...>;
+            constexpr static auto nbOoo = nbOooV<Patterns...>;
             static_assert(nbOoo == 0 || nbOoo == 1);
 
         public:
@@ -978,32 +985,32 @@ namespace matchit
             class PairPV;
 
             template <typename... Ps, typename... Vs>
-            class PairPV<std::tuple<Ps...>, std::tuple<Vs...> >
+            class PairPV<std::tuple<Ps...>, std::tuple<Vs...>>
             {
             public:
-                using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Ps>::template AppResultTuple<Vs> >()...));
+                using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Ps>::template AppResultTuple<Vs>>()...));
             };
 
             template <std::size_t nbOoos, typename ValueTuple>
             class AppResultForTupleHelper;
 
             template <typename... Values>
-            class AppResultForTupleHelper<0, std::tuple<Values...> >
+            class AppResultForTupleHelper<0, std::tuple<Values...>>
             {
             public:
-                using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Values> >()...));
+                using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Values>>()...));
             };
 
             template <typename... Values>
-            class AppResultForTupleHelper<1, std::tuple<Values...> >
+            class AppResultForTupleHelper<1, std::tuple<Values...>>
             {
-                auto constexpr static idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
-                using Ps0 = SubTypesT<0, idxOoo, std::tuple<Patterns...> >;
-                using Vs0 = SubTypesT<0, idxOoo, std::tuple<Values...> >;
+                constexpr static auto idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
+                using Ps0 = SubTypesT<0, idxOoo, std::tuple<Patterns...>>;
+                using Vs0 = SubTypesT<0, idxOoo, std::tuple<Values...>>;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
-                using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...> >;
+                using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
                 constexpr static auto diff = sizeof...(Values) - sizeof...(Patterns);
-                using Vs1 = SubTypesT<idxOoo + 1 + diff, sizeof...(Values), std::tuple<Values...> >;
+                using Vs1 = SubTypesT<idxOoo + 1 + diff, sizeof...(Values), std::tuple<Values...>>;
                 using SecondHalfTuple = typename PairPV<Ps1, Vs1>::type;
 
             public:
@@ -1015,9 +1022,9 @@ namespace matchit
             using AppResultForTuple = typename AppResultForTupleHelper<nbOoo, decltype(drop<0>(std::declval<Tuple>()))>::type;
 
             template <typename Vector>
-            using SpanTuple = std::conditional_t<nbOoo == 1, std::tuple<Span<typename Vector::value_type> >, std::tuple<> >;
+            using SpanTuple = std::conditional_t<nbOoo == 1, std::tuple<Span<typename Vector::value_type>>, std::tuple<>>;
             template <typename Vector>
-            using AppResultForVector = decltype(std::tuple_cat(std::declval<SpanTuple<Vector> >(), std::declval<typename PatternTraits<Patterns>::template AppResultTuple<typename Vector::value_type> >()...));
+            using AppResultForVector = decltype(std::tuple_cat(std::declval<SpanTuple<Vector>>(), std::declval<typename PatternTraits<Patterns>::template AppResultTuple<typename Vector::value_type>>()...));
 
             template <typename Value>
             class AppResultHelper
@@ -1027,25 +1034,25 @@ namespace matchit
             };
 
             template <typename... Args>
-            class AppResultHelper<std::vector<Args...> >
+            class AppResultHelper<std::vector<Args...>>
             {
             public:
-                using type = AppResultForVector<std::vector<Args...> >;
+                using type = AppResultForVector<std::vector<Args...>>;
             };
 
             template <typename Value>
-            using AppResultTuple = typename AppResultHelper<std::decay_t<Value> >::type;
+            using AppResultTuple = typename AppResultHelper<std::decay_t<Value>>::type;
 
             template <typename ValueTuple, typename ContextT>
-            static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
-                -> decltype(std::tuple_size<std::decay_t<ValueTuple> >::value, bool{})
+            constexpr static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
+                -> decltype(std::tuple_size<std::decay_t<ValueTuple>>::value, bool{})
             {
                 if constexpr (nbOoo == 0)
                 {
                     return std::apply(
                         [&valueTuple, depth, &context](auto const &...patterns) {
                             return apply_(
-                                [depth, &context, &patterns...](auto const &...values) {
+                                [ depth, &context, &patterns... ](auto const &...values) constexpr {
                                     static_assert(sizeof...(patterns) == sizeof...(values));
                                     return (matchPattern(std::forward<decltype(values)>(values), patterns, depth + 1, context) && ...);
                                 },
@@ -1055,21 +1062,21 @@ namespace matchit
                 }
                 else if constexpr (nbOoo == 1)
                 {
-                    auto constexpr idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
+                    constexpr auto idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
                     auto result = matchPatternMultiple<0, 0, idxOoo>(std::forward<ValueTuple>(valueTuple), dsPat.patterns(), depth, context);
-                    auto constexpr valLen = std::tuple_size_v<std::decay_t<ValueTuple> >;
-                    auto constexpr patLen = sizeof...(Patterns);
+                    constexpr auto valLen = std::tuple_size_v<std::decay_t<ValueTuple>>;
+                    constexpr auto patLen = sizeof...(Patterns);
                     return result && matchPatternMultiple<valLen - patLen + idxOoo + 1, idxOoo + 1, patLen - idxOoo - 1>(std::forward<ValueTuple>(valueTuple), dsPat.patterns(), depth, context);
                 }
             }
 
             template <typename ValueVec, typename ContextT>
-            static auto matchPatternImpl(ValueVec &&valueVec, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
+            constexpr static auto matchPatternImpl(ValueVec &&valueVec, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
                 -> decltype(std::declval<ValueVec>().capacity(), bool{})
             {
-                auto constexpr nbOoo = nbOooV<Patterns...>;
+                constexpr auto nbOoo = nbOooV<Patterns...>;
                 static_assert(nbOoo == 0 || nbOoo == 1);
-                auto constexpr nbPat = sizeof...(Patterns);
+                constexpr auto nbPat = sizeof...(Patterns);
 
                 if constexpr (nbOoo == 0)
                 {
@@ -1086,22 +1093,22 @@ namespace matchit
                     {
                         return false;
                     }
-                    auto constexpr idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
+                    constexpr auto idxOoo = findIdx<Ooo, typename Ds<Patterns...>::Type>();
                     auto result = matchPatternVec<0, idxOoo>(std::forward<ValueVec>(valueVec), 0, dsPat.patterns(), depth, context);
                     auto const valLen = valueVec.size();
-                    auto constexpr patLen = sizeof...(Patterns);
+                    constexpr auto patLen = sizeof...(Patterns);
                     auto const spanSize = valLen - (patLen - 1);
                     // FIXME, add to AppResultTuple
-                    context.mMemHolder.emplace_back(makeSpan(&valueVec[idxOoo], spanSize));
+                    context.emplace_back(makeSpan(&valueVec[idxOoo], spanSize));
                     using type = decltype(makeSpan(&valueVec[idxOoo], spanSize));
                     return result &&
-                            // can forward span
-                           matchPattern(std::get<type>(context.mMemHolder.back()), std::get<idxOoo>(dsPat.patterns()), depth, context) &&
+                           // can forward span
+                           matchPattern(std::get<type>(context.back()), std::get<idxOoo>(dsPat.patterns()), depth, context) &&
                            matchPatternVec<idxOoo + 1, patLen - idxOoo - 1>(std::forward<ValueVec>(valueVec), valLen - patLen + idxOoo + 1, dsPat.patterns(), depth, context);
                 }
             }
 
-            static void processIdImpl(Ds<Patterns...> const &dsPat, int32_t depth, IdProcess idProcess)
+            constexpr static void processIdImpl(Ds<Patterns...> const &dsPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
                     [depth, idProcess](auto &&...patterns) {
@@ -1117,15 +1124,15 @@ namespace matchit
         class PostCheck
         {
         public:
-            explicit PostCheck(Pattern const &pattern, Pred const &pred)
+            constexpr explicit PostCheck(Pattern const &pattern, Pred const &pred)
                 : mPattern{pattern}, mPred{pred}
             {
             }
-            bool check() const
+            constexpr bool check() const
             {
                 return mPred();
             }
-            auto const &pattern() const
+            constexpr auto const &pattern() const
             {
                 return mPattern;
             }
@@ -1136,69 +1143,67 @@ namespace matchit
         };
 
         template <typename Pattern, typename Pred>
-        class PatternTraits<PostCheck<Pattern, Pred> >
+        class PatternTraits<PostCheck<Pattern, Pred>>
         {
         public:
             template <typename Value>
             using AppResultTuple = typename PatternTraits<Pattern>::template AppResultTuple<Value>;
 
             template <typename Value, typename ContextT>
-            static auto matchPatternImpl(Value &&value, PostCheck<Pattern, Pred> const &postCheck, int32_t depth, ContextT &context)
+            constexpr static auto matchPatternImpl(Value &&value, PostCheck<Pattern, Pred> const &postCheck, int32_t depth, ContextT &context)
             {
                 return matchPattern(std::forward<Value>(value), postCheck.pattern(), depth + 1, context) && postCheck.check();
             }
-            static void processIdImpl(PostCheck<Pattern, Pred> const &postCheck, int32_t depth, IdProcess idProcess)
+            constexpr static void processIdImpl(PostCheck<Pattern, Pred> const &postCheck, int32_t depth, IdProcess idProcess)
             {
                 processId(postCheck.pattern(), depth, idProcess);
             }
         };
 
-        static_assert(std::is_same_v<PatternTraits<Wildcard>::template AppResultTuple<int32_t>, std::tuple<> >);
-        static_assert(std::is_same_v<PatternTraits<int32_t>::template AppResultTuple<int32_t>, std::tuple<> >);
-        auto constexpr x = [](int32_t) -> int32_t { return 0; };
-        static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard> >::template AppResultTuple<int32_t>, std::tuple<int32_t> >);
-        static_assert(std::is_same_v<PatternTraits<And<App<decltype(x), Wildcard> > >::template AppResultTuple<int32_t>, std::tuple<int32_t> >);
-
-        template <typename Value, typename... Patterns>
-        using TypeSetTuple = UniqueT<decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Value> >()...))>;
+        static_assert(std::is_same_v<PatternTraits<Wildcard>::template AppResultTuple<int32_t>, std::tuple<>>);
+        static_assert(std::is_same_v<PatternTraits<int32_t>::template AppResultTuple<int32_t>, std::tuple<>>);
+        constexpr auto x = [](int32_t) -> int32_t { return 0; };
+        static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<int32_t>, std::tuple<int32_t>>);
+        static_assert(std::is_same_v<PatternTraits<And<App<decltype(x), Wildcard>>>::template AppResultTuple<int32_t>, std::tuple<int32_t>>);
 
         template <typename Value, typename... PatternPairs>
-        auto matchPatterns(Value &&value, PatternPairs const &...patterns)
+        constexpr auto matchPatterns(Value &&value, PatternPairs const &...patterns)
         {
             using RetType = typename PatternPairsRetType<PatternPairs...>::RetType;
-            using TypeSetT = TypeSetTuple<Value, typename PatternPairs::PatternT...>;
+            using TypeTuple = decltype(std::tuple_cat(std::declval<typename PatternTraits<typename PatternPairs::PatternT>::template AppResultTuple<Value>>()...));
 
             if constexpr (!std::is_same_v<RetType, void>)
             {
-                RetType result{};
-                auto const func = [&result, &value](auto const &pattern) -> bool {
-                    auto context = typename ContextTrait<TypeSetT>::ContextT{};
-                    ScopeGuard<decltype(pattern)> guard{pattern};
+                constexpr auto const func = [](auto const &pattern, auto &&value, RetType &result) constexpr->bool
+                {
+                    auto context = typename ContextTrait<TypeTuple>::ContextT{};
                     if (pattern.matchValue(std::forward<Value>(value), context))
                     {
                         result = pattern.execute();
+                        processId(pattern, 0, IdProcess::kCANCEL);
                         return true;
                     }
                     return false;
                 };
-                bool const matched = (func(patterns) || ...);
+                RetType result{};
+                bool const matched = (func(patterns, value, result) || ...);
                 assert(matched);
                 static_cast<void>(matched);
                 return result;
             }
             else
             {
-                auto const func = [&value](auto const &pattern) -> bool {
-                    auto context = typename ContextTrait<TypeSetT>::ContextT{};
-                    ScopeGuard<decltype(pattern)> guard{pattern};
+                auto const func = [](auto const &pattern, auto &&value) -> bool {
+                    auto context = typename ContextTrait<TypeTuple>::ContextT{};
                     if (pattern.matchValue(std::forward<Value>(value), context))
                     {
                         pattern.execute();
+                        processId(pattern, 0, IdProcess::kCANCEL);
                         return true;
                     }
                     return false;
                 };
-                bool const matched = (func(patterns) || ...);
+                bool const matched = (func(patterns, value) || ...);
                 assert(matched);
                 static_cast<void>(matched);
             }
