@@ -15,7 +15,7 @@ constexpr bool checkAndlogLarge(double value)
         pattern(_) = [&] { return false; });
 }
 
-// comment out std::cout then turn on this.
+// comment out std::cout then uncomment this.
 // static_assert(checkAndlogLarge(100));
 
 int main()

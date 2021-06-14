@@ -6,6 +6,12 @@ using namespace matchit;
 
 enum class Kind { kONE, kTWO };
 
+#if __cplusplus > 201703L
+#define CPP20_CONSTEXPR constexpr
+#else
+#define CPP20_CONSTEXPR
+#endif
+
 class Num
 {
 public:
@@ -18,7 +24,7 @@ class One : public Num
 {
 public:
     constexpr static auto k = Kind::kONE;
-    constexpr Kind kind() const override
+    CPP20_CONSTEXPR Kind kind() const override
     {
         return k;
     }
@@ -28,7 +34,7 @@ class Two : public Num
 {
 public:
     constexpr static auto k = Kind::kTWO;
-    Kind kind() const override
+    CPP20_CONSTEXPR Kind kind() const override
     {
         return k;
     }
@@ -62,7 +68,9 @@ constexpr int staticCastAs(Num const& input)
         pattern(_) = [] { return 3; });
 }
 
+#if __cplusplus > 201703L
 static_assert(staticCastAs(One{}) == 1);
+#endif
 
 int main()
 {
