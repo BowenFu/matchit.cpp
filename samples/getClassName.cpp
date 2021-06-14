@@ -2,6 +2,7 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/utility.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 struct Shape
@@ -14,8 +15,8 @@ struct Square : Shape {};
 constexpr auto getClassName(Shape const &s)
 {
     return match(s)(
-        pattern(as<Circle>(_)) = [] { return "Circle"; },
-        pattern(as<Square>(_)) = [] { return "Square"; }
+        pattern(as<Circle>(_)) = expr("Circle"),
+        pattern(as<Square>(_)) = expr("Square")
     );
 }
 

@@ -1,6 +1,7 @@
 #include <array>
 #include "matchit/core.h"
 #include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 template <typename Tuple>
@@ -8,10 +9,10 @@ constexpr int32_t detectTuplePattern(Tuple const& tuple)
 {
     return match(tuple)
     (
-        pattern(ds(2, ooo, 2))  = []{return 4;},
-        pattern(ds(2, ooo))     = []{return 3;},
-        pattern(ds(ooo, 2))     = []{return 2;},
-        pattern(ds(ooo))        = []{return 1;}
+        pattern(ds(2, ooo, 2))  = expr(4),
+        pattern(ds(2, ooo))     = expr(3),
+        pattern(ds(ooo, 2))     = expr(2),
+        pattern(ds(ooo))        = expr(1)
     );
 }
 

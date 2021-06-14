@@ -6,9 +6,9 @@ using namespace matchit;
 constexpr double clip(double value, double min, double max)
 {
     return match(value)(
-        pattern(and_(_ >= min, _ <= max)) = [&] { return value; },
-        pattern(_ > max)                  = [&] { return max; },
-        pattern(_)                        = [&] { return min; }
+        pattern(and_(_ >= min, _ <= max)) = expr(value),
+        pattern(_ > max)                  = expr(max),
+        pattern(_)                        = expr(min)
     );
 }
 

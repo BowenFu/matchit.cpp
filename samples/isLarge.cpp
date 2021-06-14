@@ -3,11 +3,11 @@
 #include "matchit/expression.h"
 using namespace matchit;
 
-constexpr bool isLarge(int32_t value)
+constexpr bool isLarge(double value)
 {
     return match(value)(
-        pattern(app([](int32_t x) { return x * x; }, _ > 1000)) = [] { return true; },
-        pattern(_)                                              = [&] { return false; }
+        pattern(app(_ * _, _ > 1000)) = expr(true),
+        pattern(_)                    = expr(false)
     );
 }
 

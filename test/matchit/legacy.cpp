@@ -140,7 +140,7 @@ bool operator==(Two const &, Two const &)
 }
 
 template <Kind k>
-auto constexpr kind = app(&Num::kind, k);
+constexpr auto kind = app(&Num::kind, k);
 
 template <typename T>
 class NumAsPointer
