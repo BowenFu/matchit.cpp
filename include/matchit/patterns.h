@@ -600,7 +600,7 @@ namespace matchit
                 ValueVariant<Type> mVariant;
                 int32_t mDepth;
 
-                constexpr auto& variant()
+                constexpr auto &variant()
                 {
                     return mVariant;
                 }
@@ -697,7 +697,7 @@ namespace matchit
                 mBlock = BlockVT{&id.block()};
             }
 
-            constexpr Block& block() const
+            constexpr Block &block() const
             {
                 return std::visit(
                     overload(
@@ -1013,6 +1013,19 @@ namespace matchit
         static_assert(std::is_same_v<std::tuple<>, SubTypesT<1, 1, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
         static_assert(std::is_same_v<std::tuple<int32_t, std::nullptr_t>, SubTypesT<2, 4, std::tuple<char, bool, int32_t, std::nullptr_t>>>);
 
+        template <typename ValueTuple>
+        class IsArray : public std::false_type
+        {
+        };
+
+        template <typename T, size_t s>
+        class IsArray<std::array<T, s>> : public std::true_type
+        {
+        };
+
+        template <typename ValueTuple>
+        constexpr auto isArrayV = IsArray<std::decay_t<ValueTuple>>::value;
+
         template <typename... Patterns>
         class PatternTraits<Ds<Patterns...>>
         {
@@ -1047,6 +1060,9 @@ namespace matchit
                 // static_assert(!isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>);
                 using Ps0 = SubTypesT<0, idxOoo, std::tuple<Patterns...>>;
                 using Vs0 = SubTypesT<0, idxOoo, std::tuple<Values...>>;
+                constexpr static auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
+                // <0, ...int32_t> to workaround compile failure for std::tuple<>.
+                using OooResultTuple = typename std::conditional<isBinder, std::tuple<Span<typename std::tuple_element<0, std::tuple<std::decay_t<Values>..., int32_t>>::type>>, std::tuple<>>::type;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
                 using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
                 constexpr static auto diff = sizeof...(Values) - sizeof...(Patterns);
@@ -1054,7 +1070,7 @@ namespace matchit
                 using SecondHalfTuple = typename PairPV<Ps1, Vs1>::type;
 
             public:
-                using type = decltype(std::tuple_cat(std::declval<FirstHalfTuple>(), std::declval<SecondHalfTuple>()));
+                using type = decltype(std::tuple_cat(std::declval<FirstHalfTuple>(), std::declval<OooResultTuple>(), std::declval<SecondHalfTuple>()));
             };
 
             // TODO fix me.
@@ -1083,19 +1099,6 @@ namespace matchit
             template <typename Value>
             using AppResultTuple = typename AppResultHelper<std::decay_t<Value>>::type;
 
-            template <typename ValueTuple>
-            class IsArray : public std::false_type
-            {
-            };
-
-            template <typename T, size_t s>
-            class IsArray<std::array<T, s>> : public std::true_type
-            {
-            };
-
-            template <typename ValueTuple>
-            using isArrayV = typename IsArray<std::decay_t<ValueTuple>>::value;
-
             template <typename ValueTuple, typename ContextT>
             constexpr static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
                 -> decltype(std::tuple_size<std::decay_t<ValueTuple>>::value, bool{})
@@ -1116,10 +1119,26 @@ namespace matchit
                 else if constexpr (nbOooOrBinder == 1)
                 {
                     constexpr auto idxOoo = findOooIdx<typename Ds<Patterns...>::Type>();
+                    constexpr auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
+                    constexpr auto isArray = isArrayV<ValueTuple>;
                     auto result = matchPatternMultiple<0, 0, idxOoo>(std::forward<ValueTuple>(valueTuple), dsPat.patterns(), depth, context);
-                    // constexpr auto isArray = isArrayV<ValueTuple>;
                     constexpr auto valLen = std::tuple_size_v<std::decay_t<ValueTuple>>;
                     constexpr auto patLen = sizeof...(Patterns);
+                    if constexpr (isArray)
+                    {
+                        if constexpr (isBinder)
+                        {
+                            auto const spanSize = valLen - (patLen - 1);
+                            context.emplace_back(makeSpan(&valueTuple[idxOoo], spanSize));
+                            using type = decltype(makeSpan(&valueTuple[idxOoo], spanSize));
+                            result = result &&
+                                     matchPattern(std::get<type>(context.back()), std::get<idxOoo>(dsPat.patterns()), depth, context);
+                        }
+                    }
+                    else
+                    {
+                        static_assert(!isBinder);
+                    }
                     return result && matchPatternMultiple<valLen - patLen + idxOoo + 1, idxOoo + 1, patLen - idxOoo - 1>(std::forward<ValueTuple>(valueTuple), dsPat.patterns(), depth, context);
                 }
             }
@@ -1173,8 +1192,6 @@ namespace matchit
                     },
                     dsPat.patterns());
             }
-
-        private:
         };
 
         template <typename Pattern, typename Pred>
@@ -1219,7 +1236,7 @@ namespace matchit
 
         static_assert(std::is_same_v<PatternTraits<Wildcard>::template AppResultTuple<int32_t>, std::tuple<>>);
         static_assert(std::is_same_v<PatternTraits<int32_t>::template AppResultTuple<int32_t>, std::tuple<>>);
-        constexpr auto x = [](auto&& t) { return t; };
+        constexpr auto x = [](auto &&t) { return t; };
         static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<int32_t>, std::tuple<>>);
         static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<std::array<int32_t, 3>>, std::tuple<std::array<int32_t, 3>>>);
         static_assert(std::is_same_v<PatternTraits<And<App<decltype(x), Wildcard>>>::template AppResultTuple<int32_t>, std::tuple<>>);
