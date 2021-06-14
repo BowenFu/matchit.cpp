@@ -585,7 +585,7 @@ namespace matchit
         };
 
         template <typename... Ts>
-        auto overload(Ts &&...ts)
+        constexpr auto overload(Ts &&...ts)
         {
             return Overload<Ts...>{ts...};
         }
@@ -596,10 +596,14 @@ namespace matchit
         private:
             class Block
             {
-                int32_t mDepth;
-
             public:
                 ValueVariant<Type> mVariant;
+                int32_t mDepth;
+
+                constexpr auto& variant()
+                {
+                    return mVariant;
+                }
                 constexpr auto hasValue() const
                 {
                     return std::visit(
@@ -672,23 +676,25 @@ namespace matchit
                 template <typename Value>
                 constexpr static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::false_type /* StorePointer */)
                 {
-                    v = std::forward<Value>(value);
+                    // for constexpr
+                    v = ValueVariant<Type>{std::forward<Value>(value)};
                 }
                 template <typename Value>
                 constexpr static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::true_type /* StorePointer */)
                 {
-                    v = &value;
+                    v = ValueVariant<Type>{&value};
                 }
             };
 
-            mutable std::variant<Block, Block *> mBlock = Block{};
+            using BlockVT = std::variant<Block, Block *>;
+            mutable BlockVT mBlock = Block{};
 
         public:
             constexpr Id() = default;
 
             constexpr Id(Id const &id)
             {
-                mBlock = std::visit(
+                mBlock = BlockVT{std::visit(
                     overload(
                         [](Block &v) -> Block * {
                             return &v;
@@ -696,7 +702,7 @@ namespace matchit
                         [](Block *p) -> Block * {
                             return p;
                         }),
-                    id.mBlock);
+                    id.mBlock)};
             }
 
             constexpr Block& block() const
@@ -719,7 +725,7 @@ namespace matchit
                 {
                     return value() == v;
                 }
-                IdTrait::matchValueImpl(block().mVariant, std::forward<Value>(v), StorePointer<Type, Value>{});
+                IdTrait::matchValueImpl(block().variant(), std::forward<Value>(v), StorePointer<Type, Value>{});
                 return true;
             }
             constexpr void reset(int32_t depth) const
