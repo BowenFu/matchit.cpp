@@ -20,9 +20,9 @@ jobs:
 
     - name: Run static analysis
       uses: JacobDomagala/StaticAnalysis@master
-      # with:
+      with:
         # Exclude any issues found in ${Project_root_dir}/lib
-        # exclude_dir: lib
+        exclude_dir: build
 
         # Additional apt packages that need to be installed before running Cmake
         # apt_pckgs: software-properties-common libglu1-mesa-dev freeglut3-dev mesa-common-dev
