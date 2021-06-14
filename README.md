@@ -2,12 +2,16 @@
 ![match(it).cpp](./matchit.cpp.svg)
 
 [![CMake](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml)
+[![Codacy](https://github.com/BowenFu/matchit.cpp/actions/workflows/codacy.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/codacy.yml)
+[![CodeQL](https://github.com/BowenFu/matchit.cpp/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/codeql-analysis.yml)
+
 [![godbolt][badge.godbolt]][godbolt]
+
 Tested on Windows (msvc), Ubuntu (gcc), MacOS (clang).
 
 [badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
 
-[godbolt]: https://godbolt.org/z/jMd5KhK1K
+[godbolt]: https://godbolt.org/z/6E1h14Y74
 
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
