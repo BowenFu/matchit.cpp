@@ -61,3 +61,25 @@ TEST(Ds, vecOooBinder2)
         EXPECT_EQ(span.value().mData[1], 456);
       });
 }
+
+TEST(Ds, vecOooBinder3)
+{
+  // Note: id only valid inside match scope.
+  Id<Span<int32_t>> span;
+  match(std::vector<int32_t>{123, 456})(
+      pattern(ds(123, ooo(span), 456)) = [&] {
+        EXPECT_EQ(span.value().mSize, 0);
+      });
+}
+
+TEST(Ds, vecOooBinder4)
+{
+  // Note: id only valid inside match scope.
+  Id<Span<int32_t>> span;
+  match(std::vector<int32_t>{123, 456, 789})(
+      pattern(ds(123, ooo(span))) = [&] {
+        EXPECT_EQ(span.value().mSize, 2);
+        EXPECT_EQ(span.value().mData[0], 456);
+        EXPECT_EQ(span.value().mData[1], 789);
+      });
+}
