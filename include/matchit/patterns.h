@@ -687,22 +687,14 @@ namespace matchit
             };
 
             using BlockVT = std::variant<Block, Block *>;
-            mutable BlockVT mBlock = Block{};
+            BlockVT mBlock = Block{};
 
         public:
             constexpr Id() = default;
 
             constexpr Id(Id const &id)
             {
-                mBlock = BlockVT{std::visit(
-                    overload(
-                        [](Block &v) -> Block * {
-                            return &v;
-                        },
-                        [](Block *p) -> Block * {
-                            return p;
-                        }),
-                    id.mBlock)};
+                mBlock = BlockVT{&id.block()};
             }
 
             constexpr Block& block() const
@@ -715,7 +707,9 @@ namespace matchit
                         [](Block *p) -> Block & {
                             return *p;
                         }),
-                    mBlock);
+                    // constexpr does not allow mutable, we use const_cast instead.
+                    // Never declare Id as const.
+                    const_cast<BlockVT &>(mBlock));
             }
 
             template <typename Value>
