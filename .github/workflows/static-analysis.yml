@@ -20,7 +20,7 @@ jobs:
 
     - name: Run static analysis
       uses: JacobDomagala/StaticAnalysis@master
-      with:
+      # with:
         # Exclude any issues found in ${Project_root_dir}/lib
         # exclude_dir: lib
 
