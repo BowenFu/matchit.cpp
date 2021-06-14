@@ -1,6 +1,10 @@
 name: Static analysis
 
-on: [pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   static_analysis:
