@@ -15,7 +15,7 @@ enum class Kind { kONE, kTWO };
 class Num
 {
 public:
-    virtual Kind kind() const = 0;
+    CPP20_CONSTEXPR virtual Kind kind() const = 0;
 protected:
     ~Num() = default;
 };
