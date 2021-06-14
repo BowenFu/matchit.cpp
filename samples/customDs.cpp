@@ -58,7 +58,9 @@ constexpr auto getSecond(T&& v)
         pattern(ds(_, i)) = expr(i));
 }
 
+#if __cplusplus > 201703L
 static_assert(getSecond(A{1, "123"}) == std::string_view{"123"});
+#endif
 
 int main()
 {
