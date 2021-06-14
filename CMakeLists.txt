@@ -6,7 +6,10 @@ project(
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-set(CMAKE_CXX_STANDARD 17)
+
+if (NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17)
+endif()
 
 list(APPEND
     BASE_COMPILE_FLAGS
@@ -30,3 +33,5 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         add_subdirectory(samples)
     endif()
 endif()
+
+unset(CMAKE_CXX_STANDARD CACHE)
