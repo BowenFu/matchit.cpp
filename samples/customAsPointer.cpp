@@ -9,15 +9,16 @@ enum class Kind { kONE, kTWO };
 class Num
 {
 public:
-    virtual ~Num() = default;
     virtual Kind kind() const = 0;
+protected:
+    ~Num() = default;
 };
 
 class One : public Num
 {
 public:
     constexpr static auto k = Kind::kONE;
-    Kind kind() const override
+    constexpr Kind kind() const override
     {
         return k;
     }
@@ -40,9 +41,9 @@ template <typename T>
 class NumAsPointer
 {
 public:
-    auto operator()(Num const& num) const
+    constexpr auto operator()(Num const& num) const
     {
-        std::cout << "custom as pointer." << std::endl;
+        // std::cout << "custom as pointer." << std::endl;
         return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
     }
 };
@@ -53,13 +54,15 @@ class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One> {};
 template <>
 class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
 
-int staticCastAs(Num const& input)
+constexpr int staticCastAs(Num const& input)
 {
     return match(input)(
         pattern(as<One>(_)) = [] { return 1; },
         pattern(kind<Kind::kTWO>) = [] { return 2; },
         pattern(_) = [] { return 3; });
 }
+
+static_assert(staticCastAs(One{}) == 1);
 
 int main()
 {

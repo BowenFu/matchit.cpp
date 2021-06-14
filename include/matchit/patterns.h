@@ -435,7 +435,7 @@ namespace matchit
             {
                 if constexpr (std::is_same_v<AppResultCurTuple<Value>, std::tuple<>>)
                 {
-                    return matchPattern(invoke_(appPat.unary(), value), appPat.pattern(), depth + 1, context);
+                    return matchPattern(std::forward<AppResult<Value>>(invoke_(appPat.unary(), value)), appPat.pattern(), depth + 1, context);
                 }
                 else
                 {
@@ -468,7 +468,7 @@ namespace matchit
         };
 
         template <typename... Patterns>
-        auto and_(Patterns const &...patterns)
+        constexpr auto and_(Patterns const &...patterns)
         {
             return And<Patterns...>{patterns...};
         }
@@ -519,7 +519,7 @@ namespace matchit
         };
 
         template <typename Pattern>
-        auto not_(Pattern const &pattern)
+        constexpr auto not_(Pattern const &pattern)
         {
             return Not<Pattern>{pattern};
         }
