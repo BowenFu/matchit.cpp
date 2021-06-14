@@ -52,7 +52,6 @@ TEST(Ds, vecOooBinder1)
 
 TEST(Ds, vecOooBinder2)
 {
-  // Note: id only valid inside match scope.
   Id<Span<int32_t>> span;
   match(std::vector<int32_t>{123, 456})(
       pattern(ds(ooo(span))) = [&] {
@@ -64,7 +63,6 @@ TEST(Ds, vecOooBinder2)
 
 TEST(Ds, vecOooBinder3)
 {
-  // Note: id only valid inside match scope.
   Id<Span<int32_t>> span;
   match(std::vector<int32_t>{123, 456})(
       pattern(ds(123, ooo(span), 456)) = [&] {
@@ -74,7 +72,6 @@ TEST(Ds, vecOooBinder3)
 
 TEST(Ds, vecOooBinder4)
 {
-  // Note: id only valid inside match scope.
   Id<Span<int32_t>> span;
   match(std::vector<int32_t>{123, 456, 789})(
       pattern(ds(123, ooo(span))) = [&] {
@@ -101,7 +98,6 @@ TEST(Ds, arrayOooBinder1)
 
 TEST(Ds, arrayOooBinder2)
 {
-  // Note: id only valid inside match scope.
   Id<Span<int32_t>> span;
   match(std::array<int32_t, 2>{123, 456})(
       pattern(ds(ooo(span))) = [&] {
@@ -113,7 +109,6 @@ TEST(Ds, arrayOooBinder2)
 
 TEST(Ds, arrayOooBinder3)
 {
-  // Note: id only valid inside match scope.
   Id<Span<int32_t>> span;
   match(std::array<int32_t, 2>{123, 456})(
       pattern(ds(123, ooo(span), 456)) = [&] {
@@ -123,7 +118,6 @@ TEST(Ds, arrayOooBinder3)
 
 TEST(Ds, arrayOooBinder4)
 {
-  // Note: id only valid inside match scope.
   Id<Span<int32_t>> span;
   match(std::array<int32_t, 3>{123, 456, 789})(
       pattern(ds(123, ooo(span))) = [&] {
