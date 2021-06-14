@@ -142,7 +142,6 @@ namespace matchit
         class Variant<std::tuple<T, Ts...>>
         {
         public:
-            // using type = std::conditional_t<sizeof...(Ts) == 0 && std::is_default_constructible_v<T>, std::tuple<T>, std::variant<std::monostate, T, Ts...>>;
             using type = std::variant<std::monostate, T, Ts...>;
         };
 
@@ -424,8 +423,9 @@ namespace matchit
         public:
             template <typename Value>
             using AppResult = std::invoke_result_t<Unary, Value>;
+            // We store value for scalar types in Id and they can not be moved. So to support constexpr.
             template <typename Value>
-            using AppResultCurTuple = std::conditional_t<std::is_lvalue_reference_v<AppResult<Value>>, std::tuple<>, std::tuple<AppResult<Value>>>;
+            using AppResultCurTuple = std::conditional_t<std::is_lvalue_reference_v<AppResult<Value>> || std::is_scalar_v<AppResult<Value>>, std::tuple<>, std::tuple<AppResult<Value>>>;
 
             template <typename Value>
             using AppResultTuple = decltype(std::tuple_cat(std::declval<AppResultCurTuple<Value>>(), std::declval<typename PatternTraits<Pattern>::template AppResultTuple<AppResult<Value>>>()));
@@ -433,9 +433,9 @@ namespace matchit
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, App<Unary, Pattern> const &appPat, int32_t depth, ContextT &context)
             {
-                if constexpr (std::is_lvalue_reference_v<AppResult<Value>>)
+                if constexpr (std::is_same_v<AppResultCurTuple<Value>, std::tuple<>>)
                 {
-                    return matchPattern(std::invoke(appPat.unary(), value), appPat.pattern(), depth + 1, context);
+                    return matchPattern(std::forward<AppResult<Value>>(invoke_(appPat.unary(), value)), appPat.pattern(), depth + 1, context);
                 }
                 else
                 {
@@ -468,7 +468,7 @@ namespace matchit
         };
 
         template <typename... Patterns>
-        auto and_(Patterns const &...patterns)
+        constexpr auto and_(Patterns const &...patterns)
         {
             return And<Patterns...>{patterns...};
         }
@@ -519,7 +519,7 @@ namespace matchit
         };
 
         template <typename Pattern>
-        auto not_(Pattern const &pattern)
+        constexpr auto not_(Pattern const &pattern)
         {
             return Not<Pattern>{pattern};
         }
@@ -566,7 +566,7 @@ namespace matchit
 
         template <typename Type, typename Value>
         struct StorePointer<Type, Value, std::void_t<decltype(std::declval<ValueVariant<Type> &>() = &std::declval<Value>())>>
-            : std::is_lvalue_reference<Value>
+            : std::conjunction<std::is_lvalue_reference<Value>, std::negation<std::is_scalar<Value>>>
         {
         };
 
@@ -585,7 +585,7 @@ namespace matchit
         };
 
         template <typename... Ts>
-        auto overload(Ts &&...ts)
+        constexpr auto overload(Ts &&...ts)
         {
             return Overload<Ts...>{ts...};
         }
@@ -596,10 +596,14 @@ namespace matchit
         private:
             class Block
             {
-                int32_t mDepth;
-
             public:
                 ValueVariant<Type> mVariant;
+                int32_t mDepth;
+
+                constexpr auto& variant()
+                {
+                    return mVariant;
+                }
                 constexpr auto hasValue() const
                 {
                     return std::visit(
@@ -672,31 +676,25 @@ namespace matchit
                 template <typename Value>
                 constexpr static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::false_type /* StorePointer */)
                 {
-                    v = std::forward<Value>(value);
+                    // for constexpr
+                    v = ValueVariant<Type>{std::forward<Value>(value)};
                 }
                 template <typename Value>
                 constexpr static auto matchValueImpl(ValueVariant<Type> &v, Value &&value, std::true_type /* StorePointer */)
                 {
-                    v = &value;
+                    v = ValueVariant<Type>{&value};
                 }
             };
 
-            mutable std::variant<Block, Block *> mBlock = Block{};
+            using BlockVT = std::variant<Block, Block *>;
+            BlockVT mBlock = Block{};
 
         public:
             constexpr Id() = default;
 
             constexpr Id(Id const &id)
             {
-                mBlock = std::visit(
-                    overload(
-                        [](Block &v) -> Block * {
-                            return &v;
-                        },
-                        [](Block *p) -> Block * {
-                            return p;
-                        }),
-                    id.mBlock);
+                mBlock = BlockVT{&id.block()};
             }
 
             constexpr Block& block() const
@@ -709,7 +707,9 @@ namespace matchit
                         [](Block *p) -> Block & {
                             return *p;
                         }),
-                    mBlock);
+                    // constexpr does not allow mutable, we use const_cast instead.
+                    // Never declare Id as const.
+                    const_cast<BlockVT &>(mBlock));
             }
 
             template <typename Value>
@@ -719,7 +719,7 @@ namespace matchit
                 {
                     return value() == v;
                 }
-                IdTrait::matchValueImpl(block().mVariant, std::forward<Value>(v), StorePointer<Type, Value>{});
+                IdTrait::matchValueImpl(block().variant(), std::forward<Value>(v), StorePointer<Type, Value>{});
                 return true;
             }
             constexpr void reset(int32_t depth) const
@@ -1190,9 +1190,10 @@ namespace matchit
 
         static_assert(std::is_same_v<PatternTraits<Wildcard>::template AppResultTuple<int32_t>, std::tuple<>>);
         static_assert(std::is_same_v<PatternTraits<int32_t>::template AppResultTuple<int32_t>, std::tuple<>>);
-        constexpr auto x = [](int32_t) -> int32_t { return 0; };
-        static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<int32_t>, std::tuple<int32_t>>);
-        static_assert(std::is_same_v<PatternTraits<And<App<decltype(x), Wildcard>>>::template AppResultTuple<int32_t>, std::tuple<int32_t>>);
+        constexpr auto x = [](auto&& t) { return t; };
+        static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<int32_t>, std::tuple<>>);
+        static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<std::array<int32_t, 3>>, std::tuple<std::array<int32_t, 3>>>);
+        static_assert(std::is_same_v<PatternTraits<And<App<decltype(x), Wildcard>>>::template AppResultTuple<int32_t>, std::tuple<>>);
 
         template <typename Value, typename... PatternPairs>
         constexpr auto matchPatterns(Value &&value, PatternPairs const &...patterns)

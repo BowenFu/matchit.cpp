@@ -14,8 +14,8 @@ namespace matchit
             return static_cast<T>(input);
         };
 
+        auto constexpr deref = [](auto &&x) -> decltype(*x)& { return *x; };
         auto constexpr some = [](auto const pat) {
-            auto constexpr deref = [](auto &&x) -> decltype(*x) { return *x; };
             return and_(app(cast<bool>, true), app(deref, pat));
         };
 
@@ -26,16 +26,16 @@ namespace matchit
         {
         public:
             template <typename B>
-            auto operator()(B const &b) const
+            constexpr auto operator()(B const &b) const
             {
                 return dynamic_cast<T const *>(std::addressof(b));
             }
             template <typename... Types>
-            auto operator()(std::variant<Types...> const &v) const
+            constexpr auto operator()(std::variant<Types...> const &v) const
             {
                 return std::get_if<T>(std::addressof(v));
             }
-            auto operator()(std::any const &a) const
+            constexpr auto operator()(std::any const &a) const
             {
                 return std::any_cast<T>(std::addressof(a));
             }
@@ -61,13 +61,15 @@ namespace matchit
             using CustomAsPointer<T>::operator();
         };
 
-        template <typename T, typename AsPointerT = AsPointer<T> >
-        auto constexpr as = [](auto const pat, AsPointerT const asPointer = {}) {
-            return app(asPointer, some(pat));
+        template <typename T>
+        constexpr AsPointer<T> asPointer;
+        template <typename T>
+        auto constexpr as = [](auto const pat) {
+            return app(asPointer<T>, some(pat));
         };
 
         template <typename Value, typename Pattern>
-        auto matched(Value&& v, Pattern&& p)
+        constexpr auto matched(Value&& v, Pattern&& p)
         {
             return match(std::forward<Value>(v))(
                 pattern(std::forward<Pattern>(p)) = [] { return true; },

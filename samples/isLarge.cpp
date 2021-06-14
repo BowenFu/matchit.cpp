@@ -11,7 +11,8 @@ constexpr bool isLarge(int32_t value)
     );
 }
 
-// static_assert(isLarge(100));
+// app with projection returning scalar types is supported by constexpr match.
+static_assert(isLarge(100));
 
 int main()
 {

@@ -6,7 +6,10 @@ project(
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-set(CMAKE_CXX_STANDARD 17)
+if (NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+message(STATUS "CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
 list(APPEND
     BASE_COMPILE_FLAGS
@@ -21,7 +24,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 add_library(matchit INTERFACE)
 target_include_directories(matchit INTERFACE
   ${PROJECT_SOURCE_DIR}/include)
-target_compile_features(matchit INTERFACE cxx_std_17)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
@@ -30,3 +32,5 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         add_subdirectory(samples)
     endif()
 endif()
+
+unset(CMAKE_CXX_STANDARD CACHE)

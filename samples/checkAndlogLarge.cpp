@@ -4,7 +4,7 @@
 #include "matchit/expression.h"
 using namespace matchit;
 
-bool checkAndlogLarge(double value)
+constexpr bool checkAndlogLarge(double value)
 {
     auto const square = [](auto &&v) { return v * v; };
     Id<double> s;
@@ -14,6 +14,9 @@ bool checkAndlogLarge(double value)
                 return true; },
         pattern(_) = [&] { return false; });
 }
+
+// comment out std::cout then uncomment this.
+// static_assert(checkAndlogLarge(100));
 
 int main()
 {

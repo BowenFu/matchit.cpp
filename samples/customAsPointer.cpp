@@ -6,18 +6,25 @@ using namespace matchit;
 
 enum class Kind { kONE, kTWO };
 
+#if __cplusplus > 201703L
+#define CPP20_CONSTEXPR constexpr
+#else
+#define CPP20_CONSTEXPR
+#endif
+
 class Num
 {
 public:
-    virtual ~Num() = default;
-    virtual Kind kind() const = 0;
+    CPP20_CONSTEXPR virtual Kind kind() const = 0;
+protected:
+    ~Num() = default;
 };
 
 class One : public Num
 {
 public:
     constexpr static auto k = Kind::kONE;
-    Kind kind() const override
+    CPP20_CONSTEXPR Kind kind() const override
     {
         return k;
     }
@@ -27,7 +34,7 @@ class Two : public Num
 {
 public:
     constexpr static auto k = Kind::kTWO;
-    Kind kind() const override
+    CPP20_CONSTEXPR Kind kind() const override
     {
         return k;
     }
@@ -40,9 +47,9 @@ template <typename T>
 class NumAsPointer
 {
 public:
-    auto operator()(Num const& num) const
+    constexpr auto operator()(Num const& num) const
     {
-        std::cout << "custom as pointer." << std::endl;
+        // std::cout << "custom as pointer." << std::endl;
         return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
     }
 };
@@ -53,13 +60,19 @@ class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One> {};
 template <>
 class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
 
-int staticCastAs(Num const& input)
+constexpr int staticCastAs(Num const& input)
 {
     return match(input)(
         pattern(as<One>(_)) = [] { return 1; },
         pattern(kind<Kind::kTWO>) = [] { return 2; },
         pattern(_) = [] { return 3; });
 }
+
+#if 0 // fail on gcc, fix me later.
+#if __cplusplus > 201703L
+static_assert(staticCastAs(One{}) == 1);
+#endif
+#endif
 
 int main()
 {

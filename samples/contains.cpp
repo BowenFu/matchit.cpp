@@ -4,7 +4,7 @@
 using namespace matchit;
 
 template <typename Map, typename Key>
-bool contains(Map const& map, Key const& key)
+constexpr bool contains(Map const& map, Key const& key)
 {
     return match(map.find(key))(
         pattern(map.end()) = [] { return false; },

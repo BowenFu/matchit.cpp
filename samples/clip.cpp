@@ -3,7 +3,7 @@
 #include "matchit/expression.h"
 using namespace matchit;
 
-double clip(double value, double min, double max)
+constexpr double clip(double value, double min, double max)
 {
     return match(value)(
         pattern(and_(_ >= min, _ <= max)) = [&] { return value; },
@@ -11,6 +11,10 @@ double clip(double value, double min, double max)
         pattern(_)                        = [&] { return min; }
     );
 }
+
+static_assert(clip(5, 0, 10) == 5);
+static_assert(clip(5, 6, 10) == 6);
+static_assert(clip(5, 0, 4) == 4);
 
 int main()
 {

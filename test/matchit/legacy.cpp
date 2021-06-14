@@ -84,8 +84,6 @@ TEST(Match, test3)
 {
     auto const matchFunc = [](A const &input) {
         Id<int> i;
-        Id<int> j;
-        Id<A> a;
         // compose patterns for destructuring struct A.
         auto const dsA = [](Id<int> &x) {
             return and_(app(&A::a, x), app(&A::b, 1));
@@ -317,7 +315,6 @@ TEST(Match, test11)
 TEST(Match, test12)
 {
     EXPECT_TRUE(matched(std::array<int, 2>{1, 2}, ds(ooo, _)));
-    Id<int> x;
     EXPECT_TRUE(matched(std::array<int, 3>{1, 2, 3}, ds(ooo, _)));
     EXPECT_TRUE(matched(std::array<int, 2>{1, 2}, ds(ooo, _)));
 }

@@ -8,7 +8,7 @@ using namespace matchit;
 struct A
 {
     int a;
-    std::string b;
+    char const *b;
 };
 bool operator==(A const& lhs, A const& rhs)
 {
@@ -50,13 +50,17 @@ namespace std
 } // namespace std
 
 template <typename T>
-auto getSecond(T&& v)
+constexpr auto getSecond(T&& v)
 {
-    Id<std::string> i;
+    Id<char const*> i;
     return match(std::forward<T>(v))(
         pattern(ds(2, i)) = expr(i),
         pattern(ds(_, i)) = expr(i));
 }
+
+// #if __cplusplus > 201703L
+static_assert(getSecond(A{1, "123"}) == std::string_view{"123"});
+// #endif
 
 int main()
 {

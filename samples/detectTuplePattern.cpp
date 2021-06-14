@@ -4,7 +4,7 @@
 using namespace matchit;
 
 template <typename Tuple>
-int32_t detectTuplePattern(Tuple const& tuple)
+constexpr int32_t detectTuplePattern(Tuple const& tuple)
 {
     return match(tuple)
     (
@@ -14,6 +14,8 @@ int32_t detectTuplePattern(Tuple const& tuple)
         pattern(ds(ooo))        = []{return 1;}
     );
 }
+
+static_assert(detectTuplePattern(std::make_tuple(2, 3, 5, 7, 2)) == 4);
 
 int main()
 {
