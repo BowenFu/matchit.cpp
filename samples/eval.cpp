@@ -18,7 +18,8 @@ constexpr auto eval(std::tuple<char, T1, T2> const& expr)
 
 static_assert(std::is_literal_type_v<Id<int32_t>>);
 #if __cplusplus > 201703L
-static_assert(eval(std::make_tuple('*', 5, 6)) == 30);
+constexpr auto result = eval(std::make_tuple('*', 5, 6));
+static_assert(result == 30);
 #endif
 
 int main()
