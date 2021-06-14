@@ -1,15 +1,18 @@
 #include <array>
 #include "matchit/core.h"
 #include "matchit/patterns.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
-bool sumIs(std::array<int32_t, 2> const& arr, int s)
+constexpr bool sumIs(std::array<int32_t, 2> const& arr, int s)
 {
     Id<int32_t> i, j;
     return match(arr)(
-        pattern(i, j).when([&] { return *i + *j == s; }) = [] { return true; },
-        pattern(_) = [] { return false; });
+        pattern(i, j).when(i + j == s) = expr(true),
+        pattern(_)                     = expr(false));
 }
+
+static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));
 
 int main()
 {

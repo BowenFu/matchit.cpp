@@ -10,16 +10,16 @@ namespace matchit
     {
 
         template <typename T>
-        auto constexpr cast = [](auto &&input) {
+        constexpr auto cast = [](auto &&input) {
             return static_cast<T>(input);
         };
 
-        auto constexpr deref = [](auto &&x) -> decltype(*x)& { return *x; };
-        auto constexpr some = [](auto const pat) {
+        constexpr auto deref = [](auto &&x) -> decltype(*x)& { return *x; };
+        constexpr auto some = [](auto const pat) {
             return and_(app(cast<bool>, true), app(deref, pat));
         };
 
-        auto constexpr none = app(cast<bool>, false);
+        constexpr auto none = app(cast<bool>, false);
 
         template <typename T>
         class AsPointerBase
@@ -64,7 +64,7 @@ namespace matchit
         template <typename T>
         constexpr AsPointer<T> asPointer;
         template <typename T>
-        auto constexpr as = [](auto const pat) {
+        constexpr auto as = [](auto const pat) {
             return app(asPointer<T>, some(pat));
         };
 

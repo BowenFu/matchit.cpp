@@ -2,20 +2,23 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/utility.h"
+#include "matchit/expression.h"
 using namespace matchit;
 
 template <typename T>
-auto square(T const* t)
+constexpr auto square(std::optional<T> const& t)
 {
     Id<T> id;
     return match(t)(
-        pattern(some(id)) = [&id] { return *id * *id; },
-        pattern(none) = [] { return 0; });
+        pattern(some(id)) = id * id,
+        pattern(none) = expr(0));
 }
+constexpr auto x = std::make_optional(5);
+static_assert(square(x) == 25);
 
 int main()
 {
-    auto t = 3;
-    std::cout << square(&t) << std::endl;
+    auto t = std::make_optional(3);
+    std::cout << square(t) << std::endl;
     return 0;
 }

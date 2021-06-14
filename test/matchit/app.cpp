@@ -21,7 +21,7 @@ public:
   }
 };
 
-auto constexpr deref = [](auto &&x) -> decltype(*x) { return *x; };
+constexpr auto deref = [](auto &&x) -> decltype(*x) { return *x; };
 static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard> >::template AppResultTuple<Base*>, std::tuple<> >);
 static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard> >::template AppResult<Base*>, Base&>);
 
