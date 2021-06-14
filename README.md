@@ -2,12 +2,13 @@
 ![match(it).cpp](./matchit.cpp.svg)
 
 [![CMake](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml)
-[![Codacy](https://github.com/BowenFu/matchit.cpp/actions/workflows/codacy.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/codacy.yml)
 [![CodeQL](https://github.com/BowenFu/matchit.cpp/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/codeql-analysis.yml)
+[![Codacy](https://github.com/BowenFu/matchit.cpp/actions/workflows/codacy.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/codacy.yml)
 
 [![godbolt][badge.godbolt]][godbolt]
-
-Tested on Windows (msvc), Ubuntu (gcc), MacOS (clang).
+[![GitHub license](https://img.shields.io/github/license/BowenFu/matchit.cpp.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
+[![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](.) 
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](.) 
 
 [badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
 
