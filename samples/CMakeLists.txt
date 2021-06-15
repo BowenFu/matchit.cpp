@@ -16,6 +16,7 @@ relu
 someNone
 sumIs
 variantAny
+symmetric
 )
 
 foreach(sample ${MATCHIT_SAMPLES})

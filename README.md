@@ -14,6 +14,8 @@
 
 [godbolt]: https://godbolt.org/z/6E1h14Y74
 
+### For syntax design details please refer to [design](./DESIGN.md).
+
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
 ```C++
@@ -103,7 +105,7 @@ constexpr double relu(double value)
 {
     return match(value)(
         pattern(meet([](auto &&v) { return v >= 0; })) = expr(value),
-        pattern(_) = expr(0));
+        pattern(_)                                     = expr(0));
 }
 
 static_assert(relu(5) == 5);
@@ -116,7 +118,7 @@ constexpr double relu(double value)
 {
     return match(value)(
         pattern(_ >= 0) = expr(value),
-        pattern(_) = expr(0));
+        pattern(_)      = expr(0));
 }
 
 static_assert(relu(5) == 5);
@@ -234,13 +236,35 @@ bool checkAndlogLarge(double value)
 // comment out std::cout then uncomment this. Outputs are not support in constant expression.
 // static_assert(checkAndlogLarge(100));
 ```
-Note that we need to define/declare the identifiers (`Id<double> s`) before using it inside the pattern matching.
+Note that we need to define/declare the identifiers (`Id<double> s`) before using it inside the pattern matching. (Do not mark it as const.)
 `*` operator is used to dereference the value inside identifiers.
 Identifiers are only valid inside match context.
 
 Note that we used `and_` here to bind a value to the identifier under some conditions on the value.
 This practice can achieve the functionality of `@` pattern in Rust.
 We recommend always put your Identifier pattern at the end of And pattern. It is like saying that bind the value to the identifier only when all previous patterns / conditions get met.
+
+Also note when the same identifier is bound multiple times, the bound values must equal to each other via `operator==`.
+An sample to check if an array is symmetric:
+```C++
+#include "matchit/core.h"
+#include "matchit/patterns.h"
+#include "matchit/expression.h"
+using namespace matchit;
+
+constexpr bool symmetric(std::array<int32_t, 5> const& arr)
+{
+    Id<int32_t> i, j; 
+    return match(arr)(
+        pattern(i, j, _, j, i) = expr(true),
+        pattern(_)             = expr(false)
+    );
+}
+
+static_assert(symmetric(std::array<int32_t, 5>{5, 0, 3, 7, 10}) == false);
+static_assert(symmetric(std::array<int32_t, 5>{5, 0, 3, 0, 5}) == true);
+static_assert(symmetric(std::array<int32_t, 5>{5, 1, 3, 0, 5}) == false);
+```
 
 ## Destructure Pattern
 We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and `std::vector` from the STL (including their variants).
