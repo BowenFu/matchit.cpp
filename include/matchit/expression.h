@@ -1,5 +1,5 @@
-#ifndef _EXPRESSION_H_
-#define _EXPRESSION_H_
+#ifndef MATCHIT_EXPRESSION_H
+#define MATCHIT_EXPRESSION_H
 
 #include <type_traits>
 
@@ -208,4 +208,4 @@ namespace matchit
     using impl::expr;
 } // namespace matchit
 
-#endif // _EXPRESSION_H_
+#endif // MATCHIT_EXPRESSION_H

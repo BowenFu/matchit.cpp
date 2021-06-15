@@ -1,5 +1,6 @@
-#ifndef _CORE_H_
-#define _CORE_H_
+#ifndef MATCHIT_CORE_H
+#define MATCHIT_CORE_H
+
 #include <tuple>
 #include <optional>
 #include <cstdint>
@@ -65,4 +66,4 @@ namespace matchit
     using impl::match;
 
 } // namespace matchit
-#endif // _CORE_H_
+#endif // MATCHIT_CORE_H

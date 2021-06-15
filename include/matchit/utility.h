@@ -1,5 +1,5 @@
-#ifndef _UTILITY_H_
-#define _UTILITY_H_
+#ifndef MATCHIT_UTILITY_H
+#define MATCHIT_UTILITY_H
 
 #include <variant>
 #include <any>
@@ -83,4 +83,4 @@ namespace matchit
     using impl::matched;
 } // namespace matchit
 
-#endif // _UTILITY_H_
+#endif // MATCHIT_UTILITY_H
