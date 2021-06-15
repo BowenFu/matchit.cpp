@@ -1,4 +1,4 @@
-# match(it): A light-weight header-only pattern-matching library for C++17.
+# match(it): A light-weight header-only pattern-matching library for C++17 with macro-free APIs.
 ![match(it).cpp](./matchit.cpp.svg)
 
 [![CMake](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml)

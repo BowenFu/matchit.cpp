@@ -1,0 +1,41 @@
+name: Test Coverage
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: sudo apt install gcovr
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++
+
+    - name: Build
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake --build . --config Debug
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ctest -C Debug --output-on-failure --timeout 240
+
+    - name: Compute Coverage
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: gcovr -r ../include/matchit -x coverage.xml .
+
+    - name: Upload Coverage
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: bash <(curl -s https://codecov.io/bash) -f coverage.xml
