@@ -1,5 +1,5 @@
-#ifndef _PATTERNS_H_
-#define _PATTERNS_H_
+#ifndef MATCHIT_PATTERNS_H
+#define MATCHIT_PATTERNS_H
 
 #include <memory>
 #include <tuple>
@@ -1300,4 +1300,4 @@ namespace matchit
     using impl::Span;
 } // namespace matchit
 
-#endif // _PATTERNS_H_
+#endif // MATCHIT_PATTERNS_H

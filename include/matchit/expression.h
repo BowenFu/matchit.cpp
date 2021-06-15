@@ -1,5 +1,5 @@
-#ifndef _EXPRESSION_H_
-#define _EXPRESSION_H_
+#ifndef MATCHIT_EXPRESSION_H
+#define MATCHIT_EXPRESSION_H
 
 #include <type_traits>
 
@@ -135,6 +135,8 @@ namespace matchit
         UN_OP_FOR_NULLARY(!)
         UN_OP_FOR_NULLARY(-)
 
+#undef UN_OP_FOR_NULLARY
+
         BIN_OP_FOR_NULLARY(+)
         BIN_OP_FOR_NULLARY(-)
         BIN_OP_FOR_NULLARY(*)
@@ -148,6 +150,8 @@ namespace matchit
         BIN_OP_FOR_NULLARY(>)
         BIN_OP_FOR_NULLARY(||)
         BIN_OP_FOR_NULLARY(&&)
+
+#undef BIN_OP_FOR_NULLARY
 
         // Unary
         template <typename T>
@@ -190,6 +194,8 @@ namespace matchit
         UN_OP_FOR_UNARY(!)
         UN_OP_FOR_UNARY(-)
 
+#undef UN_OP_FOR_UNARY
+
         BIN_OP_FOR_UNARY(+)
         BIN_OP_FOR_UNARY(-)
         BIN_OP_FOR_UNARY(*)
@@ -204,8 +210,10 @@ namespace matchit
         BIN_OP_FOR_UNARY(||)
         BIN_OP_FOR_UNARY(&&)
 
+#undef BIN_OP_FOR_UNARY
+
     } // namespace impl
     using impl::expr;
 } // namespace matchit
 
-#endif // _EXPRESSION_H_
+#endif // MATCHIT_EXPRESSION_H

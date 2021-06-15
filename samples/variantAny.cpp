@@ -14,8 +14,8 @@ constexpr auto getClassName(T const& v)
     );
 }
 
-constexpr std::variant<int32_t, char const*> v = 123;
-static_assert(getClassName(v) == std::string_view{"int"});
+constexpr std::variant<int32_t, char const*> cv = 123;
+static_assert(getClassName(cv) == std::string_view{"int"});
 
 int main()
 {

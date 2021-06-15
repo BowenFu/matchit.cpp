@@ -258,19 +258,19 @@ TEST(Match, test9)
 
 struct Shape
 {
-    virtual bool is() = 0;
+    virtual bool is() const = 0;
     virtual ~Shape() = default;
 };
 struct Circle : Shape
 {
-    bool is()
+    bool is() const final
     {
         return false;
     }
 };
 struct Square : Shape
 {
-    bool is()
+    bool is() const final
     {
         return false;
     }
