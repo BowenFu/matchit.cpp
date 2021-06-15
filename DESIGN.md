@@ -61,6 +61,7 @@ match(value)(
     pattern(_ >= 0) = expr(value),
     pattern(_)      = expr(0))
 ```
+The short syntax is inspired by `jbandela/simple_match`.
 
 ## Or Pattern
 Or Pattern is borrowed from Racket Pattern Matching.
@@ -129,3 +130,86 @@ match(value)(
 ```
 You have to define / declare the identifiers first then bind them inside patterns and access them in handlers.
 `expr(s)` is a short for `[&]{ return *s; }`, i.e., a function returning the value bound to the identifier.
+
+## Match Guard
+Match Guard exists in most related works. The current syntax is borrowed from `mpark/patterns`.
+Match Guard can be used to exert extra restrictions on a pattern. The syntax is
+```C++
+pattern(PATTERN).when(PREDICATE) = HANDLER
+```
+
+A simple sample can be
+```C++
+Id<int32_t> i, j;
+return match(arr)(
+    pattern(i, j).when(i + j == s) = expr(true),
+    pattern(_)                     = expr(false));
+```
+
+## Destructure Pattern
+The syntax is borrowed from `mpark/patterns`.
+```C++
+Id<T1> i;
+Id<T2> j;
+match(expr)(
+    pattern(ds('+', i, j)) = i + j,
+    pattern(ds('-', i, j)) = i - j,
+    pattern(ds('*', i, j)) = i * j,
+    pattern(ds('/', i, j)) = i / j,
+    pattern(_)             = expr(-1))
+```
+
+We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and `std::vector` from the STL. 
+in order to use Destructure Pattern for structs or classes, we need to define a get function for them inside the same namespace of the struct or the class. (std::tuple_size needs to be specialized as well.)
+Mismatch of element numbers is a compile error for fixed-size containers.
+Mismatch of element numbers is just a mismatch for `std::vector`, neither a compile error, nor a runtime error.
+To support Destructure Pattern for `std::vector` is inspired by Rust's slice pattern.
+
+## Ooo Pattern
+Ooo Pattern can match arbitrary number of items. 
+Similar patterns exist in most related works.
+The current one is mostly influenced by `..` pattern in Rust. (Also inspired by Racket's `...`).
+It can only be used inside ds patterns and at most one Ooo pattern can appear inside a ds pattern.
+```C++
+match(tuple)
+(
+    pattern(ds(2, ooo, 2))  = expr(4),
+    pattern(ds(2, ooo))     = expr(3),
+    pattern(ds(ooo, 2))     = expr(2),
+    pattern(ds(ooo))        = expr(1)
+)
+```
+
+We also support binding a span to the ooo pattern now when destructuring a std::array or std::vector (or their variants). (Similar to Rust, binding allowed for array and vector/slice.)
+```C++
+Id<Span<int32_t>> span;
+match(std::array<int32_t, 3>{123, 456, 789})(
+    pattern(ds(123, ooo(span))) = [&] {
+})
+```
+
+## Patterns Can Be Composed.
+
+## Some / None Pattern
+Some and None Patterns are composed patterns. The syntaxes are borrowed from `mpark/patterns`.
+Their usage can be
+```C++
+match(t)(
+    pattern(some(id)) = id * id,
+    pattern(none) = expr(0));
+```
+
+## As Pattern
+As Pattern is also a composed pattern. The syntax is borrowed from `mpark/patterns`.
+It can be used to handle sum type, including base / derived classes, std::variant, and std::any. A simple sample can be
+```C++
+match(v)(
+    pattern(as<char const*>(_)) = expr("chars"),
+    pattern(as<int32_t>(_))     = expr("int")
+);
+```
+As Pattern can be customized for users' classes to override the dynamic cast as the default down casting.
+Refer to `samples/CustomAsPointer.cpp`.
+
+## Customized Pattern
+Users can define their Customized Pattern.
