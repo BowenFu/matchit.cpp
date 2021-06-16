@@ -852,7 +852,7 @@ namespace matchit
         template <typename T>
         bool operator==(Span<T> const &lhs, Span<T> const &rhs)
         {
-            return lhs.data() == rhs.data() && lhs.size() == rhs.size();
+            return lhs.size() == rhs.size() && std::equal(lhs.data(), lhs.data() + lhs.size(), rhs.data());
         }
 
         template <typename T>

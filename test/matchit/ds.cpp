@@ -126,3 +126,19 @@ TEST(Ds, arrayOooBinder4)
         EXPECT_EQ((*span)[1], 789);
       });
 }
+
+// rotate
+TEST(Ds, arrayOooBinder5)
+{
+  Id<Span<int32_t>> span;
+  Id<int32_t> e;
+  match(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123})(
+      // move head to end
+      pattern(ds(e, ooo(span)), ds(ooo(span), e)) = [&]
+      {
+        EXPECT_EQ(*e, 123);
+        EXPECT_EQ((*span).size(), 2);
+        EXPECT_EQ((*span)[0], 456);
+        EXPECT_EQ((*span)[1], 789);
+      });
+}
