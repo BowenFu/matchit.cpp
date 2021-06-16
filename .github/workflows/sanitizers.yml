@@ -20,7 +20,7 @@ jobs:
         os: [macos-latest]
         std: [17]
         # cxx: [clang]
-        build_type: [ASAN, TSAN, LSAN, MSAN, UBSAN]
+        build_type: [ASAN, TSAN, MSAN, UBSAN] # LSAN not supported by macos
 
     steps:
     - uses: actions/checkout@v2
