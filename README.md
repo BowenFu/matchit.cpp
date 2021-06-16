@@ -363,9 +363,9 @@ Sample codes can be
 Id<Span<int32_t>> span;
 match(std::array<int32_t, 3>{123, 456, 789})(
     pattern(ds(123, ooo(span))) = [&] {
-    EXPECT_EQ(span.value().mSize, 2);
-    EXPECT_EQ(span.value().mData[0], 456);
-    EXPECT_EQ(span.value().mData[1], 789);
+    EXPECT_EQ((*span).size(), 2);
+    EXPECT_EQ((*span)[0], 456);
+    EXPECT_EQ((*span)[1], 789);
     });
 ```
 We define a basic struct `span` (similar to `std::span` in C++20) to reference the values bound to the ooo pattern.

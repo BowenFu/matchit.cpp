@@ -8,6 +8,7 @@
 #include <variant>
 #include <array>
 #include <type_traits>
+#include <cassert>
 
 namespace matchit
 {
@@ -819,9 +820,27 @@ namespace matchit
         template <typename T>
         class Span
         {
-        public:
             T const *mData;
             size_t mSize;
+        public:
+            Span(T const * data, size_t size)
+            : mData{data}
+            , mSize{size}
+            {}
+            
+            T const * data() const
+            {
+                return mData;
+            }
+            size_t size() const
+            {
+                return mSize;
+            }
+            constexpr T const& operator[] (size_t idx) const
+            {
+                assert(idx < mSize);
+                return mData[idx];
+            }
         };
 
         template <typename T>
@@ -833,7 +852,7 @@ namespace matchit
         template <typename T>
         bool operator==(Span<T> const &lhs, Span<T> const &rhs)
         {
-            return lhs.mData == rhs.mData && lhs.mSize == rhs.mSize;
+            return lhs.data() == rhs.data() && lhs.size() == rhs.size();
         }
 
         template <typename T>
@@ -1247,6 +1266,7 @@ namespace matchit
             using RetType = typename PatternPairsRetType<PatternPairs...>::RetType;
             using TypeTuple = decltype(std::tuple_cat(std::declval<typename PatternTraits<typename PatternPairs::PatternT>::template AppResultTuple<Value>>()...));
 
+            // expression, has return value.
             if constexpr (!std::is_same_v<RetType, void>)
             {
                 constexpr auto const func = [](auto const &pattern, auto &&value, RetType &result) constexpr->bool
@@ -1267,6 +1287,7 @@ namespace matchit
                 return result;
             }
             else
+            // statement, no return value, mismatching all patterns is not an error.
             {
                 auto const func = [](auto const &pattern, auto &&value) -> bool {
                     auto context = typename ContextTrait<TypeTuple>::ContextT{};
@@ -1279,7 +1300,6 @@ namespace matchit
                     return false;
                 };
                 bool const matched = (func(patterns, value) || ...);
-                assert(matched);
                 static_cast<void>(matched);
             }
         }
