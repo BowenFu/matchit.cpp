@@ -20,6 +20,6 @@ constexpr bool checkAndlogLarge(double value)
 
 int main()
 {
-    printf("%d\n", checkAndlogLarge(100));
+    std::cout << checkAndlogLarge(100) << std::endl;
     return 0;
 }

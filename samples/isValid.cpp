@@ -1,6 +1,7 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/expression.h"
+#include <iostream>
 using namespace matchit;
 
 constexpr bool isValid(int32_t n)
@@ -16,6 +17,6 @@ static_assert(!isValid(6));
 
 int main()
 {
-    printf("%d\n", isValid(3));
+    std::cout << isValid(3) << std::endl;
     return 0;
 }

@@ -1,6 +1,7 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/expression.h"
+#include <iostream>
 using namespace matchit;
 
 template<typename T1, typename T2>
@@ -27,6 +28,6 @@ static_assert(result == 30);
 
 int main()
 {
-    printf("%d\n", eval(std::make_tuple('*', 5, 6)));
+    std::cout << eval(std::make_tuple('*', 5, 6)) << std::endl;
     return 0;
 }

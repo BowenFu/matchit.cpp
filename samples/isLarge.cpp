@@ -1,6 +1,7 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/expression.h"
+#include <iostream>
 using namespace matchit;
 
 constexpr bool isLarge(double value)
@@ -16,6 +17,6 @@ static_assert(isLarge(100));
 
 int main()
 {
-    printf("%d\n", isLarge(10));
+    std::cout << isLarge(10) << std::endl;
     return 0;
 }
