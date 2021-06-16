@@ -8,7 +8,7 @@ TEST(MatchStatement, test)
 {
   testing::internal::CaptureStdout();
   match(4)(
-      pattern(1) = [] { std::cout << "mismatch!"; },
+      pattern(or_(_ < 0, 2)) = [] { std::cout << "mismatch!"; },
       pattern(_) = [] { std::cout << "match all!"; });
   std::string output = testing::internal::GetCapturedStdout();
 
