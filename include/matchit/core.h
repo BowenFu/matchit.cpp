@@ -5,7 +5,6 @@
 #include <optional>
 #include <cstdint>
 #include <algorithm>
-#include <cassert>
 
 namespace matchit
 {

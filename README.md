@@ -14,7 +14,18 @@
 
 [godbolt]: https://godbolt.org/z/6E1h14Y74
 
-### For syntax design details please refer to [design](./DESIGN.md).
+## Related Work
+`match(it)` is influenced by multiple related work
+
+- [mpark/patterns](https://github.com/mpark/patterns)
+- [Racket Pattern Matching](https://docs.racket-lang.org/reference/match.html)
+- [Rust Patterns](https://doc.rust-lang.org/stable/reference/patterns.html)
+- [jbandela/simple_match](https://github.com/jbandela/simple_match/)
+- [solodon4/Mach7](https://github.com/solodon4/Mach7)
+- [C++ Pattern Matching Proposal](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1371r3.pdf)
+
+## Syntax Design
+For syntax design details please refer to [design](./DESIGN.md).
 
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
@@ -363,9 +374,9 @@ Sample codes can be
 Id<Span<int32_t>> span;
 match(std::array<int32_t, 3>{123, 456, 789})(
     pattern(ds(123, ooo(span))) = [&] {
-    EXPECT_EQ(span.value().mSize, 2);
-    EXPECT_EQ(span.value().mData[0], 456);
-    EXPECT_EQ(span.value().mData[1], 789);
+    EXPECT_EQ((*span).size(), 2);
+    EXPECT_EQ((*span)[0], 456);
+    EXPECT_EQ((*span)[1], 789);
     });
 ```
 We define a basic struct `span` (similar to `std::span` in C++20) to reference the values bound to the ooo pattern.
