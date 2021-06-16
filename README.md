@@ -14,6 +14,13 @@
 
 [godbolt]: https://godbolt.org/z/6E1h14Y74
 
+## Features
+- Header-only library.
+- Macro-free APIs.
+- Composable patterns.
+- Partial support for constant expression.
+- Users can define their own patterns, either via composing existent ones, or create brand new ones.
+
 ## Related Work
 `match(it)` is influenced by multiple related work
 
