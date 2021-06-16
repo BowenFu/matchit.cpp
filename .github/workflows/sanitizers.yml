@@ -1,4 +1,4 @@
-name: CMake
+name: Sanitizers
 
 on:
   push:
