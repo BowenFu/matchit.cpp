@@ -22,7 +22,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     include(CodeCoverage)
-    list(APPEND BASE_COMPILE_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+    list(APPEND BASE_COMPILE_FLAGS "-g;-O0;-fprofile-arcs;-ftest-coverage")
 endif() #CMAKE_BUILD_TYPE STREQUAL "Coverage"
 
 # Target.
