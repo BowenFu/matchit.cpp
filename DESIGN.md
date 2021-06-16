@@ -1,16 +1,6 @@
 # match(it): A light-weight header-only pattern-matching library for C++17.
 ![match(it).cpp](./matchit.cpp.svg)
 
-## Related Work
-`match(it)` is influenced by multiple related work, programming languages or libraries
-
-- [mpark/patterns](https://github.com/mpark/patterns)
-- [Racket Pattern Matching](https://docs.racket-lang.org/reference/match.html)
-- [Rust Patterns](https://doc.rust-lang.org/stable/reference/patterns.html)
-- [jbandela/simple_match](https://github.com/jbandela/simple_match/)
-- [solodon4/Mach7](https://github.com/solodon4/Mach7)
-- [C++ Pattern Matching Proposal](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1371r3.pdf)
-
 ## The basic syntax
 ```C++
 match(VALUE)
