@@ -81,6 +81,11 @@ TEST(Ds, vecOooBinder4)
       });
 }
 
+TEST(Ds, FailDueToTwoFewValues)
+{
+  EXPECT_FALSE(matched(std::vector<int32_t>{123, 456, 789}, ds(123, ooo, 456, 456, 789)));
+}
+
 TEST(Ds, arrayOooBinder1)
 {
   auto const array = std::array<int32_t, 2>{123, 456};

@@ -15,7 +15,7 @@ namespace matchit
         };
 
         template <typename T>
-        constexpr auto nullary(T t)
+        constexpr auto nullary(T const &t)
         {
             return Nullary<T>{t};
         }
@@ -25,13 +25,14 @@ namespace matchit
         template <typename T>
         constexpr auto expr(Id<T> const &id)
         {
-            return nullary([&] () constexpr { return *id; });
+            return nullary([&] { return *id; });
         }
 
         template <typename T>
-        constexpr auto expr(T const &v)
+        constexpr auto expr(T const&v)
         {
-            return nullary([&] () constexpr { return v; });
+            return nullary([&]
+                           { return v; });
         }
 
         // for constant
@@ -40,17 +41,17 @@ namespace matchit
         {
         public:
             template <typename... Args>
-            constexpr static auto evalImpl(T const &v, Args const &...)
+            constexpr static decltype(auto) evalImpl(T const &v, Args const&...)
             {
                 return v;
             }
         };
 
         template <typename T>
-        class EvalTraits<Nullary<T> >
+        class EvalTraits<Nullary<T>>
         {
         public:
-            constexpr static auto evalImpl(Nullary<T> const &e)
+            constexpr static decltype(auto) evalImpl(Nullary<T> const &e)
             {
                 return e();
             }
@@ -58,27 +59,28 @@ namespace matchit
 
         // Only allowed in nullary
         template <typename T>
-        class EvalTraits<Id<T> >
+        class EvalTraits<Id<T>>
         {
         public:
-            constexpr static auto evalImpl(Id<T> const &id)
+            constexpr static decltype(auto) evalImpl(Id<T> const &id)
             {
                 return *id;
             }
         };
 
-        template <typename Pred> class Meet;
-    
+        template <typename Pred>
+        class Meet;
+
         // Unary is an alias of Meet.
         template <typename T>
         using Unary = Meet<T>;
 
         template <typename T>
-        class EvalTraits<Unary<T> >
+        class EvalTraits<Unary<T>>
         {
         public:
             template <typename Arg>
-            constexpr static auto evalImpl(Unary<T> const &e, Arg const &arg)
+            constexpr static decltype(auto) evalImpl(Unary<T> const &e, Arg const&arg)
             {
                 return e(arg);
             }
@@ -90,14 +92,14 @@ namespace matchit
         {
         public:
             template <typename Arg>
-            constexpr static auto evalImpl(Wildcard const &, Arg const &arg)
+            constexpr static decltype(auto) evalImpl(Wildcard const &, Arg const&arg)
             {
                 return arg;
             }
         };
 
         template <typename T, typename... Args>
-        constexpr auto eval(T const &t, Args const &...args)
+        constexpr decltype(auto) eval(T const&t, Args const&...args)
         {
             return EvalTraits<T>::evalImpl(t, args...);
         }
@@ -108,27 +110,30 @@ namespace matchit
         };
 
         template <typename T>
-        class IsNullaryOrId<Id<T> > : public std::true_type
+        class IsNullaryOrId<Id<T>> : public std::true_type
         {
         };
 
         template <typename T>
-        class IsNullaryOrId<Nullary<T> > : public std::true_type
+        class IsNullaryOrId<Nullary<T>> : public std::true_type
         {
         };
 
-#define UN_OP_FOR_NULLARY(op)                                                     \
-    template <typename T, std::enable_if_t<IsNullaryOrId<T>::value, bool> = true> \
-    constexpr auto operator op(T const &t)                                                  \
-    {                                                                             \
-        return nullary([&] { return op eval(t); });                               \
+        template <typename T>
+        constexpr auto isNullaryOrIdV = IsNullaryOrId<std::decay_t<T>>::value;
+
+#define UN_OP_FOR_NULLARY(op)                                               \
+    template <typename T, std::enable_if_t<isNullaryOrIdV<T>, bool> = true> \
+    constexpr auto operator op(T const&t)                                       \
+    {                                                                       \
+        return nullary([&] { return op eval(t); });                         \
     }
 
-#define BIN_OP_FOR_NULLARY(op)                                                                                           \
-    template <typename T, typename U, std::enable_if_t<IsNullaryOrId<T>::value || IsNullaryOrId<U>::value, bool> = true> \
-    constexpr auto operator op(T const &t, U const &u)                                                                             \
-    {                                                                                                                    \
-        return nullary([&] { return eval(t) op eval(u); });                                                              \
+#define BIN_OP_FOR_NULLARY(op)                                                                               \
+    template <typename T, typename U, std::enable_if_t<isNullaryOrIdV<T> || isNullaryOrIdV<U>, bool> = true> \
+    constexpr auto operator op(T const&t, U const&u)                                                                 \
+    {                                                                                                        \
+        return nullary([&] { return eval(t) op eval(u); });                                                  \
     }
 
         // ADL will find these operators.
@@ -150,6 +155,7 @@ namespace matchit
         BIN_OP_FOR_NULLARY(>)
         BIN_OP_FOR_NULLARY(||)
         BIN_OP_FOR_NULLARY(&&)
+        BIN_OP_FOR_NULLARY(<<)
 
 #undef BIN_OP_FOR_NULLARY
 
@@ -165,30 +171,32 @@ namespace matchit
         };
 
         template <typename T>
-        class IsUnaryOrWildcard<Unary<T> > : public std::true_type
+        class IsUnaryOrWildcard<Unary<T>> : public std::true_type
         {
         };
 
+        template <typename T>
+        constexpr auto isUnaryOrWildcardV = IsUnaryOrWildcard<std::decay_t<T>>::value;
 
         // unary is an alias of meet.
         template <typename T>
-        constexpr auto unary(T&& t)
+        constexpr auto unary(T &&t)
         {
             return meet(std::forward<T>(t));
         }
 
-#define UN_OP_FOR_UNARY(op)                                                              \
-    template <typename T, std::enable_if_t<IsUnaryOrWildcard<T>::value, bool> = true> \
-    constexpr auto operator op(T const &t)                                                         \
-    {                                                                                    \
-        return unary([&](auto &&arg) constexpr { return op eval(t, arg); });                       \
+#define UN_OP_FOR_UNARY(op)                                                     \
+    template <typename T, std::enable_if_t<isUnaryOrWildcardV<T>, bool> = true> \
+    constexpr auto operator op(T const&t)                                           \
+    {                                                                           \
+        return unary([&](auto &&arg) constexpr { return op eval(t, arg); });    \
     }
 
-#define BIN_OP_FOR_UNARY(op)                                                                                                     \
-    template <typename T, typename U, std::enable_if_t<IsUnaryOrWildcard<T>::value || IsUnaryOrWildcard<U>::value, bool> = true> \
-    constexpr auto operator op(T const &t, U const &u)                                                                           \
-    {                                                                                                                            \
-        return unary([&](auto &&arg) constexpr { return eval(t, arg) op eval(u, arg); });                                        \
+#define BIN_OP_FOR_UNARY(op)                                                                                         \
+    template <typename T, typename U, std::enable_if_t<isUnaryOrWildcardV<T> || isUnaryOrWildcardV<U>, bool> = true> \
+    constexpr auto operator op(T const&t, U const&u)                                                                         \
+    {                                                                                                                \
+        return unary([&](auto &&arg) constexpr { return eval(t, arg) op eval(u, arg); });                            \
     }
 
         UN_OP_FOR_UNARY(!)
