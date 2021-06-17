@@ -16,17 +16,18 @@ jobs:
 
     strategy:
       matrix:
-        # os: [ubuntu-latest]
-        os: [macos-latest]
+        os: [ubuntu-latest]
+        # os: [macos-latest]
         std: [17]
-        # cxx: [clang]
-        build_type: [ASAN, TSAN, UBSAN] # MSAN, LSAN not supported by macos
+        cxx: [clang++]
+        build_type: [ASAN, TSAN, UBSAN, LSAN] # MSAN not supported by macos
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Configure CMake
-      # env:
+      env:
+        CXX: ${{ matrix.cxx }}
       #   ASAN_OPTIONS: suppressions=MyASan.supp 
 
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
