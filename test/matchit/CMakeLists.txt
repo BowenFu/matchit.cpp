@@ -1,5 +1,5 @@
 add_executable(unittests app.cpp constexpr.cpp expr.cpp legacy.cpp noRet.cpp id.cpp ds.cpp)
 target_compile_options(unittests PRIVATE ${BASE_COMPILE_FLAGS})
-target_link_libraries(unittests PRIVATE matchit gtest_main)
+target_link_libraries(unittests PRIVATE matchit gtest_main ${BASE_LINK_FLAGS})
 set_target_properties(unittests PROPERTIES CXX_EXTENSIONS OFF)
 gtest_discover_tests(unittests)
