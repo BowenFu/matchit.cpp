@@ -3,3 +3,4 @@ fun:*AddTestInfo*
 fun:*internal*
 fun:*TestInfo*
 fun:*basic_string*
+fun:*char_traits*
