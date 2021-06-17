@@ -42,7 +42,7 @@ jobs:
         && cp -r libcxxabi llvm/projects/ \
         && mkdir ${{github.workspace}}/libcxx_msan \
         && cd ${{github.workspace}}/libcxx_msan \
-        && cmake ../llvm-project/llvm -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_USE_SANITIZER=Memory -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CFLAGS" \
+        && cmake ../llvm-project/llvm -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_USE_SANITIZER=MemoryWithOrigins -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CFLAGS" \
         && make cxx -j4
 
     - name: Configure CMake
