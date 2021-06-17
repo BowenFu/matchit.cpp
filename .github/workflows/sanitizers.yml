@@ -26,7 +26,8 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Configure CMake
-      # env:
+      env:
+        CXX: ${{ matrix.cxx }}
       #   ASAN_OPTIONS: suppressions=MyASan.supp 
 
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
