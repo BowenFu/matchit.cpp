@@ -36,11 +36,11 @@ set(CMAKE_CXX_FLAGS_LSAN
 
 # MemorySanitizer
 set(CMAKE_C_FLAGS_MSAN
-    "-fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer -g -O2"
+    "-fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer -stdlib=libc++ -g -O2"
     CACHE STRING "Flags used by the C compiler during MemorySanitizer builds."
     FORCE)
 set(CMAKE_CXX_FLAGS_MSAN
-    "-fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer -g -O2"
+    "-fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer -stdlib=libc++ -g -O2"
     CACHE STRING "Flags used by the C++ compiler during MemorySanitizer builds."
     FORCE)
 
