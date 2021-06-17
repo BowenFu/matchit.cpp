@@ -39,7 +39,7 @@ jobs:
         cd llvm-project
         mkdir build; cd build
         # configure cmake
-        cmake -GNinja ../llvm \
+        cmake ../llvm \
           -DCMAKE_BUILD_TYPE=Release \
           -DLLVM_ENABLE_PROJECTS="libcxx;libcxxabi" \
           -DCMAKE_C_COMPILER=clang \
