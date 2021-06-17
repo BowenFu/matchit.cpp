@@ -39,9 +39,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
     if(BUILD_TESTING)
         add_subdirectory(test)
-        if (CMAKE_BUILD_TYPE STREQUAL "MSAN")
-            add_subdirectory(samples)
-        endif() #CMAKE_BUILD_TYPE STREQUAL "MSAN"
+        add_subdirectory(samples)
     endif()
 endif()
 
