@@ -16,11 +16,11 @@ jobs:
 
     strategy:
       matrix:
-        # os: [ubuntu-latest]
-        os: [macos-latest]
+        os: [ubuntu-latest]
+        # os: [macos-latest]
         std: [17]
-        # cxx: [clang]
-        build_type: [ASAN, TSAN, UBSAN] # MSAN, LSAN not supported by macos
+        cxx: [clang]
+        build_type: [ASAN, TSAN, UBSAN, MSAN, LSAN] # MSAN, LSAN not supported by macos
 
     steps:
     - uses: actions/checkout@v2
