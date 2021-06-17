@@ -23,6 +23,9 @@ jobs:
         os: [ubuntu-latest]
         std: [17]
 
+    - name: Install valgrind
+      run: sudo apt-get install valgrind
+
     steps:
     - uses: actions/checkout@v2
 
@@ -40,7 +43,7 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
-        sudo apt-get install valgrind
-        ctest --output-on-failure -C ${{env.BUILD_TYPE}} --overwrite MemoryCheckCommandOptions="--leak-check=full --error-exitcode=100" -T memcheck
+        # ctest --output-on-failure -C ${{env.BUILD_TYPE}} --overwrite MemoryCheckCommandOptions="--leak-check=full --error-exitcode=100" -T memcheck
+        ctest --output-on-failure -C ${{env.BUILD_TYPE}} -T memcheck
         # --overwrite MemoryCheckSuppressionFile=/path/to/valgrind.suppressions \
       
