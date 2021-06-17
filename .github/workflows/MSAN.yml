@@ -19,7 +19,7 @@ jobs:
         os: [ubuntu-latest]
         # os: [macos-latest]
         std: [17]
-        cc: [clang++]
+        cc: [clang]
         cxx: [clang++]
         build_type: [MSAN] # MSAN not supported by macos
 
