@@ -64,7 +64,7 @@ jobs:
       env:
         CC: ${{ matrix.cc }}
         CXX: ${{ matrix.cxx }}
-        MSAN_CFLAGS: -stdlib=libc++ -I${{github.workspace}}/llvm-project/libcxx/include -I${{github.workspace}}/llvm-project/llvm/include/c++/v1
+        MSAN_CFLAGS: -stdlib=libc++ -I${{github.workspace}}/llvm-project/libcxx/include -I${{github.workspace}}/llvm-project/libcxxabi/include
 
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
