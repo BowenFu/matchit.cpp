@@ -2,3 +2,4 @@ fun:*MakeAndRegisterTestInfo*
 fun:*AddTestInfo*
 fun:*internal*
 fun:*TestInfo*
+fun:*internal*
