@@ -34,11 +34,20 @@ jobs:
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
-        git clone https://github.com/rukkal/libcxx-msan.git
-        cd libcxx-msan
-        source load-environment
-        ./build.sh
-        cd ..
+        # clone LLVM
+        git clone --depth=1 https://github.com/llvm/llvm-project
+        cd llvm-project
+        mkdir build; cd build
+        # configure cmake
+        cmake -GNinja ../llvm \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DLLVM_ENABLE_PROJECTS="libcxx;libcxxabi" \
+          -DCMAKE_C_COMPILER=clang \
+          -DCMAKE_CXX_COMPILER=clang++ \
+          -DLLVM_USE_SANITIZER=MemoryWithOrigins
+        # build the libraries
+        cmake --build . -- cxx cxxabi
+        cd ${{github.workspace}}
 
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_STANDARD=${{matrix.std}} 
 
