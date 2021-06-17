@@ -2,17 +2,27 @@
 ![match(it).cpp](./matchit.cpp.svg)
 
 [![CMake](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/cmake.yml)
+[![CMake](https://github.com/BowenFu/matchit.cpp/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/sanitizers.yml)
+[![CMake](https://github.com/BowenFu/matchit.cpp/actions/workflows/coverage.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/coverage.yml)
+
 [![CodeQL](https://github.com/BowenFu/matchit.cpp/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/codeql-analysis.yml)
 [![Codacy](https://github.com/BowenFu/matchit.cpp/actions/workflows/codacy.yml/badge.svg)](https://github.com/BowenFu/matchit.cpp/actions/workflows/codacy.yml)
 
 [![godbolt][badge.godbolt]][godbolt]
 [![GitHub license](https://img.shields.io/github/license/BowenFu/matchit.cpp.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
-[![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](.) 
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](.) 
+[![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/BowenFu/matchit.cpp)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/BowenFu/matchit.cpp) 
 
 [badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
 
 [godbolt]: https://godbolt.org/z/6E1h14Y74
+
+## Features
+- Header-only library.
+- Macro-free APIs.
+- Composable patterns.
+- Partial support for constant expression.
+- Users can define their own patterns, either via composing existent ones, or create brand new ones.
 
 ## Related Work
 `match(it)` is influenced by multiple related work

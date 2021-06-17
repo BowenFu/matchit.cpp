@@ -1,6 +1,7 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/expression.h"
+#include <iostream>
 using namespace matchit;
 
 constexpr double relu(double value)
@@ -16,6 +17,6 @@ static_assert(relu(-5) == 0);
 
 int main()
 {
-    printf("%f\n", relu(3));
+    std::cout << relu(3) << std::endl;
     return 0;
 }

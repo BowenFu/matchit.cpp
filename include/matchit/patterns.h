@@ -714,7 +714,13 @@ namespace matchit
             }
 
             template <typename Value>
-            constexpr auto matchValue(Value &&v) const
+            constexpr auto
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+                __attribute__((no_sanitize_address))
+#endif
+#endif
+                matchValue(Value &&v) const
             {
                 if (hasValue())
                 {

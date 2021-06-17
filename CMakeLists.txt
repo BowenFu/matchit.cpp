@@ -31,6 +31,7 @@ target_include_directories(matchit INTERFACE
   ${PROJECT_SOURCE_DIR}/include)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(Sanitizers)
     include(CTest)
     if(BUILD_TESTING)
         add_subdirectory(test)

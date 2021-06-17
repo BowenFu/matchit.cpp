@@ -1,6 +1,7 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/expression.h"
+#include <iostream>
 using namespace matchit;
 
 constexpr double clip(double value, double min, double max)
@@ -18,6 +19,6 @@ static_assert(clip(5, 0, 4) == 4);
 
 int main()
 {
-    printf("%f\n", clip(10, 5,7));
+    std::cout << clip(10, 5,7) << std::endl;
     return 0;
 }

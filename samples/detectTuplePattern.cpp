@@ -2,6 +2,7 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
 #include "matchit/expression.h"
+#include <iostream>
 using namespace matchit;
 
 template <typename Tuple>
@@ -20,9 +21,9 @@ static_assert(detectTuplePattern(std::make_tuple(2, 3, 5, 7, 2)) == 4);
 
 int main()
 {
-    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 5, 7, 2)));
-    printf("%d\n", detectTuplePattern(std::make_tuple(2, 3, 4, 5, 6)));
-    printf("%d\n", detectTuplePattern(std::make_tuple(3, 3, 3, 2)));
-    printf("%d\n", detectTuplePattern(std::make_tuple(3, 4, 5, 6, 7)));
+    std::cout << detectTuplePattern(std::make_tuple(2, 3, 5, 7, 2)) << std::endl;
+    std::cout << detectTuplePattern(std::make_tuple(2, 3, 4, 5, 6)) << std::endl;
+    std::cout << detectTuplePattern(std::make_tuple(3, 3, 3, 2)) << std::endl;
+    std::cout << detectTuplePattern(std::make_tuple(3, 4, 5, 6, 7)) << std::endl;
     return 0;
 }

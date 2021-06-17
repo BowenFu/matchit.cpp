@@ -1,5 +1,6 @@
 #include "matchit/core.h"
 #include "matchit/patterns.h"
+#include <iostream>
 using namespace matchit;
 
 constexpr int32_t factorial(int32_t n)
@@ -15,6 +16,6 @@ static_assert(factorial(3) == 6);
 
 int main()
 {
-    printf("%d\n", factorial(10));
+    std::cout << factorial(10) << std::endl;
     return 0;
 }
