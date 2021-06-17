@@ -4,6 +4,7 @@ fun:*internal*
 fun:*TestInfo*
 fun:*basic_string*
 fun:*char_traits*
-src:*/gtest/*
+src:*/gtest*
 src:*/googletest/*
 src:*/llvm-project/*
+src:*/libcxx/*
