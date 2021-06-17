@@ -48,6 +48,8 @@ jobs:
         # build the libraries
         cmake --build . -- cxx cxxabi
         cd ${{github.workspace}}
+        ls ${{github.workspace}}/llvm-project/include
+        ls ${{github.workspace}}/llvm-project/include/c++/v1
 
     - name: Configure CMake
       env:

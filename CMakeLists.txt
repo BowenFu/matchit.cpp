@@ -27,7 +27,7 @@ endif() #CMAKE_BUILD_TYPE STREQUAL "Coverage"
 
 if (CMAKE_BUILD_TYPE STREQUAL "MSAN")
     add_link_options("-L./llvm-project/lib;-lc++abi")
-endif() #CMAKE_BUILD_TYPE STREQUAL "Coverage"
+endif() #CMAKE_BUILD_TYPE STREQUAL "MSAN"
 
 # Target.
 add_library(matchit INTERFACE)
@@ -39,7 +39,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
     if(BUILD_TESTING)
         add_subdirectory(test)
-        add_subdirectory(samples)
+        if (CMAKE_BUILD_TYPE STREQUAL "MSAN")
+            add_subdirectory(samples)
+        endif() #CMAKE_BUILD_TYPE STREQUAL "MSAN"
     endif()
 endif()
 
