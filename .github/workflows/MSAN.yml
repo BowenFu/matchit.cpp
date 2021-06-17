@@ -35,8 +35,10 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
       git clone https://github.com/rukkal/libcxx-msan.git
+      cd libcxx-msan
       source load-environment
       ./build.sh
+      cd ..
       
       cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_STANDARD=${{matrix.std}} 
 
