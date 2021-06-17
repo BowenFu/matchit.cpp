@@ -55,11 +55,10 @@ jobs:
         && cd llvm-project \
         && cp -r libcxx llvm/projects/ \
         && cp -r libcxxabi llvm/projects/ \
-        && mkdir /usr/src/libcxx_msan \
-        && cd /usr/src/libcxx_msan \
+        && mkdir ${{github.workspace}}/libcxx_msan \
+        && cd ${{github.workspace}}/libcxx_msan \
         && cmake ../llvm-project/llvm -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_USE_SANITIZER=Memory \
-        && make cxx -j4 \
-        && rm -rf /usr/src/llvm-project
+        && make cxx -j4
 
     - name: Configure CMake
       env:

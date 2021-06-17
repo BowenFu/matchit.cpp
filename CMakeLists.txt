@@ -26,7 +26,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 endif() #CMAKE_BUILD_TYPE STREQUAL "Coverage"
 
 if (CMAKE_BUILD_TYPE STREQUAL "MSAN")
-    add_link_options("-L/usr/src/libcxx_msan/lib;-lc++abi")
+    add_link_options("-L${PROJECT_SOURCE_DIR}/libcxx_msan/lib;-lc++abi")
 endif() #CMAKE_BUILD_TYPE STREQUAL "MSAN"
 
 # Target.
