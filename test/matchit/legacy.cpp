@@ -56,10 +56,10 @@ TEST(Match, test2)
         Id<int> i;
         Id<int> j;
         return match(input)(
-            pattern(ds('/', 1, 1)) = expr(1),
-            pattern(ds('/', 0, _)) = expr(0),
-            pattern(ds('*', i, j)) = i * j,
-            pattern(ds('+', i, j)) = i + j,
+            pattern('/', 1, 1) = expr(1),
+            pattern('/', 0, _) = expr(0),
+            pattern('*', i, j) = i * j,
+            pattern('+', i, j) = i + j,
             pattern(_) = expr(-1));
     };
     EXPECT_EQ(matchFunc(std::make_tuple('/', 1, 1)), 1);
@@ -225,7 +225,7 @@ TEST(Match, test7)
         };
         return match(ij.first % 3, ij.second % 5)(
             pattern(0, _ > 2) = expr(2),
-            pattern(ds(1, _ > 2)) = expr(3),
+            pattern(1, _ > 2) = expr(3),
             pattern(at(id, ds(_, 2))) = [&id]
             {
                 EXPECT_TRUE(std::get<1>(*id) == 2);
@@ -243,7 +243,7 @@ TEST(Match, test8)
     {
         Id<int32_t> x;
         return match(ijk)(
-            pattern(ds(x, ds(_, x))) = expr(true),
+            pattern(x, ds(_, x)) = expr(true),
             pattern(_) = expr(false));
     };
     EXPECT_TRUE(equal(std::make_pair(2, std::make_pair(1, 2))));
@@ -362,8 +362,8 @@ TEST(Match, test13)
     {
         Id<int> i;
         return match(v)(
-            pattern(ds(1, i)) = expr(i),
-            pattern(ds(_, i)) = expr(i));
+            pattern(1, i) = expr(i),
+            pattern(_, i) = expr(i));
     };
 
     EXPECT_EQ(dsAgg(A{1, 2}), 2);
@@ -467,23 +467,23 @@ TEST(Match, test19)
         Id<int> j;
         return match(input)(
             // `... / 2 3`
-            pattern(ds(ooo, '/', 2, 3)) = expr(1),
+            pattern(ooo, '/', 2, 3) = expr(1),
             // `... 3`
-            pattern(ds(ooo, 3)) = expr(3),
+            pattern(ooo, 3) = expr(3),
             // `/ ...`
-            pattern(ds('/', ooo)) = expr(4),
+            pattern('/', ooo) = expr(4),
 
-            pattern(ds(ooo)) = expr(222),
+            pattern(ooo) = expr(222),
             // `3 3 3 3 ..` all 3
-            pattern(ds(ooo)) = expr(333),
+            pattern(ooo) = expr(333),
 
             // `... int 3`
-            pattern(ds(ooo, j, 3)) = expr(7),
+            pattern(ooo, j, 3) = expr(7),
             // `... int 3`
-            pattern(ds(ooo, or_(j), 3)) = expr(8),
+            pattern(ooo, or_(j), 3) = expr(8),
 
             // `...`
-            pattern(ds(ooo)) = expr(12),
+            pattern(ooo) = expr(12),
 
             pattern(_) = expr(-1));
     };
