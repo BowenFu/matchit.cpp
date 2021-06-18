@@ -111,7 +111,7 @@ TEST(Ds, arrayOooBinder2)
 {
   Id<Span<int32_t>> span;
   match(std::array<int32_t, 2>{123, 456})(
-      pattern(ds(ooo(span))) = [&]
+      pattern(ooo(span)) = [&]
       {
         EXPECT_EQ((*span).size(), 2);
         EXPECT_EQ((*span)[0], 123);
@@ -123,7 +123,7 @@ TEST(Ds, arrayOooBinder3)
 {
   Id<Span<int32_t>> span;
   match(std::array<int32_t, 2>{123, 456})(
-      pattern(ds(123, ooo(span), 456)) = [&]
+      pattern(123, ooo(span), 456) = [&]
       { EXPECT_EQ((*span).size(), 0); });
 }
 
@@ -131,7 +131,7 @@ TEST(Ds, arrayOooBinder4)
 {
   Id<Span<int32_t>> span;
   match(std::array<int32_t, 3>{123, 456, 789})(
-      pattern(ds(123, ooo(span))) = [&]
+      pattern(123, ooo(span)) = [&]
       {
         EXPECT_EQ((*span).size(), 2);
         EXPECT_EQ((*span)[0], 456);
