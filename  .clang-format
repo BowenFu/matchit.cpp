@@ -1,0 +1,3 @@
+# AllowShortLambdasOnASingleLine: All
+AllowShortLambdasOnASingleLine: Inline
+AllowShortFunctionsOnASingleLine: All
