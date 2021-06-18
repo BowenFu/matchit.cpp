@@ -1012,22 +1012,22 @@ namespace matchit
                 std::forward<ValueTuple>(valueTuple), patternTuple, depth, context, std::make_index_sequence<size>{});
         }
 
-        template <std::size_t patternStartIdx, std::size_t... I, typename ValueVec, typename PatternTuple, typename ContextT>
-        constexpr decltype(auto) matchPatternVecImpl(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
+        template <std::size_t patternStartIdx, std::size_t... I, typename ValueRange, typename PatternTuple, typename ContextT>
+        constexpr decltype(auto) matchPatternVecImpl(ValueRange &&valueRange, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
         {
             auto const func = [&](auto &&value, auto &&pattern)
             {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1, context);
             };
             static_cast<void>(func);
-            return (func(std::forward<ValueVec>(valueVec).at(I + valueStartIdx), std::get<I + patternStartIdx>(patternTuple)) && ...);
+            return (func(std::forward<ValueRange>(valueRange).at(I + valueStartIdx), std::get<I + patternStartIdx>(patternTuple)) && ...);
         }
 
-        template <std::size_t patternStartIdx, std::size_t size, typename ValueVec, typename PatternTuple, typename ContextT>
-        constexpr decltype(auto) matchPatternVec(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
+        template <std::size_t patternStartIdx, std::size_t size, typename ValueRange, typename PatternTuple, typename ContextT>
+        constexpr decltype(auto) matchPatternVec(ValueRange &&valueRange, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
         {
             return matchPatternVecImpl<patternStartIdx>(
-                std::forward<ValueVec>(valueVec), valueStartIdx, patternTuple, depth, context, std::make_index_sequence<size>{});
+                std::forward<ValueRange>(valueRange), valueStartIdx, patternTuple, depth, context, std::make_index_sequence<size>{});
         }
 
         template <std::size_t start, typename Indices, typename Tuple>
@@ -1184,7 +1184,7 @@ namespace matchit
 
             template <typename ValueTuple, typename ContextT>
             constexpr static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
-                -> decltype(std::tuple_size<std::decay_t<ValueTuple>>::value, bool{})
+                -> std::enable_if_t<isTupleLikeV<ValueTuple>, bool>
             {
                 if constexpr (nbOooOrBinder == 0)
                 {
@@ -1228,9 +1228,9 @@ namespace matchit
                 }
             }
 
-            template <typename ValueVec, typename ContextT>
-            constexpr static auto matchPatternImpl(ValueVec &&valueVec, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
-                -> decltype(std::declval<ValueVec>().capacity(), bool{})
+            template <typename ValueRange, typename ContextT>
+            constexpr static auto matchPatternImpl(ValueRange &&valueRange, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
+                -> std::enable_if_t<!isTupleLikeV<ValueRange> && isRangeV<ValueRange>, bool>
             {
                 constexpr auto nbOooOrBinder = nbOooOrBinderV<Patterns...>;
                 static_assert(nbOooOrBinder == 0 || nbOooOrBinder == 1);
@@ -1239,33 +1239,33 @@ namespace matchit
                 if constexpr (nbOooOrBinder == 0)
                 {
                     // size mismatch for dynamic array is not an error;
-                    if (valueVec.size() != nbPat)
+                    if (valueRange.size() != nbPat)
                     {
                         return false;
                     }
-                    return matchPatternVec<0, nbPat>(std::forward<ValueVec>(valueVec), 0, dsPat.patterns(), depth, context);
+                    return matchPatternVec<0, nbPat>(std::forward<ValueRange>(valueRange), 0, dsPat.patterns(), depth, context);
                 }
                 else if constexpr (nbOooOrBinder == 1)
                 {
-                    if (valueVec.size() < nbPat - 1)
+                    if (valueRange.size() < nbPat - 1)
                     {
                         return false;
                     }
                     constexpr auto idxOoo = findOooIdx<typename Ds<Patterns...>::Type>();
                     constexpr auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
-                    auto result = matchPatternVec<0, idxOoo>(std::forward<ValueVec>(valueVec), 0, dsPat.patterns(), depth, context);
-                    auto const valLen = valueVec.size();
+                    auto result = matchPatternVec<0, idxOoo>(std::forward<ValueRange>(valueRange), 0, dsPat.patterns(), depth, context);
+                    auto const valLen = valueRange.size();
                     constexpr auto patLen = sizeof...(Patterns);
                     if constexpr (isBinder)
                     {
                         auto const spanSize = valLen - (patLen - 1);
-                        context.emplace_back(makeSpan(&valueVec[idxOoo], spanSize));
-                        using type = decltype(makeSpan(&valueVec[idxOoo], spanSize));
+                        context.emplace_back(makeSpan(&valueRange[idxOoo], spanSize));
+                        using type = decltype(makeSpan(&valueRange[idxOoo], spanSize));
                         result = result &&
                                  matchPattern(std::get<type>(context.back()), std::get<idxOoo>(dsPat.patterns()), depth, context);
                     }
                     return result &&
-                           matchPatternVec<idxOoo + 1, patLen - idxOoo - 1>(std::forward<ValueVec>(valueVec), valLen - patLen + idxOoo + 1, dsPat.patterns(), depth, context);
+                           matchPatternVec<idxOoo + 1, patLen - idxOoo - 1>(std::forward<ValueRange>(valueRange), valLen - patLen + idxOoo + 1, dsPat.patterns(), depth, context);
                 }
             }
 
