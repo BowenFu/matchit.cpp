@@ -25,6 +25,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     list(APPEND BASE_COMPILE_FLAGS "-g;-O0;-fprofile-arcs;-ftest-coverage")
 endif() #CMAKE_BUILD_TYPE STREQUAL "Coverage"
 
+if (CMAKE_BUILD_TYPE STREQUAL "MSAN")
+    add_link_options("-L${PROJECT_SOURCE_DIR}/libcxx_msan/lib;-lc++abi")
+endif() #CMAKE_BUILD_TYPE STREQUAL "MSAN"
+
 # Target.
 add_library(matchit INTERFACE)
 target_include_directories(matchit INTERFACE
