@@ -96,7 +96,7 @@ TEST(Ds, arrayOooBinder1)
   auto const array = std::array<int32_t, 2>{123, 456};
   Id<Span<int32_t>> span;
   auto matched = match(array)(
-      pattern(ds(ooo(span))) = [&]
+      pattern(ooo(span)) = [&]
       {
         EXPECT_EQ((*span).size(), 2);
         EXPECT_EQ((*span)[0], 123);
