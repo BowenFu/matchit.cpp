@@ -15,7 +15,7 @@
 
 [badge.godbolt]: https://img.shields.io/badge/try%20it-on%20godbolt-222266.svg
 
-[godbolt]: https://godbolt.org/z/6E1h14Y74
+[godbolt]: https://godbolt.org/z/rMaPvWcbr
 
 ## Features
 
