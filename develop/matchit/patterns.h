@@ -341,7 +341,8 @@ namespace matchit
             {
                 constexpr auto patSize = sizeof...(Patterns);
                 return std::apply(
-                           [&value, depth, &context](auto const &...patterns) {
+                           [&value, depth, &context](auto const &...patterns)
+                           {
                                return (matchPattern(value, patterns, depth + 1, context) || ...);
                            },
                            take<patSize - 1>(orPat.patterns())) ||
@@ -350,7 +351,8 @@ namespace matchit
             constexpr static void processIdImpl(Or<Patterns...> const &orPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
-                    [depth, idProcess](Patterns const &...patterns) {
+                    [depth, idProcess](Patterns const &...patterns)
+                    {
                         return (processId(patterns, depth, idProcess), ...);
                     },
                     orPat.patterns());
@@ -486,7 +488,8 @@ namespace matchit
             {
                 constexpr auto patSize = sizeof...(Patterns);
                 return std::apply(
-                           [&value, depth, &context](auto const &...patterns) {
+                           [&value, depth, &context](auto const &...patterns)
+                           {
                                return (matchPattern(value, patterns, depth + 1, context) && ...);
                            },
                            take<patSize - 1>(andPat.patterns())) &&
@@ -495,7 +498,8 @@ namespace matchit
             constexpr static void processIdImpl(And<Patterns...> const &andPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
-                    [depth, idProcess](Patterns const &...patterns) {
+                    [depth, idProcess](Patterns const &...patterns)
+                    {
                         return (processId(patterns, depth, idProcess), ...);
                     },
                     andPat.patterns());
@@ -609,13 +613,16 @@ namespace matchit
                 {
                     return std::visit(
                         overload(
-                            [](Type const &) {
+                            [](Type const &)
+                            {
                                 return true;
                             },
-                            [](Type const *) {
+                            [](Type const *)
+                            {
                                 return true;
                             },
-                            [](std::monostate const &) {
+                            [](std::monostate const &)
+                            {
                                 return false;
                             }),
                         mVariant);
@@ -630,7 +637,8 @@ namespace matchit
                             [](Type const *p) -> Type const & {
                                 return *p;
                             },
-                            [](std::monostate const &) -> Type const & {
+                            [](std::monostate const &) -> Type const &
+                            {
                                 assert(false && "invalid state!");
                                 return *reinterpret_cast<Type const *>(1);
                             }),
@@ -644,11 +652,13 @@ namespace matchit
                             [](Type &v) -> Type & {
                                 return v;
                             },
-                            [](Type const *) -> Type & {
+                            [](Type const *) -> Type &
+                            {
                                 assert(false && "Cannot get mutableValue for pointer type!");
                                 return *reinterpret_cast<Type *>(1);
                             },
-                            [](std::monostate &) -> Type & {
+                            [](std::monostate &) -> Type &
+                            {
                                 assert(false && "invalid state!");
                                 return *reinterpret_cast<Type *>(1);
                             }),
@@ -828,13 +838,14 @@ namespace matchit
         {
             T const *mData;
             size_t mSize;
+
         public:
-            Span(T const * data, size_t size)
-            : mData{data}
-            , mSize{size}
-            {}
-            
-            T const * data() const
+            Span(T const *data, size_t size)
+                : mData{data}, mSize{size}
+            {
+            }
+
+            T const *data() const
             {
                 return mData;
             }
@@ -842,7 +853,7 @@ namespace matchit
             {
                 return mSize;
             }
-            constexpr T const& operator[] (size_t idx) const
+            constexpr T const &operator[](size_t idx) const
             {
                 assert(idx < mSize);
                 return mData[idx];
@@ -976,7 +987,8 @@ namespace matchit
         template <std::size_t valueStartIdx, std::size_t patternStartIdx, std::size_t... I, typename ValueTuple, typename PatternTuple, typename ContextT>
         constexpr decltype(auto) matchPatternMultipleImpl(ValueTuple &&valueTuple, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
         {
-            auto const func = [&](auto &&value, auto &&pattern) {
+            auto const func = [&](auto &&value, auto &&pattern)
+            {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1, context);
             };
             static_cast<void>(func);
@@ -993,7 +1005,8 @@ namespace matchit
         template <std::size_t patternStartIdx, std::size_t... I, typename ValueVec, typename PatternTuple, typename ContextT>
         constexpr decltype(auto) matchPatternVecImpl(ValueVec &&valueVec, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
         {
-            auto const func = [&](auto &&value, auto &&pattern) {
+            auto const func = [&](auto &&value, auto &&pattern)
+            {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1, context);
             };
             static_cast<void>(func);
@@ -1131,9 +1144,11 @@ namespace matchit
                 if constexpr (nbOooOrBinder == 0)
                 {
                     return std::apply(
-                        [&valueTuple, depth, &context](auto const &...patterns) {
+                        [&valueTuple, depth, &context](auto const &...patterns)
+                        {
                             return apply_(
-                                [ depth, &context, &patterns... ](auto const &...values) constexpr {
+                                [ depth, &context, &patterns... ](auto const &...values) constexpr
+                                {
                                     static_assert(sizeof...(patterns) == sizeof...(values));
                                     return (matchPattern(std::forward<decltype(values)>(values), patterns, depth + 1, context) && ...);
                                 },
@@ -1212,7 +1227,8 @@ namespace matchit
             constexpr static void processIdImpl(Ds<Patterns...> const &dsPat, int32_t depth, IdProcess idProcess)
             {
                 return std::apply(
-                    [depth, idProcess](auto &&...patterns) {
+                    [depth, idProcess](auto &&...patterns)
+                    {
                         return (processId(patterns, depth, idProcess), ...);
                     },
                     dsPat.patterns());
@@ -1261,7 +1277,8 @@ namespace matchit
 
         static_assert(std::is_same_v<PatternTraits<Wildcard>::template AppResultTuple<int32_t>, std::tuple<>>);
         static_assert(std::is_same_v<PatternTraits<int32_t>::template AppResultTuple<int32_t>, std::tuple<>>);
-        constexpr auto x = [](auto &&t) { return t; };
+        constexpr auto x = [](auto &&t)
+        { return t; };
         static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<int32_t>, std::tuple<>>);
         static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<std::array<int32_t, 3>>, std::tuple<std::array<int32_t, 3>>>);
         static_assert(std::is_same_v<PatternTraits<And<App<decltype(x), Wildcard>>>::template AppResultTuple<int32_t>, std::tuple<>>);
@@ -1295,7 +1312,8 @@ namespace matchit
             else
             // statement, no return value, mismatching all patterns is not an error.
             {
-                auto const func = [](auto const &pattern, auto &&value) -> bool {
+                auto const func = [](auto const &pattern, auto &&value) -> bool
+                {
                     auto context = typename ContextTrait<TypeTuple>::ContextT{};
                     if (pattern.matchValue(std::forward<Value>(value), context))
                     {

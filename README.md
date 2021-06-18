@@ -40,7 +40,7 @@ For syntax design details please refer to [design](./DESIGN.md).
 ## Basic usage.
 The following sample shows to how to implement factorial using the pattern matching library.
 ```C++
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -70,7 +70,7 @@ This is a function call and will return some value returned by handlers. The ret
 We can match multiple values at the same time:
 
 ```C++
-
+#include "matchit.h"
 
 using namespace matchit;
 
@@ -92,7 +92,7 @@ Now let's go through all kinds of patterns in the library.
 ## Expression Pattern
 The value passed to `match` will be matched against the value evaluated from the expression with `pattern == value`.
 ```C++
-
+#include "matchit.h"
 
 
 #include <map>
@@ -117,7 +117,7 @@ It can be used inside other patterns (that accept subpatterns) as well.
 ## Predicate Pattern
 Predicate Pattern can be used to put some restrictions on the value to be matched.
 ```C++
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -149,7 +149,7 @@ static_assert(relu(-5) == 0);
 ## Or Pattern
 Or pattern makes it possible to merge/union multiple patterns, thus can be especially useful when used with other subpatterns.
 ```C++
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -169,7 +169,7 @@ static_assert(!isValid(6));
 ## And Pattern
 And Pattern can be used to combine multiple Predicate patterns.
 ```C++
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -190,7 +190,7 @@ static_assert(clip(5, 0, 4) == 4);
 
 The above can also be written as
 ```C++
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -215,7 +215,7 @@ app(PROJECTION, PATTERN)
 .
 A simple sample to check whether a num is large:
 ```C++
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -239,7 +239,7 @@ Users can bind values with `Identifier Pattern`.
 Logging the details when detecting large values can be useful for the example above. With Identifier Pattern the codes would be
 ```C++
 #include <iostream>
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -268,7 +268,7 @@ We recommend always put your Identifier pattern at the end of And pattern. It is
 Also note when the same identifier is bound multiple times, the bound values must equal to each other via `operator==`.
 An sample to check if an array is symmetric:
 ```C++
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -293,7 +293,7 @@ We also support the Destructure Pattern for any types that define their own `get
 (It is not possible to overload a function in `std` namespace, we use ADL to look up available `get` functions for other types.)
 That is to say, in order to use Destructure Pattern for structs or classes, we need to define a `get` function for them inside the same namespace of the struct or the class. (`std::tuple_size` needs to be specialized as well.)
 ```C++
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -337,7 +337,7 @@ pattern(PATTERN).when(PREDICATE) = HANDLER
 A basic sample can be
 ```C++
 #include <array>
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -358,7 +358,7 @@ Note that `i + j == s` will return a expr function that return the result of `*i
 Ooo Pattern can match arbitrary number of items. It can only be used inside `ds` patterns and at most one Ooo pattern can appear inside a `ds` pattern.
 ```C++
 #include <array>
-
+#include "matchit.h"
 
 
 using namespace matchit;
@@ -396,7 +396,7 @@ We define a basic struct `span` (similar to `std::span` in C++20) to reference t
 Some / None Patterns can be used to match raw pointers, `std::optional`, `std::unique_ptr`, `std::shared_ptr` and other types that can be converted to bool and dereferenced.
 A typical sample can be
 ```C++
-
+#include "matchit.h"
 
 
 
@@ -439,7 +439,7 @@ As pattern can be used to handle `sum type`, including base / derived classes, `
 A simple sample can be
 ```C++
 #include <iostream>
-
+#include "matchit.h"
 
 
 
@@ -483,7 +483,7 @@ The default `As` Pattern for down casting is calling `dynamic_cast`.
 Users can customize their down casting via specializing `CustomAsPointer`:
 ```C++
 #include <iostream>
-
+#include "matchit.h"
 
 
 
@@ -554,7 +554,7 @@ int main()
 ```
 `std::variant` and `std::any` can be visited as
 ```C++
-
+#include "matchit.h"
 
 
 

@@ -1,16 +1,17 @@
 #include <array>
 #include "matchit.h"
-
-
 #include <iostream>
 using namespace matchit;
 
-constexpr bool sumIs(std::array<int32_t, 2> const& arr, int s)
+constexpr bool sumIs(std::array<int32_t, 2> const &arr, int s)
 {
     Id<int32_t> i, j;
     return match(arr)(
+        // clang-format off
         pattern(i, j).when(i + j == s) = expr(true),
-        pattern(_)                     = expr(false));
+        pattern(_)                     = expr(false)
+        // clang-format on
+    );
 }
 
 static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));

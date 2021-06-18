@@ -1,11 +1,9 @@
 #include "matchit.h"
-
-
 #include <iostream>
 using namespace matchit;
 
-template<typename T1, typename T2>
-constexpr auto eval(std::tuple<char, T1, T2> const& expr)
+template <typename T1, typename T2>
+constexpr auto eval(std::tuple<char, T1, T2> const &expr)
 {
     Id<T1> i;
     Id<T2> j;

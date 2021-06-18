@@ -1,23 +1,23 @@
 #include <iostream>
 #include "matchit.h"
-
-
-
 using namespace matchit;
 
 struct Shape
 {
     virtual ~Shape() = default;
 };
-struct Circle : Shape {};
-struct Square : Shape {};
+struct Circle : Shape
+{
+};
+struct Square : Shape
+{
+};
 
 constexpr auto getClassName(Shape const &s)
 {
     return match(s)(
         pattern(as<Circle>(_)) = expr("Circle"),
-        pattern(as<Square>(_)) = expr("Square")
-    );
+        pattern(as<Square>(_)) = expr("Square"));
 }
 
 int main()

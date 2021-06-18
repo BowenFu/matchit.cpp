@@ -1,7 +1,5 @@
 #include <iostream>
 #include "matchit.h"
-
-
 using namespace matchit;
 
 // lift a function from T -> U to std::optional<T> -> std::optional<U>
@@ -12,8 +10,11 @@ auto optionalLift(Func func)
         Id<std::decay_t<decltype(*v)> > x;
         using RetType = decltype(std::make_optional(func(*x)));
         return match(v)(
-            pattern(some(x)) = [func, &x] { return std::make_optional(func(*x)); },
-            pattern(none) = [] { return RetType{}; });
+            // clang-format off
+            pattern(some(x)) = [&] { return std::make_optional(func(*x)); },
+            pattern(none)    = expr(RetType{})
+            // clang-format on
+        );
     };
 }
 

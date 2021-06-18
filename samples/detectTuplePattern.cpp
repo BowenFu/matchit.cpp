@@ -1,19 +1,18 @@
 #include <array>
 #include "matchit.h"
-
-
 #include <iostream>
 using namespace matchit;
 
 template <typename Tuple>
-constexpr int32_t detectTuplePattern(Tuple const& tuple)
+constexpr int32_t detectTuplePattern(Tuple const &tuple)
 {
-    return match(tuple)
-    (
-        pattern(ds(2, ooo, 2))  = expr(4),
-        pattern(ds(2, ooo))     = expr(3),
-        pattern(ds(ooo, 2))     = expr(2),
-        pattern(ds(ooo))        = expr(1)
+    return match(tuple)(
+        // clang-format off
+        pattern(ds(2, ooo, 2)) = expr(4),
+        pattern(ds(2, ooo))    = expr(3),
+        pattern(ds(ooo, 2))    = expr(2),
+        pattern(ds(ooo))       = expr(1)
+        // clang-format on
     );
 }
 
