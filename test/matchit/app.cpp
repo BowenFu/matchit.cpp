@@ -1,8 +1,5 @@
 #include <gtest/gtest.h>
 #include "matchit.h"
-
-
-
 using namespace matchit;
 
 class Base
@@ -21,14 +18,15 @@ public:
   }
 };
 
-constexpr auto deref = [](auto &&x) -> decltype(*x) { return *x; };
-static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard> >::template AppResultTuple<Base*>, std::tuple<> >);
-static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard> >::template AppResult<Base*>, Base&>);
+constexpr auto deref = [](auto &&x) -> decltype(*x)
+{
+  return *x;
+};
+static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard>>::template AppResultTuple<Base *>, std::tuple<>>);
+static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard>>::template AppResult<Base *>, Base &>);
 
 TEST(App, someAs)
 {
-  auto x = std::unique_ptr<Base>{new Derived};
-  auto const result = match(x)(
-      pattern(some(as<Derived>(_))) = expr(true));
-  EXPECT_EQ(result, true);
+  auto const x = std::unique_ptr<Base>{new Derived};
+  EXPECT_TRUE(matched(x, some(as<Derived>(_))));
 }

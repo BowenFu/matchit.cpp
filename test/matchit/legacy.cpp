@@ -7,8 +7,6 @@
 #include <type_traits>
 #include "matchit.h"
 
-
-
 using namespace matchit;
 
 std::tuple<> xxx();
@@ -25,7 +23,8 @@ int64_t func2()
 
 TEST(Match, test1)
 {
-    auto const matchFunc = [](int32_t input) {
+    auto const matchFunc = [](int32_t input)
+    {
         Id<int> ii;
         return match(input)(
             pattern(1) = func1,
@@ -52,7 +51,8 @@ TEST(Match, test1)
 
 TEST(Match, test2)
 {
-    auto const matchFunc = [](auto &&input) {
+    auto const matchFunc = [](auto &&input)
+    {
         Id<int> i;
         Id<int> j;
         return match(input)(
@@ -82,10 +82,12 @@ bool operator==(A const lhs, A const rhs)
 
 TEST(Match, test3)
 {
-    auto const matchFunc = [](A const &input) {
+    auto const matchFunc = [](A const &input)
+    {
         Id<int> i;
         // compose patterns for destructuring struct A.
-        auto const dsA = [](Id<int> &x) {
+        auto const dsA = [](Id<int> &x)
+        {
             return and_(app(&A::a, x), app(&A::b, 1));
         };
         return match(input)(
@@ -164,7 +166,8 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
 
 TEST(Match, test4)
 {
-    auto const matchFunc = [](Num const &input) {
+    auto const matchFunc = [](Num const &input)
+    {
         return match(input)(
             pattern(as<One>(_)) = expr(1),
             pattern(kind<Kind::kTWO>) = expr(2),
@@ -177,7 +180,8 @@ TEST(Match, test4)
 
 TEST(Match, test5)
 {
-    auto const matchFunc = [](std::pair<int32_t, int32_t> ij) {
+    auto const matchFunc = [](std::pair<int32_t, int32_t> ij)
+    {
         return match(ij.first % 3, ij.second % 5)(
             pattern(0, 0) = expr(1),
             pattern(0, _ > 2) = expr(2),
@@ -196,7 +200,8 @@ int32_t fib(int32_t n)
     return match(n)(
         pattern(1) = expr(1),
         pattern(2) = expr(1),
-        pattern(_) = [n] { return fib(n - 1) + fib(n - 2); });
+        pattern(_) = [n]
+        { return fib(n - 1) + fib(n - 2); });
 }
 
 TEST(Match, test6)
@@ -210,16 +215,23 @@ TEST(Match, test6)
 
 TEST(Match, test7)
 {
-    auto const matchFunc = [](std::pair<int32_t, int32_t> ij) {
-        Id<std::tuple<int32_t &, int32_t &> > id;
+    auto const matchFunc = [](std::pair<int32_t, int32_t> ij)
+    {
+        Id<std::tuple<int32_t &, int32_t &>> id;
         // delegate at to and_
-        auto const at = [](auto &&id, auto &&pattern) {
+        auto const at = [](auto &&id, auto &&pattern)
+        {
             return and_(pattern, id);
         };
         return match(ij.first % 3, ij.second % 5)(
             pattern(0, _ > 2) = expr(2),
             pattern(ds(1, _ > 2)) = expr(3),
-            pattern(at(id, ds(_, 2))) = [&id] {EXPECT_TRUE(std::get<1>(*id) == 2); static_cast<void>(id); return 4; },
+            pattern(at(id, ds(_, 2))) = [&id]
+            {
+                EXPECT_TRUE(std::get<1>(*id) == 2);
+                static_cast<void>(id);
+                return 4;
+            },
             pattern(_) = expr(5));
     };
     EXPECT_EQ(matchFunc(std::make_pair(4, 2)), 4);
@@ -227,7 +239,8 @@ TEST(Match, test7)
 
 TEST(Match, test8)
 {
-    auto const equal = [](std::pair<int32_t, std::pair<int32_t, int32_t> > ijk) {
+    auto const equal = [](std::pair<int32_t, std::pair<int32_t, int32_t>> ijk)
+    {
         Id<int32_t> x;
         return match(ijk)(
             pattern(ds(x, ds(_, x))) = expr(true),
@@ -240,7 +253,8 @@ TEST(Match, test8)
 // optional
 TEST(Match, test9)
 {
-    auto const optional = [](auto const &i) {
+    auto const optional = [](auto const &i)
+    {
         Id<int32_t> x;
         return match(i)(
             pattern(some(x)) = expr(true),
@@ -286,7 +300,8 @@ TEST(Match, test10)
     static_assert(matchit::impl::StorePointer<Shape, Shape &>::value);
     static_assert(matchit::impl::StorePointer<Shape const, Shape const &>::value);
 
-    auto const dynCast = [](auto const &i) {
+    auto const dynCast = [](auto const &i)
+    {
         return match(i)(
             pattern(some(as<Circle>(_))) = expr("Circle"),
             pattern(some(as<Square>(_))) = expr("Square"),
@@ -300,7 +315,8 @@ TEST(Match, test10)
 
 TEST(Match, test11)
 {
-    auto const getIf = [](auto const &i) {
+    auto const getIf = [](auto const &i)
+    {
         return match(i)(
             pattern(as<Square>(_)) = expr("Square"),
             pattern(as<Circle>(_)) = expr("Circle"));
@@ -342,7 +358,8 @@ namespace std
 
 TEST(Match, test13)
 {
-    auto const dsAgg = [](auto const &v) {
+    auto const dsAgg = [](auto const &v)
+    {
         Id<int> i;
         return match(v)(
             pattern(ds(1, i)) = expr(i),
@@ -357,7 +374,8 @@ TEST(Match, test13)
 
 TEST(Match, test14)
 {
-    auto const anyCast = [](auto const &i) {
+    auto const anyCast = [](auto const &i)
+    {
         return match(i)(
             pattern(as<Square>(_)) = expr("Square"),
             pattern(as<Circle>(_)) = expr("Circle"));
@@ -371,16 +389,17 @@ TEST(Match, test14)
 
     EXPECT_TRUE(matched(sc, as<Circle>(_)));
     EXPECT_FALSE(matched(sc, as<Square>(_)));
-//     // one would write if let like
-//     // if (matched(value, pattern))
-//     // {
-//     //     ...
-//     // }
+    //     // one would write if let like
+    //     // if (matched(value, pattern))
+    //     // {
+    //     //     ...
+    //     // }
 }
 
 TEST(Match, test15)
 {
-    auto const optional = [](auto const &i) {
+    auto const optional = [](auto const &i)
+    {
         Id<char> c;
         return match(i)(
             pattern(none) = expr(1),
@@ -400,7 +419,8 @@ TEST(Match, test15)
 
 TEST(Match, test16)
 {
-    auto const notX = [](auto const &i) {
+    auto const notX = [](auto const &i)
+    {
         return match(i)(
             pattern(not_(or_(1, 2))) = expr(3),
             pattern(2) = expr(2),
@@ -414,7 +434,8 @@ TEST(Match, test16)
 // when
 TEST(Match, test17)
 {
-    auto const whenX = [](auto const &x) {
+    auto const whenX = [](auto const &x)
+    {
         Id<int32_t> i, j;
         return match(x)(
             pattern(i, j).when(i + j == 10) = expr(3),
@@ -428,7 +449,8 @@ TEST(Match, test17)
 
 TEST(Match, test18)
 {
-    auto const idNotOwn = [](auto const &x) {
+    auto const idNotOwn = [](auto const &x)
+    {
         Id<int32_t> i;
         return match(x)(
             pattern(i).when(i == 5) = expr(1),
@@ -440,7 +462,8 @@ TEST(Match, test18)
 
 TEST(Match, test19)
 {
-    auto const matchFunc = [](auto &&input) {
+    auto const matchFunc = [](auto &&input)
+    {
         Id<int> j;
         return match(input)(
             // `... / 2 3`
@@ -478,9 +501,9 @@ TEST(Match, test20)
     Id<std::string> strA;
     Id<const char *> strB;
     EXPECT_TRUE(matched(
-                  "abc",
-                  strA));
+        "abc",
+        strA));
     EXPECT_TRUE(matched(
-                  "abc",
-                  strB));
+        "abc",
+        strB));
 }

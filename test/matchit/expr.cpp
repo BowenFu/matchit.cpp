@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 #include "matchit.h"
-
-
 using namespace matchit;
 
 TEST(Expr, nullary)

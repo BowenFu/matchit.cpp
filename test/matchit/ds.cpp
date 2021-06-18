@@ -58,6 +58,11 @@ TEST(Ds, vecOooBinder2)
         EXPECT_EQ((*span).size(), 2);
         EXPECT_EQ((*span)[0], 123);
         EXPECT_EQ((*span)[1], 456);
+      },
+      pattern(_) = []
+      {
+        // make sure the above pattern is matched, otherwise the test case fails.
+        ADD_FAILURE();
       });
 }
 
