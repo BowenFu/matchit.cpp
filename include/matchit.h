@@ -1308,22 +1308,22 @@ namespace matchit
                 std::forward<ValueTuple>(valueTuple), patternTuple, depth, context, std::make_index_sequence<size>{});
         }
 
-        template <std::size_t patternStartIdx, std::size_t... I, typename ValueRange, typename PatternTuple, typename ContextT>
-        constexpr decltype(auto) matchPatternRangeImpl(ValueRange &&valueRange, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
+        template <std::size_t patternStartIdx, std::size_t... I, typename RangeBegin, typename PatternTuple, typename ContextT>
+        constexpr decltype(auto) matchPatternRangeImpl(RangeBegin &&rangeBegin, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
         {
             auto const func = [&](auto &&value, auto &&pattern)
             {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1, context);
             };
             static_cast<void>(func);
-            return (func(std::forward<ValueRange>(valueRange).at(I + valueStartIdx), std::get<I + patternStartIdx>(patternTuple)) && ...);
+            return (func(*std::next(rangeBegin, static_cast<long>(I + valueStartIdx)), std::get<I + patternStartIdx>(patternTuple)) && ...);
         }
 
         template <std::size_t patternStartIdx, std::size_t size, typename ValueRange, typename PatternTuple, typename ContextT>
         constexpr decltype(auto) matchPatternRange(ValueRange &&valueRange, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
         {
             return matchPatternRangeImpl<patternStartIdx>(
-                std::forward<ValueRange>(valueRange), valueStartIdx, patternTuple, depth, context, std::make_index_sequence<size>{});
+                std::begin(valueRange), valueStartIdx, patternTuple, depth, context, std::make_index_sequence<size>{});
         }
 
         template <std::size_t start, typename Indices, typename Tuple>
