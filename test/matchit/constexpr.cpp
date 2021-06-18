@@ -23,8 +23,8 @@ template <typename Value>
 constexpr auto eval(Value &&input)
 {
     return match(input)(
-        pattern(ds('/', 1, 1)) = expr(1),
-        pattern(ds('/', 0, _)) = expr(0),
+        pattern('/', 1, 1) = expr(1),
+        pattern('/', 0, _) = expr(0),
         pattern(_) = expr(-1));
 }
 

@@ -51,8 +51,8 @@ constexpr auto getSecond(T &&v)
 {
     Id<char const *> i;
     return match(std::forward<T>(v))(
-        pattern(ds(2, i)) = expr(i),
-        pattern(ds(_, i)) = expr(i));
+        pattern(2, i) = expr(i),
+        pattern(_, i) = expr(i));
 }
 
 // #if __cplusplus > 201703L

@@ -263,6 +263,16 @@ namespace matchit
         {
             return PatternHelper<Ds<First, Patterns...>>{ds(f, ps...)};
         }
+        
+        template <typename Pattern>
+        class OooBinder;
+
+        template <typename Pattern>
+        constexpr auto pattern(OooBinder<Pattern> const &p)
+        {
+            return pattern(ds(p));
+        }
+
 
         template <typename Pattern>
         class PatternTraits
