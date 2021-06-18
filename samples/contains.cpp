@@ -1,5 +1,5 @@
-#include "matchit/core.h"
-#include "matchit/patterns.h"
+#include "matchit.h"
+
 #include <map>
 #include <iostream>
 using namespace matchit;

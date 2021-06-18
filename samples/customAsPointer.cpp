@@ -1,7 +1,7 @@
 #include <iostream>
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/utility.h"
+#include "matchit.h"
+
+
 using namespace matchit;
 
 enum class Kind { kONE, kTWO };

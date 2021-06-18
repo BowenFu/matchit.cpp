@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/utility.h"
-#include "matchit/expression.h"
+#include "matchit.h"
+
+
+
 using namespace matchit;
 
 class Base

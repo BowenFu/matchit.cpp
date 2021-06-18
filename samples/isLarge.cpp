@@ -1,6 +1,6 @@
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/expression.h"
+#include "matchit.h"
+
+
 #include <iostream>
 using namespace matchit;
 

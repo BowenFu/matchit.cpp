@@ -5,10 +5,10 @@
 #include <any>
 #include <iostream>
 #include <type_traits>
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/utility.h"
-#include "matchit/expression.h"
+#include "matchit.h"
+
+
+
 using namespace matchit;
 
 std::tuple<> xxx();
