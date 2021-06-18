@@ -38,7 +38,7 @@ TEST(Ds, vecOooBinder1)
   auto const vec = std::vector<int32_t>{123, 456};
   Id<Span<int32_t>> span;
   auto matched = match(vec)(
-      pattern(ds(ooo(span))) = [&]
+      pattern(ooo(span)) = [&]
       {
         EXPECT_EQ((*span).size(), 2);
         EXPECT_EQ((*span)[0], 123);
@@ -53,7 +53,7 @@ TEST(Ds, vecOooBinder2)
 {
   Id<Span<int32_t>> span;
   match(std::vector<int32_t>{123, 456})(
-      pattern(ds(ooo(span))) = [&]
+      pattern(ooo(span)) = [&]
       {
         EXPECT_EQ((*span).size(), 2);
         EXPECT_EQ((*span)[0], 123);
@@ -70,7 +70,7 @@ TEST(Ds, vecOooBinder3)
 {
   Id<Span<int32_t>> span;
   match(std::vector<int32_t>{123, 456})(
-      pattern(ds(123, ooo(span), 456)) = [&]
+      pattern(123, ooo(span), 456) = [&]
       { EXPECT_EQ((*span).size(), 0); });
 }
 
@@ -78,7 +78,7 @@ TEST(Ds, vecOooBinder4)
 {
   Id<Span<int32_t>> span;
   match(std::vector<int32_t>{123, 456, 789})(
-      pattern(ds(123, ooo(span))) = [&]
+      pattern(123, ooo(span)) = [&]
       {
         EXPECT_EQ((*span).size(), 2);
         EXPECT_EQ((*span)[0], 456);
