@@ -18,6 +18,7 @@
 [godbolt]: https://godbolt.org/z/6E1h14Y74
 
 ## Features
+
 - Header-only library.
 - Macro-free APIs.
 - Composable patterns.
@@ -25,6 +26,7 @@
 - Users can define their own patterns, either via composing existent ones, or create brand new ones.
 
 ## Related Work
+
 `match(it)` is influenced by multiple related work
 
 - [mpark/patterns](https://github.com/mpark/patterns)
@@ -35,10 +37,13 @@
 - [C++ Pattern Matching Proposal](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1371r3.pdf)
 
 ## Syntax Design
+
 For syntax design details please refer to [design](./DESIGN.md).
 
 ## Basic usage.
+
 The following sample shows to how to implement factorial using the pattern matching library.
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -54,6 +59,7 @@ constexpr int32_t factorial(int32_t n)
 ```
 
 The basic syntax is
+
 ```C++
 match(VALUE)
 (
@@ -87,7 +93,9 @@ Note that some patterns support constexpr match, i.e. you can match them at comp
 Now let's go through all kinds of patterns in the library.
 
 ## Expression Pattern
+
 The value passed to `match` will be matched against the value evaluated from the expression with `pattern == value`.
+
 ```C++
 #include "matchit.h"
 #include <map>
@@ -106,11 +114,14 @@ Note that the expression `map.end()` can be be used inside `pattern`.
 `expr` is a helper function that can be used to generate a nullary function that returns a value. `expr(false)` is equivalent to `[]{return false;}`. It can be useful for short functions.
 
 ## Wildcard Pattern
+
 The wildcard `_` will match any values, as we see from the example above. It is a common practice to use it as the last pattern, playing the same role in our library as `default case` does for `switch` statements.
 It can be used inside other patterns (that accept subpatterns) as well.
 
 ## Predicate Pattern
+
 Predicate Pattern can be used to put some restrictions on the value to be matched.
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -127,6 +138,7 @@ static_assert(relu(-5) == 0);
 ```
 We overload some operators for wildcard symbol `_` to facilitate usage of basic predicates.
 The above sample can be written as
+
 ```C++
 constexpr double relu(double value)
 {
@@ -140,7 +152,9 @@ static_assert(relu(-5) == 0);
 ```
 
 ## Or Pattern
+
 Or pattern makes it possible to merge/union multiple patterns, thus can be especially useful when used with other subpatterns.
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -158,7 +172,9 @@ static_assert(!isValid(6));
 ```
 
 ## And Pattern
+
 And Pattern can be used to combine multiple Predicate patterns.
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -178,6 +194,7 @@ static_assert(clip(5, 0, 4) == 4);
 ```
 
 The above can also be written as
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -194,13 +211,16 @@ double clip(double value, double min, double max)
 . Note that `&&` can only be used between Predicate patterns. `and_` can be used for all kinds of patterns.
 
 ## App Pattern
+
 App Pattern is like the projection for ranges introduced in C++20. 
 Its syntax is
+
 ```C++
 app(PROJECTION, PATTERN)
 ```
 .
 A simple sample to check whether a num is large:
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -220,8 +240,10 @@ Note that `_ * _` generates a function object that computes the square of the in
 We suggest using this only for very short and simple functions.
 
 ## Identifier Pattern
+
 Users can bind values with `Identifier Pattern`.
 Logging the details when detecting large values can be useful for the example above. With Identifier Pattern the codes would be
+
 ```C++
 #include <iostream>
 #include "matchit.h"
@@ -250,6 +272,7 @@ We recommend always put your Identifier pattern at the end of And pattern. It is
 
 Also note when the same identifier is bound multiple times, the bound values must equal to each other via `operator==`.
 An sample to check if an array is symmetric:
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -273,6 +296,8 @@ We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and 
 We also support the Destructure Pattern for any types that define their own `get` function, (similar to `std::get` for `std::tuple`, `std::pair`, `std::array`).
 (It is not possible to overload a function in `std` namespace, we use ADL to look up available `get` functions for other types.)
 That is to say, in order to use Destructure Pattern for structs or classes, we need to define a `get` function for them inside the same namespace of the struct or the class. (`std::tuple_size` needs to be specialized as well.)
+
+Note the outermost `ds` inside pattern can be saved. That is to say, when pattern receives multiple parameters, they are treated as subpatterns of a ds pattern.
 
 ```C++
 #include "matchit.h"
@@ -300,6 +325,7 @@ constexpr auto result = eval(std::make_tuple('*', 5, 6));
 static_assert(result == 30);
 #endif
 ```
+
 Note that we overload some operators for `Id`, so `i + j` will return a expr function that return the value of `*i + *j`.
 We suggest using this only for very short and simple functions.
 
@@ -308,13 +334,16 @@ Also note that `eval` cannot be used for constant expression until C++20, where 
 Different from other value types that can be matched against Ds patterns, `std::vector` is not a fixed size type. We support it since it can be useful. Other containers' support will be determined later based on actual use cases. This decision is made to align with Rust's pattern matching feature.
 
 ## Match Guard
+
 Match Guard can be used to exert extra restrictions on a pattern.
 The syntax is
+
 ```C++
 pattern(PATTERN).when(PREDICATE) = HANDLER
 ```
 
 A basic sample can be
+
 ```C++
 #include <array>
 #include "matchit.h"
@@ -330,9 +359,11 @@ constexpr bool sumIs(std::array<int32_t, 2> const& arr, int s)
 
 static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));
 ```
+
 Note that `i + j == s` will return a expr function that return the result of `*i + *j == s`.
 
 ## Ooo Pattern
+
 Ooo Pattern can match arbitrary number of items. It can only be used inside `ds` patterns and at most one Ooo pattern can appear inside a `ds` pattern.
 ```C++
 #include <array>
@@ -356,6 +387,7 @@ static_assert(detectTuplePattern(std::make_tuple(2, 3, 5, 7, 2)) == 4);
 
 We also support binding a span to the ooo pattern now when destructuring a `std::array` or `std::vector` (or their variants).
 Sample codes can be
+
 ```C++
 Id<Span<int32_t>> span;
 match(std::array<int32_t, 3>{123, 456, 789})(
@@ -365,12 +397,16 @@ match(std::array<int32_t, 3>{123, 456, 789})(
     EXPECT_EQ((*span)[1], 789);
     });
 ```
+
 We define a basic struct `span` (similar to `std::span` in C++20) to reference the values bound to the ooo pattern.
 
 ## Compose Patterns
+
 ### Some / None Patterns
+
 Some / None Patterns can be used to match raw pointers, `std::optional`, `std::unique_ptr`, `std::shared_ptr` and other types that can be converted to bool and dereferenced.
 A typical sample can be
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -388,6 +424,7 @@ static_assert(square(x) == 25);
 ```
 
 Some and none patterns are not atomic patterns, they are composed via
+
 ```C++
 template <typename T>
 constexpr auto cast = [](auto && input) {
@@ -402,12 +439,14 @@ constexpr auto some = [](auto const pat) {
 
 constexpr auto none = app(cast<bool>, false);
 ```
+
 For `some` pattern, first we cast the value to a boolean value, if the boolean value is true, we can further dereference it. Otherwise, the match fails.
 For none pattern we simply check if the converted boolean value is false.
 
 `Some` and `none` patterns can be used to lift functions for `std::optional`, `std::unique_ptr` and so on, refer to `samples/optionalLift.cpp`.
 
 ### As Pattern
+
 As pattern can be used to handle `sum type`, including base / derived classes, `std::variant`, and `std::any`.
 A simple sample can be
 ```C++
@@ -439,6 +478,7 @@ int main()
 ```
 
 As pattern is not an atomic pattern, either. It is composed via
+
 ```C++
 template <typename T>
 constexpr AsPointer<T> asPointer;
@@ -448,13 +488,15 @@ constexpr auto as = [](auto const pat) {
     return app(asPointer<T>, some(pat));
 };
 ```
+
 #### Customization Point of `As` Pattern
+
 The default `As` Pattern for down casting is calling `dynamic_cast`.
 Users can customize their down casting via specializing `CustomAsPointer`:
+
 ```C++
 #include <iostream>
 #include "matchit.h"
-
 using namespace matchit;
 
 enum class Kind { kONE, kTWO };
@@ -520,7 +562,9 @@ int main()
     return 0;
 }
 ```
+
 `std::variant` and `std::any` can be visited as
+
 ```C++
 #include "matchit.h"
 using namespace matchit;
@@ -539,4 +583,5 @@ static_assert(getClassName(v) == std::string_view{"int"});
 ```
 
 ## Customziation Point
+
 Users can specialize `PatternTraits` if they want to add a new pattern.
