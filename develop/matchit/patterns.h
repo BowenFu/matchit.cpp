@@ -1074,6 +1074,41 @@ namespace matchit
         template <typename ValueTuple>
         constexpr auto isArrayV = IsArray<std::decay_t<ValueTuple>>::value;
 
+        template <typename Value, typename = std::void_t<>>
+        struct IsTupleLike : std::false_type
+        {
+        };
+
+        template <typename Value>
+        struct IsTupleLike<Value, std::void_t<decltype(std::tuple_size<Value>::value)>>
+            : std::true_type
+        {
+        };
+
+        template <typename ValueTuple>
+        constexpr auto isTupleLikeV = IsTupleLike<std::decay_t<ValueTuple>>::value;
+
+        static_assert(isTupleLikeV<std::pair<int32_t, char>>);
+        static_assert(!isTupleLikeV<bool>);
+
+        template <typename Value, typename = std::void_t<>>
+        struct IsRange : std::false_type
+        {
+        };
+
+        template <typename Value>
+        struct IsRange<Value, std::void_t<decltype(std::begin(std::declval<Value>())), decltype(std::end(std::declval<Value>()))>>
+            : std::true_type
+        {
+        };
+
+        template <typename ValueTuple>
+        constexpr auto isRangeV = IsRange<std::decay_t<ValueTuple>>::value;
+
+        static_assert(!isRangeV<std::pair<int32_t, char>>);
+        static_assert(isRangeV<const std::array<int32_t, 5>>);
+        static_assert(isRangeV<const std::vector<int32_t>>);
+
         template <typename... Patterns>
         class PatternTraits<Ds<Patterns...>>
         {
