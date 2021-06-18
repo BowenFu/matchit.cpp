@@ -1,19 +1,17 @@
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/expression.h"
+#include "matchit.h"
 #include <iostream>
 using namespace matchit;
 
-template<typename T1, typename T2>
-constexpr auto eval(std::tuple<char, T1, T2> const& expr)
+template <typename T1, typename T2>
+constexpr auto eval(std::tuple<char, T1, T2> const &expr)
 {
     Id<T1> i;
     Id<T2> j;
     return match(expr)(
-        pattern(ds('+', i, j)) = i + j,
-        pattern(ds('-', i, j)) = i - j,
-        pattern(ds('*', i, j)) = i * j,
-        pattern(ds('/', i, j)) = i / j,
+        pattern('+', i, j) = i + j,
+        pattern('-', i, j) = i - j,
+        pattern('*', i, j) = i * j,
+        pattern('/', i, j) = i / j,
         pattern(_) = []
         {
             assert(false);

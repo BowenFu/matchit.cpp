@@ -25,11 +25,12 @@ namespace matchit
         template <typename T>
         constexpr auto expr(Id<T> const &id)
         {
-            return nullary([&] { return *id; });
+            return nullary([&]
+                           { return *id; });
         }
 
         template <typename T>
-        constexpr auto expr(T const&v)
+        constexpr auto expr(T const &v)
         {
             return nullary([&]
                            { return v; });
@@ -41,7 +42,7 @@ namespace matchit
         {
         public:
             template <typename... Args>
-            constexpr static decltype(auto) evalImpl(T const &v, Args const&...)
+            constexpr static decltype(auto) evalImpl(T const &v, Args const &...)
             {
                 return v;
             }
@@ -80,7 +81,7 @@ namespace matchit
         {
         public:
             template <typename Arg>
-            constexpr static decltype(auto) evalImpl(Unary<T> const &e, Arg const&arg)
+            constexpr static decltype(auto) evalImpl(Unary<T> const &e, Arg const &arg)
             {
                 return e(arg);
             }
@@ -92,14 +93,14 @@ namespace matchit
         {
         public:
             template <typename Arg>
-            constexpr static decltype(auto) evalImpl(Wildcard const &, Arg const&arg)
+            constexpr static decltype(auto) evalImpl(Wildcard const &, Arg const &arg)
             {
                 return arg;
             }
         };
 
         template <typename T, typename... Args>
-        constexpr decltype(auto) eval(T const&t, Args const&...args)
+        constexpr decltype(auto) eval(T const &t, Args const &...args)
         {
             return EvalTraits<T>::evalImpl(t, args...);
         }
@@ -124,14 +125,14 @@ namespace matchit
 
 #define UN_OP_FOR_NULLARY(op)                                               \
     template <typename T, std::enable_if_t<isNullaryOrIdV<T>, bool> = true> \
-    constexpr auto operator op(T const&t)                                       \
+    constexpr auto operator op(T const &t)                                  \
     {                                                                       \
         return nullary([&] { return op eval(t); });                         \
     }
 
 #define BIN_OP_FOR_NULLARY(op)                                                                               \
     template <typename T, typename U, std::enable_if_t<isNullaryOrIdV<T> || isNullaryOrIdV<U>, bool> = true> \
-    constexpr auto operator op(T const&t, U const&u)                                                                 \
+    constexpr auto operator op(T const &t, U const &u)                                                       \
     {                                                                                                        \
         return nullary([&] { return eval(t) op eval(u); });                                                  \
     }
@@ -187,14 +188,14 @@ namespace matchit
 
 #define UN_OP_FOR_UNARY(op)                                                     \
     template <typename T, std::enable_if_t<isUnaryOrWildcardV<T>, bool> = true> \
-    constexpr auto operator op(T const&t)                                           \
+    constexpr auto operator op(T const &t)                                      \
     {                                                                           \
         return unary([&](auto &&arg) constexpr { return op eval(t, arg); });    \
     }
 
 #define BIN_OP_FOR_UNARY(op)                                                                                         \
     template <typename T, typename U, std::enable_if_t<isUnaryOrWildcardV<T> || isUnaryOrWildcardV<U>, bool> = true> \
-    constexpr auto operator op(T const&t, U const&u)                                                                         \
+    constexpr auto operator op(T const &t, U const &u)                                                               \
     {                                                                                                                \
         return unary([&](auto &&arg) constexpr { return eval(t, arg) op eval(u, arg); });                            \
     }

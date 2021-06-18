@@ -1,15 +1,15 @@
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/expression.h"
+#include "matchit.h"
 #include <iostream>
 using namespace matchit;
 
-constexpr bool symmetric(std::array<int32_t, 5> const& arr)
+constexpr bool symmetric(std::array<int32_t, 5> const &arr)
 {
-    Id<int32_t> i, j; 
+    Id<int32_t> i, j;
     return match(arr)(
+        // clang-format off
         pattern(i, j, _, j, i) = expr(true),
         pattern(_)             = expr(false)
+        // clang-format on
     );
 }
 

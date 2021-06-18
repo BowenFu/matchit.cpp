@@ -1,15 +1,15 @@
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/expression.h"
+#include "matchit.h"
 #include <iostream>
 using namespace matchit;
 
 constexpr double clip(double value, double min, double max)
 {
     return match(value)(
+        // clang-format off
         pattern(and_(_ >= min, _ <= max)) = expr(value),
         pattern(_ > max)                  = expr(max),
         pattern(_)                        = expr(min)
+        // clang-format on
     );
 }
 

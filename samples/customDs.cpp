@@ -1,8 +1,5 @@
 #include <iostream>
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/utility.h"
-#include "matchit/expression.h"
+#include "matchit.h"
 using namespace matchit;
 
 struct A
@@ -10,13 +7,13 @@ struct A
     int a;
     char const *b;
 };
-bool operator==(A const& lhs, A const& rhs)
+constexpr bool operator==(A const &lhs, A const &rhs)
 {
     return lhs.a == rhs.a && lhs.b == rhs.b;
 }
 
 template <size_t I>
-constexpr auto const& get(A const &a)
+constexpr auto const &get(A const &a)
 {
     if constexpr (I == 0)
     {
@@ -29,7 +26,7 @@ constexpr auto const& get(A const &a)
 }
 
 template <size_t I>
-constexpr auto&& get(A &&a)
+constexpr auto &&get(A &&a)
 {
     if constexpr (I == 0)
     {
@@ -50,12 +47,12 @@ namespace std
 } // namespace std
 
 template <typename T>
-constexpr auto getSecond(T&& v)
+constexpr auto getSecond(T &&v)
 {
-    Id<char const*> i;
+    Id<char const *> i;
     return match(std::forward<T>(v))(
-        pattern(ds(2, i)) = expr(i),
-        pattern(ds(_, i)) = expr(i));
+        pattern(2, i) = expr(i),
+        pattern(_, i) = expr(i));
 }
 
 // #if __cplusplus > 201703L

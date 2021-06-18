@@ -1,13 +1,15 @@
-#include "matchit/core.h"
-#include "matchit/patterns.h"
+#include "matchit.h"
 #include <iostream>
 using namespace matchit;
 
 constexpr int32_t gcd(int32_t a, int32_t b)
 {
     return match(a, b)(
+        // clang-format off
         pattern(_, 0) = [&] { return a >= 0 ? a : -a; },
-        pattern(_) = [&] { return gcd(b, a % b); });
+        pattern(_)    = [&] { return gcd(b, a % b); }
+        // clang-format on
+    );
 }
 
 static_assert(gcd(12, 6) == 6);

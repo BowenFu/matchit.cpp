@@ -1,14 +1,14 @@
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/expression.h"
+#include "matchit.h"
 #include <iostream>
 using namespace matchit;
 
 constexpr bool isLarge(double value)
 {
     return match(value)(
+        // clang-format off
         pattern(app(_ * _, _ > 1000)) = expr(true),
         pattern(_)                    = expr(false)
+        // clang-format on
     );
 }
 

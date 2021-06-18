@@ -1,10 +1,12 @@
 #include <iostream>
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/utility.h"
+#include "matchit.h"
 using namespace matchit;
 
-enum class Kind { kONE, kTWO };
+enum class Kind
+{
+    kONE,
+    kTWO
+};
 
 #if __cplusplus > 201703L
 #define CPP20_CONSTEXPR constexpr
@@ -16,6 +18,7 @@ class Num
 {
 public:
     CPP20_CONSTEXPR virtual Kind kind() const = 0;
+
 protected:
     ~Num() = default;
 };
@@ -47,7 +50,7 @@ template <typename T>
 class NumAsPointer
 {
 public:
-    constexpr auto operator()(Num const& num) const
+    constexpr auto operator()(Num const &num) const
     {
         // std::cout << "custom as pointer." << std::endl;
         return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
@@ -55,17 +58,24 @@ public:
 };
 
 template <>
-class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One> {};
+class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One>
+{
+};
 
 template <>
-class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
+class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
+{
+};
 
-constexpr int staticCastAs(Num const& input)
+constexpr int staticCastAs(Num const &input)
 {
     return match(input)(
-        pattern(as<One>(_)) = [] { return 1; },
-        pattern(kind<Kind::kTWO>) = [] { return 2; },
-        pattern(_) = [] { return 3; });
+        // clang-format off
+        pattern(as<One>(_))       = expr(1),
+        pattern(kind<Kind::kTWO>) = expr(2),
+        pattern(_)                = expr(3)
+        // clang-format on
+    );
 }
 
 #if 0 // fail on gcc, fix me later.

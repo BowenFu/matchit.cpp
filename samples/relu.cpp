@@ -1,15 +1,15 @@
-#include "matchit/core.h"
-#include "matchit/patterns.h"
-#include "matchit/expression.h"
+#include "matchit.h"
 #include <iostream>
 using namespace matchit;
 
 constexpr double relu(double value)
 {
     return match(value)(
-        // pattern(meet([](auto &&v) { return v >= 0; })) = [&] { return value; },
-        pattern(_ >= 0) = [&] { return value; },
-        pattern(_) = [] { return 0; });
+        // clang-format off
+        pattern(_ >= 0) = expr(value),
+        pattern(_)      = expr(0)
+        // clang-format on
+    );
 }
 
 static_assert(relu(5) == 5);

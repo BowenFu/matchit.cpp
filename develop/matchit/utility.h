@@ -10,12 +10,14 @@ namespace matchit
     {
 
         template <typename T>
-        constexpr auto cast = [](auto &&input) {
+        constexpr auto cast = [](auto &&input)
+        {
             return static_cast<T>(input);
         };
 
-        constexpr auto deref = [](auto &&x) -> decltype(*x)& { return *x; };
-        constexpr auto some = [](auto const pat) {
+        constexpr auto deref = [](auto &&x) -> decltype(*x) & { return *x; };
+        constexpr auto some = [](auto const pat)
+        {
             return and_(app(cast<bool>, true), app(deref, pat));
         };
 
@@ -64,23 +66,26 @@ namespace matchit
         template <typename T>
         constexpr AsPointer<T> asPointer;
         template <typename T>
-        constexpr auto as = [](auto const pat) {
+        constexpr auto as = [](auto const pat)
+        {
             return app(asPointer<T>, some(pat));
         };
 
         template <typename Value, typename Pattern>
-        constexpr auto matched(Value&& v, Pattern&& p)
+        constexpr auto matched(Value &&v, Pattern &&p)
         {
             return match(std::forward<Value>(v))(
-                pattern(std::forward<Pattern>(p)) = [] { return true; },
-                pattern(_) = [] { return false; });
+                pattern(std::forward<Pattern>(p)) = []
+                { return true; },
+                pattern(_) = []
+                { return false; });
         }
 
     } // namespace impl
     using impl::as;
+    using impl::matched;
     using impl::none;
     using impl::some;
-    using impl::matched;
 } // namespace matchit
 
 #endif // MATCHIT_UTILITY_H

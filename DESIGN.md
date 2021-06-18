@@ -66,7 +66,7 @@ Say Predicate Patterns
 ```C++
 match(n)(
     pattern(or_(_ < 3, 5)) = expr(true),
-    pattern(_)            = expr(false))
+    pattern(_)             = expr(false))
 ```
 In Rust and some other related work, there exists a similar `anyof` pattern. But only literal patterns can be used as subpatterns.
 
@@ -149,6 +149,17 @@ match(expr)(
     pattern(_)             = expr(-1))
 ```
 
+Note the outermost `ds` inside pattern can be saved. That is to say, when pattern receives multiple parameters, they are treated as subpatterns of a ds pattern.
+```C++
+Id<T1> i;
+Id<T2> j;
+match(expr)(
+    pattern('+', i, j) = i + j,
+    pattern('-', i, j) = i - j,
+    pattern('*', i, j) = i * j,
+    pattern('/', i, j) = i / j,
+    pattern(_)         = expr(-1))
+```
 We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and `std::vector` from the STL. 
 in order to use Destructure Pattern for structs or classes, we need to define a get function for them inside the same namespace of the struct or the class. (std::tuple_size needs to be specialized as well.)
 Mismatch of element numbers is a compile error for fixed-size containers.
@@ -163,10 +174,10 @@ It can only be used inside ds patterns and at most one Ooo pattern can appear in
 ```C++
 match(tuple)
 (
-    pattern(ds(2, ooo, 2))  = expr(4),
-    pattern(ds(2, ooo))     = expr(3),
-    pattern(ds(ooo, 2))     = expr(2),
-    pattern(ds(ooo))        = expr(1)
+    pattern(2, ooo, 2)  = expr(4),
+    pattern(2, ooo)     = expr(3),
+    pattern(ooo, 2)     = expr(2),
+    pattern(ooo)        = expr(1)
 )
 ```
 
@@ -174,7 +185,7 @@ We also support binding a span to the ooo pattern now when destructuring a std::
 ```C++
 Id<Span<int32_t>> span;
 match(std::array<int32_t, 3>{123, 456, 789})(
-    pattern(ds(123, ooo(span))) = [&] {
+    pattern(123, ooo(span)) = [&] {
 })
 ```
 
