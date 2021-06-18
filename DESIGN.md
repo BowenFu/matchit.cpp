@@ -66,7 +66,7 @@ Say Predicate Patterns
 ```C++
 match(n)(
     pattern(or_(_ < 3, 5)) = expr(true),
-    pattern(_)            = expr(false))
+    pattern(_)             = expr(false))
 ```
 In Rust and some other related work, there exists a similar `anyof` pattern. But only literal patterns can be used as subpatterns.
 
@@ -149,6 +149,17 @@ match(expr)(
     pattern(_)             = expr(-1))
 ```
 
+Note the outermost `ds` inside pattern can be saved. That is to say, when pattern receives multiple parameters, they are treated as subpatterns of a ds pattern.
+```C++
+Id<T1> i;
+Id<T2> j;
+match(expr)(
+    pattern('+', i, j) = i + j,
+    pattern('-', i, j) = i - j,
+    pattern('*', i, j) = i * j,
+    pattern('/', i, j) = i / j,
+    pattern(_)         = expr(-1))
+```
 We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and `std::vector` from the STL. 
 in order to use Destructure Pattern for structs or classes, we need to define a get function for them inside the same namespace of the struct or the class. (std::tuple_size needs to be specialized as well.)
 Mismatch of element numbers is a compile error for fixed-size containers.

@@ -8,10 +8,10 @@ constexpr auto eval(std::tuple<char, T1, T2> const &expr)
     Id<T1> i;
     Id<T2> j;
     return match(expr)(
-        pattern(ds('+', i, j)) = i + j,
-        pattern(ds('-', i, j)) = i - j,
-        pattern(ds('*', i, j)) = i * j,
-        pattern(ds('/', i, j)) = i / j,
+        pattern('+', i, j) = i + j,
+        pattern('-', i, j) = i - j,
+        pattern('*', i, j) = i * j,
+        pattern('/', i, j) = i / j,
         pattern(_) = []
         {
             assert(false);
