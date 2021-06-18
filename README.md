@@ -41,8 +41,6 @@ For syntax design details please refer to [design](./DESIGN.md).
 The following sample shows to how to implement factorial using the pattern matching library.
 ```C++
 #include "matchit.h"
-
-
 using namespace matchit;
 
 constexpr int32_t factorial(int32_t n)
@@ -71,7 +69,6 @@ We can match multiple values at the same time:
 
 ```C++
 #include "matchit.h"
-
 using namespace matchit;
 
 constexpr int32_t gcd(int32_t a, int32_t b)
@@ -93,8 +90,6 @@ Now let's go through all kinds of patterns in the library.
 The value passed to `match` will be matched against the value evaluated from the expression with `pattern == value`.
 ```C++
 #include "matchit.h"
-
-
 #include <map>
 using namespace matchit;
 
@@ -118,8 +113,6 @@ It can be used inside other patterns (that accept subpatterns) as well.
 Predicate Pattern can be used to put some restrictions on the value to be matched.
 ```C++
 #include "matchit.h"
-
-
 using namespace matchit;
 
 constexpr double relu(double value)
@@ -150,8 +143,6 @@ static_assert(relu(-5) == 0);
 Or pattern makes it possible to merge/union multiple patterns, thus can be especially useful when used with other subpatterns.
 ```C++
 #include "matchit.h"
-
-
 using namespace matchit;
 
 constexpr bool isValid(int32_t n)
@@ -170,8 +161,6 @@ static_assert(!isValid(6));
 And Pattern can be used to combine multiple Predicate patterns.
 ```C++
 #include "matchit.h"
-
-
 using namespace matchit;
 
 constexpr double clip(double value, double min, double max)
@@ -191,8 +180,6 @@ static_assert(clip(5, 0, 4) == 4);
 The above can also be written as
 ```C++
 #include "matchit.h"
-
-
 using namespace matchit;
 
 double clip(double value, double min, double max)
@@ -216,8 +203,6 @@ app(PROJECTION, PATTERN)
 A simple sample to check whether a num is large:
 ```C++
 #include "matchit.h"
-
-
 using namespace matchit;
 
 constexpr bool isLarge(double value)
@@ -240,8 +225,6 @@ Logging the details when detecting large values can be useful for the example ab
 ```C++
 #include <iostream>
 #include "matchit.h"
-
-
 using namespace matchit;
 
 bool checkAndlogLarge(double value)
@@ -269,10 +252,7 @@ Also note when the same identifier is bound multiple times, the bound values mus
 An sample to check if an array is symmetric:
 ```C++
 #include "matchit.h"
-
-
 using namespace matchit;
-
 constexpr bool symmetric(std::array<int32_t, 5> const& arr)
 {
     Id<int32_t> i, j; 
@@ -288,14 +268,14 @@ static_assert(symmetric(std::array<int32_t, 5>{5, 1, 3, 0, 5}) == false);
 ```
 
 ## Destructure Pattern
+
 We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and `std::vector` from the STL (including their variants).
 We also support the Destructure Pattern for any types that define their own `get` function, (similar to `std::get` for `std::tuple`, `std::pair`, `std::array`).
 (It is not possible to overload a function in `std` namespace, we use ADL to look up available `get` functions for other types.)
 That is to say, in order to use Destructure Pattern for structs or classes, we need to define a `get` function for them inside the same namespace of the struct or the class. (`std::tuple_size` needs to be specialized as well.)
+
 ```C++
 #include "matchit.h"
-
-
 using namespace matchit;
 
 template<typename T1, typename T2>
@@ -304,10 +284,10 @@ constexpr auto eval(std::tuple<char, T1, T2> const& expr)
     Id<T1> i;
     Id<T2> j;
     return match(expr)(
-        pattern(ds('+', i, j)) = i + j,
-        pattern(ds('-', i, j)) = i - j,
-        pattern(ds('*', i, j)) = i * j,
-        pattern(ds('/', i, j)) = i / j,
+        pattern('+', i, j) = i + j,
+        pattern('-', i, j) = i - j,
+        pattern('*', i, j) = i * j,
+        pattern('/', i, j) = i / j,
         pattern(_) = []
         {
             assert(false);
@@ -338,8 +318,6 @@ A basic sample can be
 ```C++
 #include <array>
 #include "matchit.h"
-
-
 using namespace matchit;
 
 constexpr bool sumIs(std::array<int32_t, 2> const& arr, int s)
@@ -359,8 +337,6 @@ Ooo Pattern can match arbitrary number of items. It can only be used inside `ds`
 ```C++
 #include <array>
 #include "matchit.h"
-
-
 using namespace matchit;
 
 template <typename Tuple>
@@ -368,10 +344,10 @@ constexpr int32_t detectTuplePattern(Tuple const& tuple)
 {
     return match(tuple)
     (
-        pattern(ds(2, ooo, 2))  = expr(4),
-        pattern(ds(2, ooo))     = expr(3),
-        pattern(ds(ooo, 2))     = expr(2),
-        pattern(ds(ooo))        = expr(1)
+        pattern(2, ooo, 2)  = expr(4),
+        pattern(2, ooo)     = expr(3),
+        pattern(ooo, 2)     = expr(2),
+        pattern(ooo)        = expr(1)
     );
 }
 
@@ -383,7 +359,7 @@ Sample codes can be
 ```C++
 Id<Span<int32_t>> span;
 match(std::array<int32_t, 3>{123, 456, 789})(
-    pattern(ds(123, ooo(span))) = [&] {
+    pattern(123, ooo(span)) = [&] {
     EXPECT_EQ((*span).size(), 2);
     EXPECT_EQ((*span)[0], 456);
     EXPECT_EQ((*span)[1], 789);
@@ -397,9 +373,6 @@ Some / None Patterns can be used to match raw pointers, `std::optional`, `std::u
 A typical sample can be
 ```C++
 #include "matchit.h"
-
-
-
 using namespace matchit;
 
 template <typename T>
@@ -440,9 +413,6 @@ A simple sample can be
 ```C++
 #include <iostream>
 #include "matchit.h"
-
-
-
 using namespace matchit;
 
 struct Shape
@@ -484,8 +454,6 @@ Users can customize their down casting via specializing `CustomAsPointer`:
 ```C++
 #include <iostream>
 #include "matchit.h"
-
-
 
 using namespace matchit;
 
@@ -555,9 +523,6 @@ int main()
 `std::variant` and `std::any` can be visited as
 ```C++
 #include "matchit.h"
-
-
-
 using namespace matchit;
 
 template <typename T>

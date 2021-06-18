@@ -174,10 +174,10 @@ It can only be used inside ds patterns and at most one Ooo pattern can appear in
 ```C++
 match(tuple)
 (
-    pattern(ds(2, ooo, 2))  = expr(4),
-    pattern(ds(2, ooo))     = expr(3),
-    pattern(ds(ooo, 2))     = expr(2),
-    pattern(ds(ooo))        = expr(1)
+    pattern(2, ooo, 2)  = expr(4),
+    pattern(2, ooo)     = expr(3),
+    pattern(ooo, 2)     = expr(2),
+    pattern(ooo)        = expr(1)
 )
 ```
 
@@ -185,7 +185,7 @@ We also support binding a span to the ooo pattern now when destructuring a std::
 ```C++
 Id<Span<int32_t>> span;
 match(std::array<int32_t, 3>{123, 456, 789})(
-    pattern(ds(123, ooo(span))) = [&] {
+    pattern(123, ooo(span)) = [&] {
 })
 ```
 
