@@ -79,6 +79,15 @@ namespace matchit
             using endT = beginT;
         };
 
+        // force array iterators fallback to pointers.
+        template <typename ElemT, size_t size>
+        class IterUnderlyingType<std::array<ElemT, size> const>
+        {
+        public:
+            using beginT = decltype(&*std::begin(std::declval<std::array<ElemT, size> const&>()));
+            using endT = beginT;
+        };
+
         template <typename RangeType>
         using SubrangeT = Subrange<typename IterUnderlyingType<RangeType>::beginT, typename IterUnderlyingType<RangeType>::endT>;
 
