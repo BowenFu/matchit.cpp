@@ -37,6 +37,15 @@ TEST(Ds, tupleOoo)
   EXPECT_TRUE(matched(std::make_tuple("123", 123), ds("123", ooo, 123)));
 }
 
+TEST(Ds, arrayOoo)
+{
+  EXPECT_TRUE(matched(std::array<int32_t, 2>{123, 456}, ds(ooo)));
+  EXPECT_TRUE(matched(std::array<int32_t, 0>{}, ds(ooo)));
+  EXPECT_TRUE(matched(std::array<int32_t, 2>{123, 456}, ds(123, ooo)));
+  EXPECT_TRUE(matched(std::array<int32_t, 2>{123, 456}, ds(ooo, 456)));
+  EXPECT_TRUE(matched(std::array<int32_t, 2>{123, 456}, ds(123, ooo, 456)));
+}
+
 TEST(Ds, vecOoo)
 {
   EXPECT_TRUE(matched(std::vector<int32_t>{123, 456}, ds(ooo)));
