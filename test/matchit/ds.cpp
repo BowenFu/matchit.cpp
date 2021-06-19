@@ -60,7 +60,6 @@ TEST(Ds, listOoo)
 TEST(Ds, vecOooBinder1)
 {
   auto const vec = std::vector<int32_t>{123, 456};
-  // static_assert(std::is_same_v<SubrangeT<decltype(vec)>, int>);
   Id<SubrangeT<decltype(vec)>> subrange;
   auto matched = match(vec)(
       pattern(ds(ooo(subrange))) = [&]
@@ -74,10 +73,9 @@ TEST(Ds, vecOooBinder1)
   EXPECT_TRUE(matched);
 }
 
-#if 0
 TEST(Ds, vecOooBinder2)
 {
-  Id<Subrange<int32_t>> subrange;
+  Id<SubrangeT<std::vector<int32_t>>> subrange;
   match(std::vector<int32_t>{123, 456})(
       pattern(ooo(subrange)) = [&]
       {
@@ -94,12 +92,13 @@ TEST(Ds, vecOooBinder2)
 
 TEST(Ds, vecOooBinder3)
 {
-  Id<Subrange<int32_t>> subrange;
+  Id<SubrangeT<std::vector<int32_t>>> subrange;
   match(std::vector<int32_t>{123, 456})(
       pattern(123, ooo(subrange), 456) = [&]
       { EXPECT_EQ((*subrange).size(), 0); });
 }
 
+#if 0
 TEST(Ds, vecOooBinder4)
 {
   Id<Subrange<int32_t>> subrange;
