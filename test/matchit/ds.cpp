@@ -219,3 +219,33 @@ TEST(Ds, arrayOooBinder6)
         expectRange(*subrange, expected);
       });
 }
+
+template <typename Range>
+constexpr bool recursiveSymmetric(Range const &range)
+{
+    Id<int32_t> i;
+    Id<SubrangeT<Range const>> subrange;
+    return match(range)(
+        // clang-format off
+        pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
+        pattern(i, ooo(subrange), _) = expr(false),
+        pattern(_)                   = expr(true)
+        // clang-format on
+    );
+}
+
+// rotate
+TEST(Ds, subrangeOooBinder)
+{
+  EXPECT_TRUE(recursiveSymmetric(std::array<int32_t, 5>{5, 0, 3, 0, 5}));
+  EXPECT_FALSE(recursiveSymmetric(std::array<int32_t, 5>{5, 0, 3, 7, 10}));
+
+  EXPECT_TRUE(recursiveSymmetric(std::vector<int32_t>{5, 0, 3, 0, 5}));
+  EXPECT_FALSE(recursiveSymmetric(std::vector<int32_t>{5, 0, 3, 7, 10}));
+
+  EXPECT_TRUE(recursiveSymmetric(std::list<int32_t>{5, 0, 3, 0, 5}));
+  EXPECT_FALSE(recursiveSymmetric(std::list<int32_t>{5, 0, 3, 7, 10}));
+
+  EXPECT_TRUE(recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 0, 5}));
+  EXPECT_FALSE(recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 7, 10}));
+}
