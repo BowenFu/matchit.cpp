@@ -910,6 +910,7 @@ namespace matchit
         template <typename RangeType>
         using SubrangeT = decltype(makeSubrange(std::begin(std::declval<RangeType&>()), std::begin(std::declval<RangeType&>())));
 
+        using std::operator==;
         template <typename I, typename S>
         bool operator==(Subrange<I, S> const &lhs, Subrange<I, S> const &rhs)
         {
