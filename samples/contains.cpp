@@ -14,8 +14,8 @@ constexpr bool contains(Map const &map, Key const &key)
     );
 }
 
-int main()
+int32_t main()
 {
-    std::cout << contains(std::map<int, int>{{1, 2}}, 1) << std::endl;
+    std::cout << contains(std::map<int32_t, int32_t>{{1, 2}}, 1) << std::endl;
     return 0;
 }

@@ -511,9 +511,9 @@ namespace matchit
         template <class T>
         using decayArrayT = typename decayArray<T>::type;
 
-        static_assert(std::is_same_v<decayArrayT<int[]>, int*>);
-        static_assert(std::is_same_v<decayArrayT<int const[]>, int const*>);
-        static_assert(std::is_same_v<decayArrayT<int const&>, int const&>);
+        static_assert(std::is_same_v<decayArrayT<int32_t[]>, int32_t*>);
+        static_assert(std::is_same_v<decayArrayT<int32_t const[]>, int32_t const*>);
+        static_assert(std::is_same_v<decayArrayT<int32_t const&>, int32_t const&>);
 
         template <typename Pattern>
         class PatternTraits;
@@ -900,7 +900,8 @@ namespace matchit
                                return (matchPattern(value, patterns, depth + 1, context) && ...);
                            },
                            take<patSize - 1>(andPat.patterns())) &&
-                       matchPattern(std::forward<Value>(value), get<patSize - 1>(andPat.patterns()), depth + 1, context);
+                    //    matchPattern(std::forward<Value>(value), get<patSize - 1>(andPat.patterns()), depth + 1, context);
+                       matchPattern(value, get<patSize - 1>(andPat.patterns()), depth + 1, context);
             }
             constexpr static void processIdImpl(And<Patterns...> const &andPat, int32_t depth, IdProcess idProcess)
             {
@@ -971,7 +972,7 @@ namespace matchit
         static_assert(StorePointer<char, char &>::value);
         static_assert(StorePointer<const char, char &>::value);
         static_assert(StorePointer<const char, const char &>::value);
-        static_assert(StorePointer<std::tuple<int &, int &> const, std::tuple<int &, int &> const &>::value);
+        static_assert(StorePointer<std::tuple<int32_t &, int32_t &> const, std::tuple<int32_t &, int32_t &> const &>::value);
 
         template <typename... Ts>
         class Overload : public Ts...
@@ -1331,9 +1332,9 @@ namespace matchit
         }
 
         static_assert(isOooOrBinderV<Ooo>);
-        static_assert(isOooOrBinderV<OooBinder<int>>);
-        static_assert(findOooIdx<std::tuple<int, OooBinder<int>, const char *>>() == 1);
-        static_assert(findOooIdx<std::tuple<int, Ooo, const char *>>() == 1);
+        static_assert(isOooOrBinderV<OooBinder<int32_t>>);
+        static_assert(findOooIdx<std::tuple<int32_t, OooBinder<int32_t>, const char *>>() == 1);
+        static_assert(findOooIdx<std::tuple<int32_t, Ooo, const char *>>() == 1);
 
         using std::get;
         template <std::size_t valueStartIdx, std::size_t patternStartIdx, std::size_t... I, typename ValueTuple, typename PatternTuple, typename ContextT>
@@ -1628,16 +1629,16 @@ namespace matchit
         };
 
         static_assert(std::is_same_v<
-                      typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<const std::array<int, 2>>,
-                      std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
+                      typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<const std::array<int32_t, 2>>,
+                      std::tuple<matchit::impl::Subrange<const int32_t *, const int32_t *>>>);
 
         static_assert(std::is_same_v<
-                      typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<const std::array<int, 3>>,
-                      std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
+                      typename PatternTraits<Ds<OooBinder<Subrange<int32_t *, int32_t *>>, matchit::impl::Id<int32_t> > >::AppResultTuple<const std::array<int32_t, 3>>,
+                      std::tuple<matchit::impl::Subrange<const int32_t *, const int32_t *>>>);
 
         static_assert(std::is_same_v<
-                      typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<std::array<int, 3>>,
-                      std::tuple<matchit::impl::Subrange<int *, int *>>>);
+                      typename PatternTraits<Ds<OooBinder<Subrange<int32_t *, int32_t *>>, matchit::impl::Id<int32_t> > >::AppResultTuple<std::array<int32_t, 3>>,
+                      std::tuple<matchit::impl::Subrange<int32_t *, int32_t *>>>);
 
         template <typename Pattern, typename Pred>
         class PostCheck

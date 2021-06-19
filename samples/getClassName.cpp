@@ -20,7 +20,7 @@ constexpr auto getClassName(Shape const &s)
         pattern(as<Square>(_)) = expr("Square"));
 }
 
-int main()
+int32_t main()
 {
     Circle c{};
     std::cout << getClassName(c) << std::endl;

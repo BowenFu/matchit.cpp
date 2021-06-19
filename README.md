@@ -225,7 +225,7 @@ One thing to note is that identifiers are only valid inside `match` scope. Do no
 
 Note that we used `and_` here to bind a value to the identifier under some conditions on the value.
 This practice can achieve the functionality of **`@` pattern** in Rust.
-We recommend **always put your identifiers at the end of And pattern (and Or pattern)**. It is like saying that bind the value to the identifier only when all previous patterns / conditions get met. (Also, you may get better perf since we `std::forward` the subject value only for the last subpattern).
+We recommend **always put your identifiers at the end of And pattern**. It is like saying that bind the value to the identifier only when all previous patterns / conditions get met. (For Or pattern, you may get better perf since we `std::forward` the subject value for the last subpattern).
 
 Also note when the same identifier is bound multiple times, the bound values must equal to each other via `operator==`.
 An sample to check if an array is symmetric:

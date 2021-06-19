@@ -15,7 +15,7 @@ constexpr bool isValid(int32_t n)
 static_assert(isValid(5));
 static_assert(!isValid(6));
 
-int main()
+int32_t main()
 {
     std::cout << isValid(3) << std::endl;
     return 0;

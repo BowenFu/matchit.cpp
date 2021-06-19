@@ -19,7 +19,7 @@ auto optionalLift(Func func)
     };
 }
 
-int main()
+int32_t main()
 {
     auto const func = [](auto &&e) { return e * e; };
     auto const result = optionalLift(func)(std::make_optional(2)); 

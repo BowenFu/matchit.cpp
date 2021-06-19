@@ -17,7 +17,7 @@ static_assert(clip(5, 0, 10) == 5);
 static_assert(clip(5, 6, 10) == 6);
 static_assert(clip(5, 0, 4) == 4);
 
-int main()
+int32_t main()
 {
     std::cout << clip(10, 5,7) << std::endl;
     return 0;

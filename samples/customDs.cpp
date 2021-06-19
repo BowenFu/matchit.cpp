@@ -3,7 +3,7 @@
 
 struct A
 {
-    int a;
+    int32_t a;
     char const *b;
 };
 constexpr bool operator==(A const &lhs, A const &rhs)
@@ -59,7 +59,7 @@ constexpr auto getSecond(T &&v)
 static_assert(getSecond(A{1, "123"}) == std::string_view{"123"});
 // #endif
 
-int main()
+int32_t main()
 {
     std::cout << getSecond(A{1, "123"}) << std::endl;
     return 0;
