@@ -10,6 +10,12 @@ TEST(Ds, matchTuple)
   EXPECT_FALSE(matched(std::make_tuple("123", 123), ds("123", 12)));
 }
 
+TEST(Ds, matchArray)
+{
+  EXPECT_TRUE(matched(std::array<int32_t, 2>{123, 456}, ds(123, 456)));
+  EXPECT_FALSE(matched(std::array<int32_t, 2>{123, 456}, ds(456, 123)));
+}
+
 TEST(Ds, matchVec)
 {
   EXPECT_TRUE(matched(std::vector<int32_t>{123, 456}, ds(123, 456)));
