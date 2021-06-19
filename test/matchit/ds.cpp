@@ -50,17 +50,12 @@ TEST(Ds, listOoo)
   EXPECT_TRUE(matched(std::list<int32_t>{123, 456}, ds(123, ooo)));
   EXPECT_TRUE(matched(std::list<int32_t>{123, 456}, ds(ooo, 456)));
   EXPECT_TRUE(matched(std::list<int32_t>{123, 456}, ds(123, ooo, 456)));
-
-  // Id<SubrangeT<std::vector<int32_t>>> subrange;
-  // std::vector<int32_t> u;
-  // SubrangeT<std::vector<int32_t>> subrange = impl::makeSubrange(u.begin(), u.end());
-  // auto v = subrange;
 }
 
 TEST(Ds, vecOooBinder1)
 {
   auto const vec = std::vector<int32_t>{123, 456};
-  Id<SubrangeT<decltype(vec)>> subrange;
+  Id<SubrangeT<std::vector<int32_t> const>> subrange;
   auto matched = match(vec)(
       pattern(ds(ooo(subrange))) = [&]
       {
@@ -98,10 +93,9 @@ TEST(Ds, vecOooBinder3)
       { EXPECT_EQ((*subrange).size(), 0); });
 }
 
-#if 0
 TEST(Ds, vecOooBinder4)
 {
-  Id<Subrange<int32_t>> subrange;
+  Id<SubrangeT<std::vector<int32_t>>> subrange;
   match(std::vector<int32_t>{123, 456, 789})(
       pattern(123, ooo(subrange)) = [&]
       {
@@ -111,6 +105,7 @@ TEST(Ds, vecOooBinder4)
       });
 }
 
+#if 0
 TEST(Ds, FailDueToTwoFewValues)
 {
   EXPECT_FALSE(matched(std::vector<int32_t>{123, 456, 789}, ds(123, ooo, 456, 456, 789)));
