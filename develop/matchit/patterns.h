@@ -63,28 +63,24 @@ namespace matchit
         }
 
         template <typename RangeType>
-        class SubrangeType
+        class IterUnderlyingType
         {
         public:
-            using type = decltype(makeSubrange(std::begin(std::declval<RangeType &>()), std::end(std::declval<RangeType &>())));
+            using beginT = decltype(std::begin(std::declval<RangeType &>()));
+            using endT = decltype(std::end(std::declval<RangeType &>()));
         };
 
+        // force array iterators fallback to pointers.
         template <typename ElemT, size_t size>
-        class SubrangeType<std::array<ElemT, size>>
+        class IterUnderlyingType<std::array<ElemT, size>>
         {
         public:
-            using type = decltype(makeSubrange(std::declval<ElemT *>(), std::declval<ElemT *>()));
-        };
-
-        template <typename ElemT, size_t size>
-        class SubrangeType<std::array<ElemT, size> const>
-        {
-        public:
-            using type = decltype(makeSubrange(std::declval<ElemT const *>(), std::declval<ElemT const *>()));
+            using beginT = decltype(&*std::begin(std::declval<std::array<ElemT, size>&>()));
+            using endT = beginT;
         };
 
         template <typename RangeType>
-        using SubrangeT = typename SubrangeType<RangeType>::type;
+        using SubrangeT = Subrange<typename IterUnderlyingType<RangeType>::beginT, typename IterUnderlyingType<RangeType>::endT>;
 
         template <typename I, typename S>
         bool operator==(Subrange<I, S> const &lhs, Subrange<I, S> const &rhs)
@@ -1196,7 +1192,6 @@ namespace matchit
             class AppResultForTupleHelper<1, std::tuple<Values...>>
             {
                 constexpr static auto idxOoo = findOooIdx<typename Ds<Patterns...>::Type>();
-                // static_assert(!isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>);
                 using Ps0 = SubTypesT<0, idxOoo, std::tuple<Patterns...>>;
                 using Vs0 = SubTypesT<0, idxOoo, std::tuple<Values...>>;
                 constexpr static auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
@@ -1215,7 +1210,6 @@ namespace matchit
                 using type = decltype(std::tuple_cat(std::declval<FirstHalfTuple>(), std::declval<OooResultTuple>(), std::declval<SecondHalfTuple>()));
             };
 
-            // TODO fix me.
             template <typename Tuple>
             using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, decltype(drop<0>(std::declval<Tuple>()))>::type;
 
@@ -1321,7 +1315,6 @@ namespace matchit
                     constexpr auto patLen = sizeof...(Patterns);
                     if constexpr (isBinder)
                     {
-                        // Debug<decltype(std::begin(valueRange))> yy;
                         auto const rangeSize = static_cast<long>(valLen - (patLen - 1));
                         auto const begin = std::next(std::begin(valueRange), idxOoo);
                         auto const end = std::next(begin, rangeSize);
@@ -1346,19 +1339,13 @@ namespace matchit
             }
         };
 
-        // Debug<SubrangeT<const std::array<int32_t, 2>>> xyz;
-        // Debug<Ds<const int *, const int *>::Type> uuu;
-        // Debug<OooBinder<matchit::impl::Subrange<const int *, const int *>>> uuu;
-        // Debug<Ds<OooBinder<matchit::impl::Subrange<const int *, const int *>>>::Type> uuu;
-        // Debug<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>> xyz;
-        // Debug<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>::Type> xyz;
-        // static_assert(std::is_same_v<
-        //               typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<const std::array<int, 2>>,
-        //               std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
+        static_assert(std::is_same_v<
+                      typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<const std::array<int, 2>>,
+                      std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
 
-        // static_assert(std::is_same_v<
-        //               typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<const std::array<int, 3>>,
-        //               std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
+        static_assert(std::is_same_v<
+                      typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<const std::array<int, 3>>,
+                      std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
 
         static_assert(std::is_same_v<
                       typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<std::array<int, 3>>,
