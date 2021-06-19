@@ -869,12 +869,12 @@ namespace matchit
             S mEnd;
 
         public:
-            Subrange(I const begin, S const end)
+            constexpr Subrange(I const begin, S const end)
                 : mBegin{begin}, mEnd{end}
             {
             }
 
-            Subrange(Subrange const& other)
+            constexpr Subrange(Subrange const& other)
                 : mBegin{other.begin()}
                 , mEnd{other.end()}
             {
@@ -1199,7 +1199,7 @@ namespace matchit
             using RangeTuple = std::conditional_t<nbOooOrBinder == 1, std::tuple<SubrangeT<RangeType>>, std::tuple<>>;
 
             template <typename RangeType>
-            using AppResultForRangeType = decltype(std::tuple_cat(std::declval<RangeTuple<RangeType>>(), std::declval<typename PatternTraits<Patterns>::template AppResultTuple<typename std::decay_t<RangeType>::value_type>>()...));
+            using AppResultForRangeType = decltype(std::tuple_cat(std::declval<RangeTuple<RangeType>>(), std::declval<typename PatternTraits<Patterns>::template AppResultTuple<decltype(*std::begin(std::declval<RangeType>()))>>()...));
 
             template <typename Value, typename = std::void_t<>>
             class AppResultHelper;
