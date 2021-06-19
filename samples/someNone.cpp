@@ -1,10 +1,11 @@
 #include <iostream>
+#include <optional>
 #include "matchit.h"
-using namespace matchit;
 
 template <typename T>
 constexpr auto square(std::optional<T> const &t)
 {
+    using namespace matchit;
     Id<T> id;
     return match(t)(
         // clang-format off

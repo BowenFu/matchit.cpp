@@ -1,9 +1,9 @@
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 constexpr double clip(double value, double min, double max)
 {
+    using namespace matchit;
     return match(value)(
         // clang-format off
         pattern(and_(_ >= min, _ <= max)) = expr(value),

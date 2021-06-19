@@ -1,11 +1,11 @@
 #include "matchit.h"
 #include <map>
 #include <iostream>
-using namespace matchit;
 
 template <typename Map, typename Key>
 constexpr bool contains(Map const &map, Key const &key)
 {
+    using namespace matchit;
     return match(map.find(key))(
         // clang-format off
         pattern(map.end()) = expr(false),

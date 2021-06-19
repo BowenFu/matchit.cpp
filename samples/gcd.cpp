@@ -1,9 +1,9 @@
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 constexpr int32_t gcd(int32_t a, int32_t b)
 {
+    using namespace matchit;
     return match(a, b)(
         // clang-format off
         pattern(_, 0) = [&] { return a >= 0 ? a : -a; },

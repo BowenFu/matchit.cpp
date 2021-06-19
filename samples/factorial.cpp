@@ -1,9 +1,9 @@
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 constexpr int32_t factorial(int32_t n)
 {
+    using namespace matchit;
     assert(n >= 0);
     return match(n)(
         // clang-format off

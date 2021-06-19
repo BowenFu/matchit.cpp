@@ -1,10 +1,8 @@
 #ifndef MATCHIT_PATTERNS_H
 #define MATCHIT_PATTERNS_H
 
-#include <memory>
 #include <tuple>
 #include <functional>
-#include <vector>
 #include <variant>
 #include <array>
 #include <type_traits>
@@ -657,20 +655,6 @@ namespace matchit
             }
         };
 
-        class Deleter
-        {
-        public:
-            template <typename Type>
-            void operator()(Type *ptr)
-            {
-                if (mOwn)
-                {
-                    std::default_delete<Type>{}(ptr);
-                }
-            }
-            bool mOwn{false};
-        };
-
         template <typename Ptr, typename Value, typename = std::void_t<>>
         struct StorePointer : std::false_type
         {
@@ -688,9 +672,7 @@ namespace matchit
         static_assert(StorePointer<char, char &>::value);
         static_assert(StorePointer<const char, char &>::value);
         static_assert(StorePointer<const char, const char &>::value);
-        static_assert(StorePointer<std::unique_ptr<int32_t> const, std::unique_ptr<int32_t> const &>::value);
         static_assert(StorePointer<std::tuple<int &, int &> const, std::tuple<int &, int &> const &>::value);
-        static_assert(!StorePointer<std::unique_ptr<int32_t>, std::unique_ptr<int32_t> &&>::value);
 
         template <typename... Ts>
         class Overload : public Ts...
@@ -1168,7 +1150,6 @@ namespace matchit
 
         static_assert(!isRangeV<std::pair<int32_t, char>>);
         static_assert(isRangeV<const std::array<int32_t, 5>>);
-        static_assert(isRangeV<const std::vector<int32_t>>);
 
         template <typename... Patterns>
         class PatternTraits<Ds<Patterns...>>
@@ -1298,7 +1279,6 @@ namespace matchit
             constexpr static auto matchPatternImpl(ValueRange &&valueRange, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
                 -> std::enable_if_t<!isTupleLikeV<ValueRange> && isRangeV<ValueRange>, bool>
             {
-                constexpr auto nbOooOrBinder = nbOooOrBinderV<Patterns...>;
                 static_assert(nbOooOrBinder == 0 || nbOooOrBinder == 1);
                 constexpr auto nbPat = sizeof...(Patterns);
 

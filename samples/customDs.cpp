@@ -1,6 +1,5 @@
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 struct A
 {
@@ -49,6 +48,7 @@ namespace std
 template <typename T>
 constexpr auto getSecond(T &&v)
 {
+    using namespace matchit;
     Id<char const *> i;
     return match(std::forward<T>(v))(
         pattern(2, i) = expr(i),

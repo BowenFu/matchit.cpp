@@ -1,9 +1,9 @@
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 constexpr double relu(double value)
 {
+    using namespace matchit;
     return match(value)(
         // clang-format off
         pattern(_ >= 0) = expr(value),

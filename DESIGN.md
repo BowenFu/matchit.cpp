@@ -27,7 +27,7 @@ Handlers should always be nullary functions. This is different from `mpark/patte
 
 ## Expression Pattern
 
-Since identifiers do not have special meanings inside `matchit`, they can be used inside patterns normally.
+Since identifiers do not have special meanings inside `match(it)`, they can be used inside patterns normally.
 You can even use a function call as Expression Pattern, the result of the function call will be matched against the value.
 
 ```C++
@@ -41,7 +41,7 @@ This is different from most other related work.
 
 ## Wildcard Pattern
 
-This pattern is common in lots of related work. We adopt the same symbol `_` in `matchit`.
+This pattern is common in lots of related work. We adopt the same symbol `_` in `match(it)`.
 Refer to the above code snippets.
 
 ## Predicate Pattern
@@ -115,7 +115,7 @@ But `&&` can only be used between Predicate patterns, while `and_` can be used f
 
 Not Pattern is borrowed from Racket Pattern Matching as well.
 The Racket syntax is `(not pat ...)`, and the corresponding C++ syntax is `not_(pat)`. Note that `not` is a C++ keyword, we use `not_` instead.
-`(not pat ...)` means `none of`, in `matchit` it can be written as `not_(or_(pat, ...))`.
+`(not pat ...)` means `none of`, in `match(it)` it can be written as `not_(or_(pat, ...))`.
 
 ## App Pattern
 
@@ -137,7 +137,7 @@ There is no way for us to use identifiers in match context now since it is not v
 In `mpark/patterns` and `jbandela/simple_match` the bound values to identifiers will be forward to handlers as parameters. That is to say, identifiers are more like positioned parameters.
 The design is not very natural.
 We choose to make identifiers as binders that can be accessed inside handlers to align with other native pattern matching designs.
-This means that handlers in `matchit` are always nullary, but can be unary or binary or consisting of more arguments in the other two library.
+This means that handlers in `match(it)` are always nullary, but can be unary or binary or consisting of more arguments in the other two library.
 
 ```C++
 Id<double> s;

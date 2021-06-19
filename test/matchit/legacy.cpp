@@ -5,9 +5,13 @@
 #include <any>
 #include <iostream>
 #include <type_traits>
+#include <optional>
 #include "matchit.h"
 
 using namespace matchit;
+
+static_assert(impl::StorePointer<std::unique_ptr<int32_t> const, std::unique_ptr<int32_t> const &>::value);
+static_assert(!impl::StorePointer<std::unique_ptr<int32_t>, std::unique_ptr<int32_t> &&>::value);
 
 std::tuple<> xxx();
 

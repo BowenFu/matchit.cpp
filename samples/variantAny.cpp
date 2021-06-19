@@ -1,10 +1,10 @@
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 template <typename T>
 constexpr auto getClassName(T const &v)
 {
+    using namespace matchit;
     return match(v)(
         // clang-format off
         pattern(as<char const *>(_)) = expr("chars"),
@@ -19,6 +19,7 @@ static_assert(getClassName(cv) == std::string_view{"int"});
 template <typename T>
 constexpr auto print(T const &v)
 {
+    using namespace matchit;
     Id<char const *> c;
     Id<int32_t> i;
     return match(v)(

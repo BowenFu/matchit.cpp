@@ -2,7 +2,6 @@
 #define MATCHIT_CORE_H
 
 #include <tuple>
-#include <optional>
 #include <cstdint>
 #include <algorithm>
 
