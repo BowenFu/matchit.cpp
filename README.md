@@ -331,26 +331,6 @@ We suggest using this only for very short and simple functions.
 
 Also note that `eval` cannot be used for constant expression until C++20, where more STL functions get marked as constexpr.
 
-Now let's take a look at our support for destructuring STL containers:
-```C++
-template <typename Range>
-constexpr bool recursiveSymmetric(Range const &range)
-{
-    Id<int32_t> i;
-    Id<SubrangeT<Range const>> subrange;
-    return match(range)(
-        pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
-        pattern(i, ooo(subrange), _) = expr(false),
-        pattern(_)                   = expr(true)
-    );
-}
-```
-
-Given a range (or a container), we can check it is symmetric via recursive calls.
-`SubrangeT` is a trait function and it will return the subrange type based on a given range / container.
-We defined a `Subrange` class template (similar to what we will have in C++20) to make binding ooo patterns possible.
-When upgrading to C++20, we will replace the class with `std::ranges::subrange`.
-
 ## Match Guard
 
 Match Guard can be used to exert extra restrictions on a pattern.
@@ -383,6 +363,7 @@ Note that `i + j == s` will return a expr function that return the result of `*i
 ## Ooo Pattern
 
 Ooo Pattern can match arbitrary number of items. It can only be used inside `ds` patterns and at most one Ooo pattern can appear inside a `ds` pattern.
+
 ```C++
 #include <array>
 #include "matchit.h"
@@ -403,20 +384,27 @@ constexpr int32_t detectTuplePattern(Tuple const& tuple)
 static_assert(detectTuplePattern(std::make_tuple(2, 3, 5, 7, 2)) == 4);
 ```
 
-We also support binding a span to the ooo pattern now when destructuring a `std::array` or `std::vector` (or their variants).
+We support binding a subrange to the ooo pattern now when destructuring a `std::array` or other containers / ranges.
 Sample codes can be
 
 ```C++
-Id<Span<int32_t>> span;
-match(std::array<int32_t, 3>{123, 456, 789})(
-    pattern(123, ooo(span)) = [&] {
-    EXPECT_EQ((*span).size(), 2);
-    EXPECT_EQ((*span)[0], 456);
-    EXPECT_EQ((*span)[1], 789);
-    });
+template <typename Range>
+constexpr bool recursiveSymmetric(Range const &range)
+{
+    Id<int32_t> i;
+    Id<SubrangeT<Range const>> subrange;
+    return match(range)(
+        pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
+        pattern(i, ooo(subrange), _) = expr(false),
+        pattern(_)                   = expr(true)
+    );
+}
 ```
 
-We define a basic struct `span` (similar to `std::span` in C++20) to reference the values bound to the ooo pattern.
+Given a range (or a container), we can check it is symmetric via recursive calls.
+`SubrangeT` is a trait function and it will return the subrange type based on a given range / container.
+We defined a `Subrange` class template (similar to what we will have in C++20) to make binding ooo patterns possible.
+When upgrading to C++20, we will replace the class with `std::ranges::subrange`.
 
 ## Compose Patterns
 

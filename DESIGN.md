@@ -217,13 +217,16 @@ match(tuple)
 )
 ```
 
-We also support binding a span to the ooo pattern now when destructuring a std::array or std::vector (or their variants). (Similar to Rust, binding allowed for array and vector/slice.)
+We support binding a subrange to the ooo pattern now when destructuring a `std::array` or other containers / ranges.
 
 ```C++
-Id<Span<int32_t>> span;
-match(std::array<int32_t, 3>{123, 456, 789})(
-    pattern(123, ooo(span)) = [&] {
-})
+Id<int32_t> i;
+Id<SubrangeT<Range const>> subrange;
+return match(range)(
+    pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
+    pattern(i, ooo(subrange), _) = expr(false),
+    pattern(_)                   = expr(true)
+);
 ```
 
 ## Patterns Can Be Composed.
