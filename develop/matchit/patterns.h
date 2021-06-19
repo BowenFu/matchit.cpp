@@ -1186,7 +1186,8 @@ namespace matchit
                 using OooResultTuple = typename std::conditional<isBinder, std::tuple<SubrangeT<std::array<ElemT, clippedDiff>>>, std::tuple<> > ::type;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
                 using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
-                using Vs1 = SubTypesT<static_cast<size_t>(idxOoo + 1 + diff), sizeof...(Values), std::tuple<Values...>>;
+                constexpr static auto vs1Start = static_cast<size_t>(static_cast<int64_t>(idxOoo) + 1 + diff);
+                using Vs1 = SubTypesT<vs1Start, sizeof...(Values), std::tuple<Values...>>;
                 using SecondHalfTuple = typename PairPV<Ps1, Vs1>::type;
 
             public:
