@@ -17,6 +17,7 @@ someNone
 sumIs
 variantAny
 symmetric
+quotientRemainder
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
