@@ -843,43 +843,58 @@ namespace matchit
             return Ds<Patterns...>{patterns...};
         }
 
-        template <typename T>
-        class Span
+        template <typename I, typename S = I>
+        class Subrange
         {
-            T const *mData;
-            size_t mSize;
+            I mBegin;
+            S mEnd;
 
         public:
-            Span(T const *data, size_t size)
-                : mData{data}, mSize{size}
+            Subrange(I const begin, S const end)
+                : mBegin{begin}, mEnd{end}
             {
             }
 
-            T const *data() const
+            Subrange(Subrange const& other)
+                : mBegin{other.begin()}
+                , mEnd{other.end()}
             {
-                return mData;
             }
+
+            Subrange& operator=(Subrange const& other)
+            {
+                mBegin = other.begin();
+                mEnd = other.end();
+                return *this;
+            }
+
             size_t size() const
             {
-                return mSize;
+                return static_cast<size_t>(std::distance(mBegin, mEnd));
             }
-            constexpr T const &operator[](size_t idx) const
+            auto begin() const
             {
-                assert(idx < mSize);
-                return mData[idx];
+                return mBegin;
+            }
+            auto end() const
+            {
+                return mEnd;
             }
         };
 
-        template <typename T>
-        constexpr auto makeSpan(T const *data, size_t size)
+        template <typename I, typename S>
+        constexpr auto makeSubrange(I begin, S end)
         {
-            return Span<T>{data, size};
+            return Subrange<I, S>{begin, end};
         }
 
-        template <typename T>
-        bool operator==(Span<T> const &lhs, Span<T> const &rhs)
+        template <typename RangeType>
+        using SubrangeT = decltype(makeSubrange(std::begin(std::declval<RangeType&>()), std::begin(std::declval<RangeType&>())));
+
+        template <typename I, typename S>
+        bool operator==(Subrange<I, S> const &lhs, Subrange<I, S> const &rhs)
         {
-            return lhs.size() == rhs.size() && std::equal(lhs.data(), lhs.data() + lhs.size(), rhs.data());
+            return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
         }
 
         template <typename T>
@@ -1145,7 +1160,7 @@ namespace matchit
                 using Vs0 = SubTypesT<0, idxOoo, std::tuple<Values...>>;
                 constexpr static auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
                 // <0, ...int32_t> to workaround compile failure for std::tuple<>.
-                using OooResultTuple = typename std::conditional<isBinder, std::tuple<Span<typename std::tuple_element<0, std::tuple<std::decay_t<Values>..., int32_t>>::type>>, std::tuple<>>::type;
+                using OooResultTuple = typename std::conditional<isBinder, std::tuple<Subrange<typename std::tuple_element<0, std::tuple<std::decay_t<Values>..., int32_t>>::type>>, std::tuple<>>::type;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
                 using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
                 constexpr static auto diff = sizeof...(Values) - sizeof...(Patterns);
@@ -1161,10 +1176,10 @@ namespace matchit
             using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, decltype(drop<0>(std::declval<Tuple>()))>::type;
 
             template <typename RangeType>
-            using SpanTuple = std::conditional_t<nbOooOrBinder == 1, std::tuple<Span<typename RangeType::value_type>>, std::tuple<>>;
+            using RangeTuple = std::conditional_t<nbOooOrBinder == 1, std::tuple<SubrangeT<RangeType>>, std::tuple<>>;
 
             template <typename RangeType>
-            using AppResultForRangeType = decltype(std::tuple_cat(std::declval<SpanTuple<RangeType>>(), std::declval<typename PatternTraits<Patterns>::template AppResultTuple<typename RangeType::value_type>>()...));
+            using AppResultForRangeType = decltype(std::tuple_cat(std::declval<RangeTuple<RangeType>>(), std::declval<typename PatternTraits<Patterns>::template AppResultTuple<typename std::decay_t<RangeType>::value_type>>()...));
 
             template <typename Value, typename = std::void_t<>>
             class AppResultHelper;
@@ -1184,7 +1199,7 @@ namespace matchit
             };
 
             template <typename Value>
-            using AppResultTuple = typename AppResultHelper<std::decay_t<Value>>::type;
+            using AppResultTuple = typename AppResultHelper<Value>::type;
 
             template <typename ValueTuple, typename ContextT>
             constexpr static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
@@ -1217,9 +1232,9 @@ namespace matchit
                     {
                         if constexpr (isBinder)
                         {
-                            auto const spanSize = valLen - (patLen - 1);
-                            context.emplace_back(makeSpan(&valueTuple[idxOoo], spanSize));
-                            using type = decltype(makeSpan(&valueTuple[idxOoo], spanSize));
+                            auto const rangeSize = static_cast<long>(valLen - (patLen - 1));
+                            context.emplace_back(makeSubrange(&valueTuple[idxOoo], &valueTuple[idxOoo] + rangeSize));
+                            using type = decltype(makeSubrange(&valueTuple[idxOoo], &valueTuple[idxOoo] + rangeSize));
                             result = result &&
                                      matchPattern(std::get<type>(context.back()), std::get<idxOoo>(dsPat.patterns()), depth, context);
                         }
@@ -1262,9 +1277,12 @@ namespace matchit
                     constexpr auto patLen = sizeof...(Patterns);
                     if constexpr (isBinder)
                     {
-                        auto const spanSize = valLen - (patLen - 1);
-                        context.emplace_back(makeSpan(&valueRange[idxOoo], spanSize));
-                        using type = decltype(makeSpan(&valueRange[idxOoo], spanSize));
+                        // Debug<decltype(std::begin(valueRange))> yy;
+                        auto const rangeSize = static_cast<long>(valLen - (patLen - 1));
+                        auto const begin = std::next(std::begin(valueRange), idxOoo);
+                        auto const end = std::next(begin, rangeSize);
+                        context.emplace_back(makeSubrange(begin, end));
+                        using type = decltype(makeSubrange(begin, end));
                         result = result &&
                                  matchPattern(std::get<type>(context.back()), std::get<idxOoo>(dsPat.patterns()), depth, context);
                     }
@@ -1390,7 +1408,8 @@ namespace matchit
     using impl::ooo;
     using impl::or_;
     using impl::pattern;
-    using impl::Span;
+    using impl::Subrange;
+    using impl::SubrangeT;
 } // namespace matchit
 
 #endif // MATCHIT_PATTERNS_H
