@@ -1279,7 +1279,6 @@ namespace matchit
             constexpr static auto matchPatternImpl(ValueRange &&valueRange, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
                 -> std::enable_if_t<!isTupleLikeV<ValueRange> && isRangeV<ValueRange>, bool>
             {
-                constexpr auto nbOooOrBinder = nbOooOrBinderV<Patterns...>;
                 static_assert(nbOooOrBinder == 0 || nbOooOrBinder == 1);
                 constexpr auto nbPat = sizeof...(Patterns);
 
