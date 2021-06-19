@@ -1181,10 +1181,10 @@ namespace matchit
                 constexpr static auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
                 // <0, ...int32_t> to workaround compile failure for std::tuple<>.
                 using ElemT = std::tuple_element_t<0, std::tuple<std::remove_reference_t<Values>..., int32_t>>;
-                using OooResultTuple = typename std::conditional<isBinder, std::tuple<SubrangeT<std::array<ElemT, 1>>>, std::tuple<>>::type;
+                constexpr static auto diff = sizeof...(Values) - sizeof...(Patterns);
+                using OooResultTuple = typename std::conditional<isBinder, std::tuple<SubrangeT<std::array<ElemT, diff>>>, std::tuple<>>::type;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
                 using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
-                constexpr static auto diff = sizeof...(Values) - sizeof...(Patterns);
                 using Vs1 = SubTypesT<idxOoo + 1 + diff, sizeof...(Values), std::tuple<Values...>>;
                 using SecondHalfTuple = typename PairPV<Ps1, Vs1>::type;
 
