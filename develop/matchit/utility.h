@@ -2,6 +2,7 @@
 #define MATCHIT_UTILITY_H
 
 #include <variant>
+#include <any>
 
 namespace matchit
 {
