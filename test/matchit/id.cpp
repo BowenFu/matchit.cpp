@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <optional>
 #include "matchit.h"
 using namespace matchit;
 
