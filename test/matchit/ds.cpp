@@ -68,12 +68,12 @@ TEST(Ds, listOoo)
 }
 
 template <typename Range1, typename Range2>
-auto expectRange(Range1 const& result, Range2 const& expected)
+auto expectRange(Range1 const &result, Range2 const &expected)
 {
   EXPECT_EQ(result.size(), expected.size());
   auto b1 = result.begin();
   auto b2 = expected.begin();
-  for(; b1 != result.end() && b2 != expected.end(); ++b1, ++b2)
+  for (; b1 != result.end() && b2 != expected.end(); ++b1, ++b2)
   {
     EXPECT_EQ(*b1, *b2);
   }
@@ -86,8 +86,7 @@ TEST(Ds, vecOooBinder1)
   auto matched = match(vec)(
       pattern(ooo(subrange)) = [&]
       {
-        EXPECT_EQ((*subrange).size(), 2);
-        auto expected = {123, 456};
+        auto const expected = {123, 456};
         expectRange(*subrange, expected);
         return true;
       },
@@ -101,9 +100,8 @@ TEST(Ds, vecOooBinder2)
   match(std::vector<int32_t>{123, 456})(
       pattern(ooo(subrange)) = [&]
       {
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 123);
-        // EXPECT_EQ((*subrange)[1], 456);
+        auto const expected = {123, 456};
+        expectRange(*subrange, expected);
       },
       pattern(_) = []
       {
@@ -126,9 +124,8 @@ TEST(Ds, vecOooBinder4)
   match(std::vector<int32_t>{123, 456, 789})(
       pattern(123, ooo(subrange)) = [&]
       {
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 456);
-        // EXPECT_EQ((*subrange)[1], 789);
+        auto const expected = {456, 789};
+        expectRange(*subrange, expected);
       });
 }
 
@@ -143,9 +140,8 @@ TEST(Ds, listOooBinder4)
   match(std::list<int32_t>{123, 456, 789})(
       pattern(123, ooo(subrange)) = [&]
       {
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 456);
-        // EXPECT_EQ((*subrange)[1], 789);
+        auto const expected = {456, 789};
+        expectRange(*subrange, expected);
       });
 }
 
@@ -156,9 +152,8 @@ TEST(Ds, arrayOooBinder1)
   auto matched = match(array)(
       pattern(ooo(subrange)) = [&]
       {
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 123);
-        // EXPECT_EQ((*subrange)[1], 456);
+        auto const expected = {123, 456};
+        expectRange(*subrange, expected);
         return true;
       },
       pattern(_) = expr(false));
@@ -171,9 +166,8 @@ TEST(Ds, arrayOooBinder2)
   match(std::array<int32_t, 2>{123, 456})(
       pattern(ooo(subrange)) = [&]
       {
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 123);
-        // EXPECT_EQ((*subrange)[1], 456);
+        auto const expected = {123, 456};
+        expectRange(*subrange, expected);
       });
 }
 
@@ -191,9 +185,8 @@ TEST(Ds, arrayOooBinder4)
   match(std::forward_as_tuple(std::array<int32_t, 3>{123, 456, 789}))(
       pattern(ds(ds(123, ooo(subrange)))) = [&]
       {
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 456);
-        // EXPECT_EQ((*subrange)[1], 789);
+        auto const expected = {456, 789};
+        expectRange(*subrange, expected);
       });
 }
 
@@ -207,9 +200,8 @@ TEST(Ds, arrayOooBinder5)
       pattern(ds(e, ooo(subrange)), ds(ooo(subrange), e)) = [&]
       {
         EXPECT_EQ(*e, 123);
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 456);
-        // EXPECT_EQ((*subrange)[1], 789);
+        auto const expected = {456, 789};
+        expectRange(*subrange, expected);
       });
 }
 
@@ -223,9 +215,7 @@ TEST(Ds, arrayOooBinder6)
       pattern(ds(ds(e, ooo(subrange)))) = [&]
       {
         EXPECT_EQ(*e, 123);
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 456);
-        // EXPECT_EQ((*subrange)[1], 789);
+        auto const expected = {456, 789};
+        expectRange(*subrange, expected);
       });
 }
-
