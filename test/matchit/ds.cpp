@@ -55,9 +55,9 @@ TEST(Ds, listOoo)
 TEST(Ds, vecOooBinder1)
 {
   auto const vec = std::vector<int32_t>{123, 456};
-  Id<SubrangeT<std::vector<int32_t> const>> subrange;
+  Id<SubrangeT<decltype(vec)>> subrange;
   auto matched = match(vec)(
-      pattern(ds(ooo(subrange))) = [&]
+      pattern(ooo(subrange)) = [&]
       {
         EXPECT_EQ((*subrange).size(), 2);
         // EXPECT_EQ((*subrange)[0], 123);
@@ -105,16 +105,16 @@ TEST(Ds, vecOooBinder4)
       });
 }
 
-#if 0
 TEST(Ds, FailDueToTwoFewValues)
 {
   EXPECT_FALSE(matched(std::vector<int32_t>{123, 456, 789}, ds(123, ooo, 456, 456, 789)));
 }
 
+#if 0
 TEST(Ds, arrayOooBinder1)
 {
   auto const array = std::array<int32_t, 2>{123, 456};
-  Id<Subrange<int32_t>> subrange;
+  Id<SubrangeT<decltype(array)>> subrange;
   auto matched = match(array)(
       pattern(ooo(subrange)) = [&]
       {
@@ -129,7 +129,7 @@ TEST(Ds, arrayOooBinder1)
 
 TEST(Ds, arrayOooBinder2)
 {
-  Id<Subrange<int32_t>> subrange;
+  Id<SubrangeT<std::array<int32_t, 2>>> subrange;
   match(std::array<int32_t, 2>{123, 456})(
       pattern(ooo(subrange)) = [&]
       {
@@ -141,7 +141,7 @@ TEST(Ds, arrayOooBinder2)
 
 TEST(Ds, arrayOooBinder3)
 {
-  Id<Subrange<int32_t>> subrange;
+  Id<SubrangeT<std::array<int32_t, 2>>> subrange;
   match(std::array<int32_t, 2>{123, 456})(
       pattern(123, ooo(subrange), 456) = [&]
       { EXPECT_EQ((*subrange).size(), 0); });
@@ -149,7 +149,7 @@ TEST(Ds, arrayOooBinder3)
 
 TEST(Ds, arrayOooBinder4)
 {
-  Id<Subrange<int32_t>> subrange;
+  Id<SubrangeT<std::array<int32_t, 3>>> subrange;
   match(std::array<int32_t, 3>{123, 456, 789})(
       pattern(123, ooo(subrange)) = [&]
       {
@@ -162,7 +162,7 @@ TEST(Ds, arrayOooBinder4)
 // rotate
 TEST(Ds, arrayOooBinder5)
 {
-  Id<Subrange<int32_t>> subrange;
+  Id<SubrangeT<std::array<int32_t, 3>>> subrange;
   Id<int32_t> e;
   match(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123})(
       // move head to end

@@ -14,6 +14,9 @@ namespace matchit
 {
     namespace impl
     {
+        template <typename... Ts>
+        class Debug;
+
         template <typename T, typename... Ts>
         class WithinTypes
         {
@@ -114,6 +117,26 @@ namespace matchit
                 std::forward<F>(f), std::forward_as_tuple(std::forward<Args>(args)...));
         }
 
+        template <class T>
+        struct decayArray
+        {
+        private:
+            typedef typename std::remove_reference<T>::type U;
+
+        public:
+            using type = typename std::conditional_t<
+                std::is_array<U>::value,
+                typename std::remove_extent<U>::type *,
+                T>;
+        };
+
+        template <class T>
+        using decayArrayT = typename decayArray<T>::type;
+
+        static_assert(std::is_same_v<decayArrayT<int[]>, int*>);
+        static_assert(std::is_same_v<decayArrayT<int const[]>, int const*>);
+        static_assert(std::is_same_v<decayArrayT<int const&>, int const&>);
+
         template <typename Pattern>
         class PatternTraits;
 
@@ -191,9 +214,6 @@ namespace matchit
             return result;
         }
 
-        template <typename... Ts>
-        class Debug;
-
         template <typename Pattern, typename Func>
         class PatternPair
         {
@@ -249,7 +269,7 @@ namespace matchit
         template <typename Pattern>
         constexpr auto pattern(Pattern const &p)
         {
-            return PatternHelper<std::decay_t<Pattern>>{p};
+            return PatternHelper<decayArrayT<Pattern>>{p};
         }
 
         template <typename... Patterns>
@@ -272,7 +292,6 @@ namespace matchit
         {
             return pattern(ds(p));
         }
-
 
         template <typename Pattern>
         class PatternTraits
@@ -831,7 +850,7 @@ namespace matchit
             static_assert(std::is_same_v<AddConstToPointerT<int32_t>, int32_t>);
 
         public:
-            using Type = std::tuple<AddConstToPointerT<std::decay_t<Patterns>>...>;
+            using Type = std::tuple<AddConstToPointerT<decayArrayT<Patterns>>...>;
 
         private:
             Type mPatterns;
@@ -1141,18 +1160,18 @@ namespace matchit
                 using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Ps>::template AppResultTuple<Vs>>()...));
             };
 
-            template <std::size_t nbOoos, typename ValueTuple>
+            template <std::size_t nbOoos, bool isConst, typename ValueTuple>
             class AppResultForTupleHelper;
 
-            template <typename... Values>
-            class AppResultForTupleHelper<0, std::tuple<Values...>>
+            template <bool isConst, typename... Values>
+            class AppResultForTupleHelper<0, isConst, std::tuple<Values...>>
             {
             public:
                 using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Values>>()...));
             };
 
-            template <typename... Values>
-            class AppResultForTupleHelper<1, std::tuple<Values...>>
+            template <bool isConst, typename... Values>
+            class AppResultForTupleHelper<1, isConst, std::tuple<Values...>>
             {
                 constexpr static auto idxOoo = findOooIdx<typename Ds<Patterns...>::Type>();
                 // static_assert(!isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>);
@@ -1160,7 +1179,9 @@ namespace matchit
                 using Vs0 = SubTypesT<0, idxOoo, std::tuple<Values...>>;
                 constexpr static auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
                 // <0, ...int32_t> to workaround compile failure for std::tuple<>.
-                using OooResultTuple = typename std::conditional<isBinder, std::tuple<Subrange<typename std::tuple_element<0, std::tuple<std::decay_t<Values>..., int32_t>>::type>>, std::tuple<>>::type;
+                using ElemT = std::tuple_element_t<0, std::tuple<std::remove_reference_t<Values>..., int32_t>>;
+                using PtrT = std::conditional_t<isConst, ElemT const *, ElemT *>;
+                using OooResultTuple = typename std::conditional<isBinder, std::tuple<Subrange<PtrT>>, std::tuple<>>::type;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
                 using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
                 constexpr static auto diff = sizeof...(Values) - sizeof...(Patterns);
@@ -1173,7 +1194,7 @@ namespace matchit
 
             // TODO fix me.
             template <typename Tuple>
-            using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, decltype(drop<0>(std::declval<Tuple>()))>::type;
+            using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, std::is_const_v<Tuple>, decltype(drop<0>(std::declval<Tuple>()))>::type;
 
             template <typename RangeType>
             using RangeTuple = std::conditional_t<nbOooOrBinder == 1, std::tuple<SubrangeT<RangeType>>, std::tuple<>>;
@@ -1301,6 +1322,12 @@ namespace matchit
                     dsPat.patterns());
             }
         };
+
+        // Debug<SubrangeT<const std::array<int32_t, 2>>> xyz;
+        // Debug<Ds<const int *, const int *>::Type> uuu;
+        // Debug<OooBinder<matchit::impl::Subrange<const int *, const int *>>> uuu;
+        // Debug<Ds<OooBinder<matchit::impl::Subrange<const int *, const int *>>>::Type> uuu;
+        // Debug<typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<std::vector<int>>> xyz;
 
         template <typename Pattern, typename Pred>
         class PostCheck
