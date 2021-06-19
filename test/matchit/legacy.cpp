@@ -5,6 +5,7 @@
 #include <any>
 #include <iostream>
 #include <type_traits>
+#include <optional>
 #include "matchit.h"
 
 using namespace matchit;
