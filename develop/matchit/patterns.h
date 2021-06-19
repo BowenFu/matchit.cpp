@@ -1182,7 +1182,7 @@ namespace matchit
                 // <0, ...int32_t> to workaround compile failure for std::tuple<>.
                 using ElemT = std::tuple_element_t<0, std::tuple<std::remove_reference_t<Values>..., int32_t>>;
                 constexpr static int64_t diff = static_cast<int64_t>(sizeof...(Values) - sizeof...(Patterns));
-                constexpr static int64_t clippedDiff = diff> 0 ? diff : 0;
+                constexpr static size_t clippedDiff = static_cast<size_t>(diff> 0 ? diff : 0);
                 using OooResultTuple = typename std::conditional<isBinder, std::tuple<SubrangeT<std::array<ElemT, clippedDiff>>>, std::tuple<> > ::type;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
                 using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
