@@ -234,7 +234,6 @@ constexpr bool recursiveSymmetric(Range const &range)
     );
 }
 
-// rotate
 TEST(Ds, subrangeOooBinder)
 {
   EXPECT_TRUE(recursiveSymmetric(std::array<int32_t, 5>{5, 0, 3, 0, 5}));
@@ -248,4 +247,17 @@ TEST(Ds, subrangeOooBinder)
 
   EXPECT_TRUE(recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 0, 5}));
   EXPECT_FALSE(recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 7, 10}));
+}
+
+TEST(Ds, subrangeOooBinder2)
+{
+  Id<SubrangeT<std::set<int32_t>>> subrange;
+  Id<int32_t> e;
+  match(std::set<int32_t>{123, 456, 789})(
+      pattern(ds(e, ooo(subrange))) = [&]
+      {
+        EXPECT_EQ(*e, 123);
+        auto const expected = {456, 789};
+        expectRange(*subrange, expected);
+      });
 }
