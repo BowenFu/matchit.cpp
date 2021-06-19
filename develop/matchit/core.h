@@ -14,7 +14,7 @@ namespace matchit
         class ValueType
         {
         public:
-            using ValueT = Value const;
+            using ValueT = Value;
         };
 
         template <typename Value>
@@ -54,10 +54,14 @@ namespace matchit
             return MatchHelper<Value, true>{std::forward<Value>(value)};
         }
 
+        template <typename... Values>
+        class Debug;
+
         template <typename First, typename... Values>
         constexpr auto match(First &&first, Values &&...values)
         {
-            decltype(auto) result = std::forward_as_tuple(std::forward<First>(first), std::forward<Values>(values)...);
+            auto result = std::forward_as_tuple(std::forward<First>(first), std::forward<Values>(values)...);
+            // Debug<decltype(result)> aaa;
             return MatchHelper<decltype(result), false>{std::forward<decltype(result)>(result)};
         }
     } // namespace impl

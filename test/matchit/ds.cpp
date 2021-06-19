@@ -175,9 +175,9 @@ TEST(Ds, arrayOooBinder3)
 
 TEST(Ds, arrayOooBinder4)
 {
-  Id<SubrangeT<std::array<int32_t, 3>>> subrange;
-  match(std::array<int32_t, 3>{123, 456, 789})(
-      pattern(123, ooo(subrange)) = [&]
+  Id<SubrangeT<std::array<int32_t, 2>>> subrange;
+  match(std::forward_as_tuple(std::array<int32_t, 3>{123, 456, 789}))(
+      pattern(ds(ds(123, ooo(subrange)))) = [&]
       {
         EXPECT_EQ((*subrange).size(), 2);
         // EXPECT_EQ((*subrange)[0], 456);
@@ -186,6 +186,22 @@ TEST(Ds, arrayOooBinder4)
 }
 
 #if 0
+// rotate
+TEST(Ds, arrayOooBinder6)
+{
+  Id<SubrangeT<std::array<int32_t, 2>>> subrange;
+  Id<int32_t> e;
+  match(std::make_tuple(std::array<int32_t, 3>{123, 456, 789}))(
+      // move head to end
+      pattern(ds(ds(e, ooo(subrange)))) = [&]
+      {
+        EXPECT_EQ(*e, 123);
+        EXPECT_EQ((*subrange).size(), 2);
+        // EXPECT_EQ((*subrange)[0], 456);
+        // EXPECT_EQ((*subrange)[1], 789);
+      });
+}
+
 // rotate
 TEST(Ds, arrayOooBinder5)
 {
@@ -201,21 +217,4 @@ TEST(Ds, arrayOooBinder5)
         // EXPECT_EQ((*subrange)[1], 789);
       });
 }
-
-// rotate
-TEST(Ds, arrayOooBinder6)
-{
-  Id<SubrangeT<std::array<int32_t, 2>>> subrange;
-  Id<int32_t> e;
-  match(std::make_tuple(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123}))(
-      // move head to end
-      pattern(ds(e, ooo(subrange)), ds(456, 789, e)) = [&]
-      {
-        EXPECT_EQ(*e, 123);
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 456);
-        // EXPECT_EQ((*subrange)[1], 789);
-      });
-}
-
 #endif

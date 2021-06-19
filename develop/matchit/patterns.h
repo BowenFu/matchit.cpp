@@ -1231,7 +1231,7 @@ namespace matchit
                         [&valueTuple, depth, &context](auto const &...patterns)
                         {
                             return apply_(
-                                [ depth, &context, &patterns... ](auto const &...values) constexpr
+                                [ depth, &context, &patterns... ](auto &&...values) constexpr
                                 {
                                     static_assert(sizeof...(patterns) == sizeof...(values));
                                     return (matchPattern(std::forward<decltype(values)>(values), patterns, depth + 1, context) && ...);
