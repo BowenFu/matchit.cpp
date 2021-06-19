@@ -185,7 +185,6 @@ TEST(Ds, arrayOooBinder4)
       });
 }
 
-#if 0
 // rotate
 TEST(Ds, arrayOooBinder6)
 {
@@ -217,4 +216,3 @@ TEST(Ds, arrayOooBinder5)
         // EXPECT_EQ((*subrange)[1], 789);
       });
 }
-#endif
