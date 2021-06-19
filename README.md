@@ -16,7 +16,7 @@
 [![codecov](https://codecov.io/gh/BowenFu/matchit.cpp/branch/main/graph/badge.svg?token=G5B0RE6THD)](https://codecov.io/gh/BowenFu/matchit.cpp)
 
 [badge.godbolt]: https://img.shields.io/badge/try-godbolt-blue
-[godbolt]: https://godbolt.org/z/rMaPvWcbr
+[godbolt]: https://godbolt.org/z/hxfTc7h49
 
 ## Features
 - Easy to get started.
@@ -224,7 +224,7 @@ Here `*` operator is used to dereference the value inside identifiers.
 One thing to note is that identifiers are only valid inside `match` scope. Do not try to dereference it outside.
 
 Note that we used `and_` here to bind a value to the identifier under some conditions on the value.
-This practice can achieve the functionality of **`@` pattern**` in Rust.
+This practice can achieve the functionality of **`@` pattern** in Rust.
 We recommend **always put your identifiers at the end of And pattern (and Or pattern)**. It is like saying that bind the value to the identifier only when all previous patterns / conditions get met. (Also, you may get better perf since we `std::forward` the subject value only for the last subpattern).
 
 Also note when the same identifier is bound multiple times, the bound values must equal to each other via `operator==`.
