@@ -64,10 +64,10 @@ The following sample shows to how to implement factorial using `match(it)` libra
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr int32_t factorial(int32_t n)
 {
+    using namespace matchit;
     assert(n >= 0);
     return match(n)(
         pattern(0) = expr(1),
@@ -99,10 +99,10 @@ We can match **multiple values** at the same time:
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr int32_t gcd(int32_t a, int32_t b)
 {
+    using namespace matchit;
     return match(a, b)(
         pattern(_, 0) = [&] { return a >= 0 ? a : -a; },
         pattern(_)    = [&] { return gcd(b, a%b); }
@@ -119,11 +119,11 @@ Different from matching patterns in other programming languages, **variables can
 ```C++
 #include "matchit.h"
 #include <map>
-using namespace matchit;
 
 template <typename Map, typename Key>
 constexpr bool contains(Map const& map, Key const& key)
 {
+    using namespace matchit;
     return match(map.find(key))(
         pattern(map.end()) = expr(false),
         pattern(_)         = expr(true)
@@ -153,10 +153,10 @@ Sometimes we want to share one handler for multiple patterns, **Or Pattern** is 
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr bool isValid(int32_t n)
 {
+    using namespace matchit;
     return match(n)(
         pattern(or_(1, 3, 5)) = expr(true),
         pattern(_)            = expr(false)
@@ -180,10 +180,10 @@ A simple sample to check whether a num is large can be:
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr bool isLarge(double value)
 {
+    using namespace matchit;
     return match(value)(
         pattern(app(_ * _, _ > 1000)) = expr(true),
         pattern(_)                    = expr(false)
@@ -203,10 +203,10 @@ Let's log the square result, with Identifier Pattern the codes would be
 ```C++
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 bool checkAndlogLarge(double value)
 {
+    using namespace matchit;
     Id<double> s;
     return match(value)(
         pattern(app(_ * _, and_(_ > 1000, s))) = [&] {
@@ -232,9 +232,9 @@ An sample to check if an array is symmetric:
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 constexpr bool symmetric(std::array<int32_t, 5> const& arr)
 {
+    using namespace matchit;
     Id<int32_t> i, j; 
     return match(arr)(
         pattern(i, j, _, j, i) = expr(true),
@@ -291,10 +291,10 @@ Say, we want to match only when the sum of two identifiers equal to some value, 
 ```C++
 #include <array>
 #include "matchit.h"
-using namespace matchit;
 
 constexpr bool sumIs(std::array<int32_t, 2> const& arr, int s)
 {
+    using namespace matchit;
     Id<int32_t> i, j;
     return match(arr)(
         pattern(i, j).when(i + j == s) = expr(true),
@@ -314,11 +314,11 @@ You can write the code as following when you want to check pattern of a tuple.
 ```C++
 #include <array>
 #include "matchit.h"
-using namespace matchit;
 
 template <typename Tuple>
 constexpr int32_t detectTuplePattern(Tuple const& tuple)
 {
+    using namespace matchit;
     return match(tuple)
     (
         pattern(2, ooo, 2)  = expr(4),
@@ -455,7 +455,6 @@ Users can customize the down casting via specializing `CustomAsPointer`:
 ```C++
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 enum class Kind { kONE, kTWO };
 
@@ -506,6 +505,7 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
 
 int staticCastAs(Num const& input)
 {
+    using namespace matchit;
     return match(input)(
         pattern(as<One>(_))       = expr(1),
         pattern(kind<Kind::kTWO>) = expr(2),

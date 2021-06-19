@@ -1,12 +1,12 @@
 #include <iostream>
 #include <optional>
 #include "matchit.h"
-using namespace matchit;
 
 // lift a function from T -> U to std::optional<T> -> std::optional<U>
 template <typename Func>
 auto optionalLift(Func func)
 {
+    using namespace matchit;
     return [func](auto &&v) {
         Id<std::decay_t<decltype(*v)> > x;
         using RetType = decltype(std::make_optional(func(*x)));

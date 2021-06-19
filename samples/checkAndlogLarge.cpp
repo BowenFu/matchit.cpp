@@ -1,10 +1,10 @@
 #include <iostream>
 #include "matchit.h"
 
-using namespace matchit;
-
 constexpr bool checkAndlogLarge(double value)
 {
+    using namespace matchit;
+
     auto const square = [](auto &&v)
     { return v * v; };
     Id<double> s;

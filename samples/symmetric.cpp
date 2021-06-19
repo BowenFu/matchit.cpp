@@ -1,10 +1,10 @@
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 template <typename Range>
 constexpr bool recursiveSymmetric(Range const &range)
 {
+    using namespace matchit;
     Id<int32_t> i;
     Id<SubrangeT<Range const>> subrange;
     return match(range)(
@@ -18,6 +18,7 @@ constexpr bool recursiveSymmetric(Range const &range)
 
 constexpr bool symmetricArray(std::array<int32_t, 5> const &arr)
 {
+    using namespace matchit;
     Id<int32_t> i, j;
     return match(arr)(
         // clang-format off

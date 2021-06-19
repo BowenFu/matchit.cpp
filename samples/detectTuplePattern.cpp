@@ -1,11 +1,11 @@
 #include <array>
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 template <typename Tuple>
 constexpr int32_t detectTuplePattern(Tuple const &tuple)
 {
+    using namespace matchit;
     return match(tuple)(
         // clang-format off
         pattern(2, ooo, 2) = expr(4),

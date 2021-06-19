@@ -1,10 +1,10 @@
 #include <array>
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 constexpr bool sumIs(std::array<int32_t, 2> const &arr, int s)
 {
+    using namespace matchit;
     Id<int32_t> i, j;
     return match(arr)(
         // clang-format off

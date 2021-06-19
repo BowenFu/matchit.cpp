@@ -1,9 +1,9 @@
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 constexpr bool isValid(int32_t n)
 {
+    using namespace matchit;
     return match(n)(
         // clang-format off
         pattern(or_(1, 3, 5)) = expr(true),

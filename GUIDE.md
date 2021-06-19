@@ -14,10 +14,10 @@ The following sample shows to how to implement factorial using the pattern match
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr int32_t factorial(int32_t n)
 {
+    using namespace matchit;
     assert(n >= 0);
     return match(n)(
         pattern(0) = expr(1),
@@ -43,10 +43,10 @@ We can match multiple values at the same time:
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr int32_t gcd(int32_t a, int32_t b)
 {
+    using namespace matchit;
     return match(a, b)(
         pattern(_, 0) = [&] { return a >= 0 ? a : -a; },
         pattern(_)    = [&] { return gcd(b, a%b); }
@@ -67,11 +67,11 @@ The value passed to `match` will be matched against the value evaluated from the
 ```C++
 #include "matchit.h"
 #include <map>
-using namespace matchit;
 
 template <typename Map, typename Key>
 constexpr bool contains(Map const& map, Key const& key)
 {
+    using namespace matchit;
     return match(map.find(key))(
         pattern(map.end()) = expr(false),
         pattern(_)         = expr(true)
@@ -92,10 +92,10 @@ Predicate Pattern can be used to put some restrictions on the value to be matche
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr double relu(double value)
 {
+    using namespace matchit;
     return match(value)(
         pattern(meet([](auto &&v) { return v >= 0; })) = expr(value),
         pattern(_)                                     = expr(0));
@@ -125,10 +125,10 @@ Or pattern makes it possible to merge/union multiple patterns, thus can be espec
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr bool isValid(int32_t n)
 {
+    using namespace matchit;
     return match(n)(
         pattern(or_(1, 3, 5)) = expr(true),
         pattern(_)            = expr(false)
@@ -145,10 +145,10 @@ And Pattern can be used to combine multiple Predicate patterns.
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr double clip(double value, double min, double max)
 {
+    using namespace matchit;
     return match(value)(
         pattern(and_(_ >= min, _ <= max)) = expr(value),
         pattern(_ > max)                  = expr(max),
@@ -165,10 +165,10 @@ The above can also be written as
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 double clip(double value, double min, double max)
 {
+    using namespace matchit;
     return match(value)(
         pattern(min <= _ && _ <= max) = expr(value),
         pattern(_ > max)              = expr(max),
@@ -191,10 +191,10 @@ A simple sample to check whether a num is large:
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 constexpr bool isLarge(double value)
 {
+    using namespace matchit;
     return match(value)(
         pattern(app(_ * _, _ > 1000)) = expr(true),
         pattern(_)                    = expr(false)
@@ -215,10 +215,10 @@ Logging the details when detecting large values can be useful for the example ab
 ```C++
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 bool checkAndlogLarge(double value)
 {
+    using namespace matchit;
     Id<double> s;
     return match(value)(
         pattern(app(_ * _, and_(_ > 1000, s))) = [&] {
@@ -243,9 +243,9 @@ An sample to check if an array is symmetric:
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 constexpr bool symmetric(std::array<int32_t, 5> const& arr)
 {
+    using namespace matchit;
     Id<int32_t> i, j; 
     return match(arr)(
         pattern(i, j, _, j, i) = expr(true),
@@ -269,11 +269,11 @@ Note the outermost `ds` inside pattern can be saved. That is to say, when patter
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 template<typename T1, typename T2>
 constexpr auto eval(std::tuple<char, T1, T2> const& expr)
 {
+    using namespace matchit;
     Id<T1> i;
     Id<T2> j;
     return match(expr)(
@@ -313,10 +313,10 @@ A basic sample can be
 ```C++
 #include <array>
 #include "matchit.h"
-using namespace matchit;
 
 constexpr bool sumIs(std::array<int32_t, 2> const& arr, int s)
 {
+    using namespace matchit;
     Id<int32_t> i, j;
     return match(arr)(
         pattern(i, j).when(i + j == s) = expr(true),
@@ -335,11 +335,11 @@ Ooo Pattern can match arbitrary number of items. It can only be used inside `ds`
 ```C++
 #include <array>
 #include "matchit.h"
-using namespace matchit;
 
 template <typename Tuple>
 constexpr int32_t detectTuplePattern(Tuple const& tuple)
 {
+    using namespace matchit;
     return match(tuple)
     (
         pattern(2, ooo, 2)  = expr(4),
@@ -383,11 +383,11 @@ A typical sample can be
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 template <typename T>
 constexpr auto square(std::optional<T> const& t)
 {
+    using namespace matchit;
     Id<T> id;
     return match(t)(
         pattern(some(id)) = id * id,
@@ -426,7 +426,6 @@ A simple sample can be
 ```C++
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 struct Shape
 {
@@ -437,6 +436,7 @@ struct Square : Shape {};
 
 auto getClassName(Shape const &s)
 {
+    using namespace matchit;
     return match(s)(
         pattern(as<Circle>(_)) = expr("Circle"),
         pattern(as<Square>(_)) = expr("Square")
@@ -471,7 +471,6 @@ Users can customize their down casting via specializing `CustomAsPointer`:
 ```C++
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 enum class Kind { kONE, kTWO };
 
@@ -524,6 +523,7 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
 
 int staticCastAs(Num const& input)
 {
+    using namespace matchit;
     return match(input)(
         pattern(as<One>(_))       = expr(1),
         pattern(kind<Kind::kTWO>) = expr(2),
@@ -541,11 +541,11 @@ int main()
 
 ```C++
 #include "matchit.h"
-using namespace matchit;
 
 template <typename T>
 constexpr auto getClassName(T const& v)
 {
+    using namespace matchit;
     return match(v)(
         pattern(as<char const*>(_)) = expr("chars"),
         pattern(as<int32_t>(_))     = expr("int")

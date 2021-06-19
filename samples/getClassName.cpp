@@ -1,6 +1,5 @@
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 struct Shape
 {
@@ -15,6 +14,7 @@ struct Square : Shape
 
 constexpr auto getClassName(Shape const &s)
 {
+    using namespace matchit;
     return match(s)(
         pattern(as<Circle>(_)) = expr("Circle"),
         pattern(as<Square>(_)) = expr("Square"));

@@ -1,6 +1,5 @@
 #include <iostream>
 #include "matchit.h"
-using namespace matchit;
 
 enum class Kind
 {
@@ -44,7 +43,7 @@ public:
 };
 
 template <Kind k>
-constexpr auto kind = app(&Num::kind, k);
+constexpr auto kind = matchit::app(&Num::kind, k);
 
 template <typename T>
 class NumAsPointer
@@ -70,6 +69,7 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
 
 constexpr int staticCastAs(Num const &input)
 {
+    using namespace matchit;
     return match(input)(
         // clang-format off
         pattern(as<One>(_))       = expr(1),

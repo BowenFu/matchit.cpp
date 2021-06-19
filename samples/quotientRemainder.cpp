@@ -1,9 +1,9 @@
 #include "matchit.h"
 #include <iostream>
-using namespace matchit;
 
 constexpr auto qr = [](auto divisor)
 {
+    using namespace matchit;
     return [divisor](auto quotient, auto remainder)
     {
         return and_(app(_ / divisor, quotient),
@@ -13,6 +13,7 @@ constexpr auto qr = [](auto divisor)
 
 constexpr std::array<int32_t, 2> quoRem(int32_t dividend, int32_t divisor)
 {
+    using namespace matchit;
     Id<int32_t> q;
     Id<int32_t> r;
     return match(dividend)(
