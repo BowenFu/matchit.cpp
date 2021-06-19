@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "matchit.h"
+#include <list>
 
 using namespace matchit;
 
@@ -13,6 +14,12 @@ TEST(Ds, matchVec)
 {
   EXPECT_TRUE(matched(std::vector<int32_t>{123, 456}, ds(123, 456)));
   EXPECT_FALSE(matched(std::vector<int32_t>{123, 456}, ds(123, 456, 123)));
+}
+
+TEST(Ds, matchList)
+{
+  EXPECT_TRUE(matched(std::list<int32_t>{123, 456}, ds(123, 456)));
+  EXPECT_FALSE(matched(std::list<int32_t>{123, 456}, ds(123, 456, 123)));
 }
 
 TEST(Ds, tupleOoo)

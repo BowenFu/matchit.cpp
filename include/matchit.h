@@ -1456,23 +1456,27 @@ namespace matchit
             template <typename Tuple>
             using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, decltype(drop<0>(std::declval<Tuple>()))>::type;
 
-            template <typename Vector>
-            using SpanTuple = std::conditional_t<nbOooOrBinder == 1, std::tuple<Span<typename Vector::value_type>>, std::tuple<>>;
-            template <typename Vector>
-            using AppResultForVector = decltype(std::tuple_cat(std::declval<SpanTuple<Vector>>(), std::declval<typename PatternTraits<Patterns>::template AppResultTuple<typename Vector::value_type>>()...));
+            template <typename RangeType>
+            using SpanTuple = std::conditional_t<nbOooOrBinder == 1, std::tuple<Span<typename RangeType::value_type>>, std::tuple<>>;
+
+            template <typename RangeType>
+            using AppResultForRangeType = decltype(std::tuple_cat(std::declval<SpanTuple<RangeType>>(), std::declval<typename PatternTraits<Patterns>::template AppResultTuple<typename RangeType::value_type>>()...));
+
+            template <typename Value, typename = std::void_t<>>
+            class AppResultHelper;
 
             template <typename Value>
-            class AppResultHelper
+            class AppResultHelper<Value, std::enable_if_t<isTupleLikeV<Value>>>
             {
             public:
                 using type = AppResultForTuple<Value>;
             };
 
-            template <typename... Args>
-            class AppResultHelper<std::vector<Args...>>
+            template <typename RangeType>
+            class AppResultHelper<RangeType, std::enable_if_t<!isTupleLikeV<RangeType> && isRangeV<RangeType>>>
             {
             public:
-                using type = AppResultForVector<std::vector<Args...>>;
+                using type = AppResultForRangeType<RangeType>;
             };
 
             template <typename Value>
