@@ -57,7 +57,8 @@ namespace matchit
         template <typename First, typename... Values>
         constexpr auto match(First &&first, Values &&...values)
         {
-            return MatchHelper<decltype(std::forward_as_tuple(first, values...)), false>{std::forward_as_tuple(first, values...)};
+            decltype(auto) result = std::forward_as_tuple(std::forward<First>(first), std::forward<Values>(values)...);
+            return MatchHelper<decltype(result), false>{std::forward<decltype(result)>(result)};
         }
     } // namespace impl
 

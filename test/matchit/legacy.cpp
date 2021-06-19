@@ -217,7 +217,7 @@ TEST(Match, test7)
 {
     auto const matchFunc = [](std::pair<int32_t, int32_t> ij)
     {
-        Id<std::tuple<int32_t &, int32_t &>> id;
+        Id<std::tuple<int32_t, int32_t>> id;
         // delegate at to and_
         auto const at = [](auto &&id, auto &&pattern)
         {
