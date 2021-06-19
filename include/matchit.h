@@ -954,20 +954,6 @@ namespace matchit
             }
         };
 
-        class Deleter
-        {
-        public:
-            template <typename Type>
-            void operator()(Type *ptr)
-            {
-                if (mOwn)
-                {
-                    std::default_delete<Type>{}(ptr);
-                }
-            }
-            bool mOwn{false};
-        };
-
         template <typename Ptr, typename Value, typename = std::void_t<>>
         struct StorePointer : std::false_type
         {
