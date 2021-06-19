@@ -63,7 +63,28 @@ namespace matchit
         }
 
         template <typename RangeType>
-        using SubrangeT = decltype(makeSubrange(std::begin(std::declval<RangeType&>()), std::begin(std::declval<RangeType&>())));
+        class SubrangeType
+        {
+        public:
+            using type = decltype(makeSubrange(std::begin(std::declval<RangeType &>()), std::end(std::declval<RangeType &>())));
+        };
+
+        template <typename ElemT, size_t size>
+        class SubrangeType<std::array<ElemT, size>>
+        {
+        public:
+            using type = decltype(makeSubrange(std::declval<ElemT *>(), std::declval<ElemT *>()));
+        };
+
+        template <typename ElemT, size_t size>
+        class SubrangeType<std::array<ElemT, size> const>
+        {
+        public:
+            using type = decltype(makeSubrange(std::declval<ElemT const *>(), std::declval<ElemT const *>()));
+        };
+
+        template <typename RangeType>
+        using SubrangeT = typename SubrangeType<RangeType>::type;
 
         template <typename I, typename S>
         bool operator==(Subrange<I, S> const &lhs, Subrange<I, S> const &rhs)
@@ -1339,9 +1360,9 @@ namespace matchit
         //               typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<const std::array<int, 3>>,
         //               std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
 
-        // static_assert(std::is_same_v<
-        //               typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<std::array<int, 3>>,
-        //               std::tuple<matchit::impl::Subrange<int *, int *>>>);
+        static_assert(std::is_same_v<
+                      typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<std::array<int, 3>>,
+                      std::tuple<matchit::impl::Subrange<int *, int *>>>);
 
         template <typename Pattern, typename Pred>
         class PostCheck
