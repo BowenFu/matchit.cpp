@@ -1194,7 +1194,7 @@ namespace matchit
 
             // TODO fix me.
             template <typename Tuple>
-            using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, std::is_const_v<Tuple>, decltype(drop<0>(std::declval<Tuple>()))>::type;
+            using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, std::is_const_v<std::remove_reference_t<Tuple>>, decltype(drop<0>(std::declval<Tuple>()))>::type;
 
             template <typename RangeType>
             using RangeTuple = std::conditional_t<nbOooOrBinder == 1, std::tuple<SubrangeT<RangeType>>, std::tuple<>>;
@@ -1327,7 +1327,9 @@ namespace matchit
         // Debug<Ds<const int *, const int *>::Type> uuu;
         // Debug<OooBinder<matchit::impl::Subrange<const int *, const int *>>> uuu;
         // Debug<Ds<OooBinder<matchit::impl::Subrange<const int *, const int *>>>::Type> uuu;
-        // Debug<typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<std::vector<int>>> xyz;
+        // Debug<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>> xyz;
+        // Debug<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>::Type> xyz;
+        // Debug<typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<const std::array<int, 2>>> xyz;
 
         template <typename Pattern, typename Pred>
         class PostCheck

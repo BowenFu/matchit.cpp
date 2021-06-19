@@ -125,7 +125,6 @@ TEST(Ds, FailDueToTwoFewValues)
   EXPECT_FALSE(matched(std::vector<int32_t>{123, 456, 789}, ds(123, ooo, 456, 456, 789)));
 }
 
-#if 0
 TEST(Ds, arrayOooBinder1)
 {
   auto const array = std::array<int32_t, 2>{123, 456};
@@ -174,10 +173,11 @@ TEST(Ds, arrayOooBinder4)
       });
 }
 
+#if 0
 // rotate
 TEST(Ds, arrayOooBinder5)
 {
-  Id<SubrangeT<std::array<int32_t, 3>>> subrange;
+  Id<SubrangeT<std::array<int32_t, 2>>> subrange;
   Id<int32_t> e;
   match(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123})(
       // move head to end
