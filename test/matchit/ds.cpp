@@ -67,6 +67,18 @@ TEST(Ds, listOoo)
   EXPECT_TRUE(matched(std::list<int32_t>{123, 456}, ds(123, ooo, 456)));
 }
 
+template <typename Range1, typename Range2>
+auto expectRange(Range1 const& result, Range2 const& expected)
+{
+  EXPECT_EQ(result.size(), expected.size());
+  auto b1 = result.begin();
+  auto b2 = expected.begin();
+  for(; b1 != result.end() && b2 != expected.end(); ++b1, ++b2)
+  {
+    EXPECT_EQ(*b1, *b2);
+  }
+}
+
 TEST(Ds, vecOooBinder1)
 {
   auto const vec = std::vector<int32_t>{123, 456};
@@ -75,8 +87,8 @@ TEST(Ds, vecOooBinder1)
       pattern(ooo(subrange)) = [&]
       {
         EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 123);
-        // EXPECT_EQ((*subrange)[1], 456);
+        auto expected = {123, 456};
+        expectRange(*subrange, expected);
         return true;
       },
       pattern(_) = expr(false));
@@ -186,6 +198,22 @@ TEST(Ds, arrayOooBinder4)
 }
 
 // rotate
+TEST(Ds, arrayOooBinder5)
+{
+  Id<SubrangeT<std::array<int32_t, 2>>> subrange;
+  Id<int32_t> e;
+  match(std::make_tuple(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123}))(
+      // move head to end
+      pattern(ds(e, ooo(subrange)), ds(ooo(subrange), e)) = [&]
+      {
+        EXPECT_EQ(*e, 123);
+        EXPECT_EQ((*subrange).size(), 2);
+        // EXPECT_EQ((*subrange)[0], 456);
+        // EXPECT_EQ((*subrange)[1], 789);
+      });
+}
+
+// rotate
 TEST(Ds, arrayOooBinder6)
 {
   Id<SubrangeT<std::array<int32_t, 2>>> subrange;
@@ -201,18 +229,3 @@ TEST(Ds, arrayOooBinder6)
       });
 }
 
-// rotate
-TEST(Ds, arrayOooBinder5)
-{
-  Id<SubrangeT<std::array<int32_t, 2>>> subrange;
-  Id<int32_t> e;
-  match(std::make_tuple(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123}))(
-      // move head to end
-      pattern(ds(e, ooo(subrange)), ds(ooo(subrange), e)) = [&]
-      {
-        EXPECT_EQ(*e, 123);
-        EXPECT_EQ((*subrange).size(), 2);
-        // EXPECT_EQ((*subrange)[0], 456);
-        // EXPECT_EQ((*subrange)[1], 789);
-      });
-}
