@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
-#include "matchit.h"
 #include <list>
+#include <utility>
+#include "matchit.h"
 
 using namespace matchit;
 
@@ -249,7 +250,7 @@ TEST(Ds, subrangeOooBinder)
   EXPECT_FALSE(recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 7, 10}));
 }
 
-TEST(Ds, subrangeOooBinder2)
+TEST(Ds, setOooBinder)
 {
   Id<SubrangeT<std::set<int32_t>>> subrange;
   Id<int32_t> e;
@@ -261,3 +262,18 @@ TEST(Ds, subrangeOooBinder2)
         expectRange(*subrange, expected);
       });
 }
+
+#if 0
+TEST(Ds, mapOooBinder)
+{
+  Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
+  Id<std::pair<const int32_t, char const *>> e;
+  match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
+      pattern(ds(e, ooo(subrange))) = [&]
+      {
+        EXPECT_EQ(*e, std::make_pair(123, "a"));
+        // auto const expected = {456, 789};
+        // expectRange(*subrange, expected);
+      });
+}
+#endif 
