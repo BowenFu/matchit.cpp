@@ -10,7 +10,7 @@ constexpr bool recursiveSymmetric(Range const &range)
     return match(range)(
         // clang-format off
         pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
-        pattern(i, ooo(subrange), _) = expr(false),
+        pattern(_, ooo, _)           = expr(false),
         pattern(_)                   = expr(true)
         // clang-format on
     );
@@ -35,5 +35,8 @@ int main()
 {
     std::cout << recursiveSymmetric(std::array<int32_t, 5>{5, 0, 3, 7, 10}) << std::endl;
     std::cout << recursiveSymmetric(std::array<int32_t, 5>{5, 0, 3, 0, 5}) << std::endl;
+    std::cout << recursiveSymmetric(std::array<int32_t, 4>{5, 0, 0, 5}) << std::endl;
+    std::cout << recursiveSymmetric(std::array<int32_t, 4>{5, 0, 0, 4}) << std::endl;
+    std::cout << recursiveSymmetric(std::array<int32_t, 4>{5, 1, 0, 5}) << std::endl;
     return 0;
 }

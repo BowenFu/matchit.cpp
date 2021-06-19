@@ -52,6 +52,7 @@ class NumAsPointer
 public:
     constexpr auto operator()(Num const &num) const
     {
+        // print to make sure the customization point does work.
         // std::cout << "custom as pointer." << std::endl;
         return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
     }
