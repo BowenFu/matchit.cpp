@@ -125,6 +125,18 @@ TEST(Ds, FailDueToTwoFewValues)
   EXPECT_FALSE(matched(std::vector<int32_t>{123, 456, 789}, ds(123, ooo, 456, 456, 789)));
 }
 
+TEST(Ds, listOooBinder4)
+{
+  Id<SubrangeT<std::list<int32_t>>> subrange;
+  match(std::list<int32_t>{123, 456, 789})(
+      pattern(123, ooo(subrange)) = [&]
+      {
+        EXPECT_EQ((*subrange).size(), 2);
+        // EXPECT_EQ((*subrange)[0], 456);
+        // EXPECT_EQ((*subrange)[1], 789);
+      });
+}
+
 TEST(Ds, arrayOooBinder1)
 {
   auto const array = std::array<int32_t, 2>{123, 456};
