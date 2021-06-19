@@ -179,7 +179,7 @@ TEST(Ds, arrayOooBinder5)
 {
   Id<SubrangeT<std::array<int32_t, 2>>> subrange;
   Id<int32_t> e;
-  match(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123})(
+  match(std::make_tuple(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123}))(
       // move head to end
       pattern(ds(e, ooo(subrange)), ds(ooo(subrange), e)) = [&]
       {

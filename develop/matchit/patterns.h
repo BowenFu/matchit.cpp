@@ -1160,18 +1160,18 @@ namespace matchit
                 using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Ps>::template AppResultTuple<Vs>>()...));
             };
 
-            template <std::size_t nbOoos, bool isConst, typename ValueTuple>
+            template <std::size_t nbOoos, typename ValueTuple>
             class AppResultForTupleHelper;
 
-            template <bool isConst, typename... Values>
-            class AppResultForTupleHelper<0, isConst, std::tuple<Values...>>
+            template <typename... Values>
+            class AppResultForTupleHelper<0, std::tuple<Values...>>
             {
             public:
                 using type = decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Values>>()...));
             };
 
-            template <bool isConst, typename... Values>
-            class AppResultForTupleHelper<1, isConst, std::tuple<Values...>>
+            template <typename... Values>
+            class AppResultForTupleHelper<1, std::tuple<Values...>>
             {
                 constexpr static auto idxOoo = findOooIdx<typename Ds<Patterns...>::Type>();
                 // static_assert(!isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>);
@@ -1180,8 +1180,7 @@ namespace matchit
                 constexpr static auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
                 // <0, ...int32_t> to workaround compile failure for std::tuple<>.
                 using ElemT = std::tuple_element_t<0, std::tuple<std::remove_reference_t<Values>..., int32_t>>;
-                using PtrT = std::conditional_t<isConst, ElemT const *, ElemT *>;
-                using OooResultTuple = typename std::conditional<isBinder, std::tuple<Subrange<PtrT>>, std::tuple<>>::type;
+                using OooResultTuple = typename std::conditional<isBinder, std::tuple<Subrange<ElemT*>>, std::tuple<>>::type;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
                 using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
                 constexpr static auto diff = sizeof...(Values) - sizeof...(Patterns);
@@ -1194,7 +1193,7 @@ namespace matchit
 
             // TODO fix me.
             template <typename Tuple>
-            using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, std::is_const_v<std::remove_reference_t<Tuple>>, decltype(drop<0>(std::declval<Tuple>()))>::type;
+            using AppResultForTuple = typename AppResultForTupleHelper<nbOooOrBinder, decltype(drop<0>(std::declval<Tuple>()))>::type;
 
             template <typename RangeType>
             using RangeTuple = std::conditional_t<nbOooOrBinder == 1, std::tuple<SubrangeT<RangeType>>, std::tuple<>>;
