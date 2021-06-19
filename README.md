@@ -292,7 +292,7 @@ static_assert(symmetric(std::array<int32_t, 5>{5, 1, 3, 0, 5}) == false);
 
 ## Destructure Pattern
 
-We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and `std::vector` from the STL (including their variants).
+We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and all containers (`std::vector`, `std::list`, `std::set`, and so on) with `std::begin` and `std::end` supports. 
 We also support the Destructure Pattern for any types that define their own `get` function, (similar to `std::get` for `std::tuple`, `std::pair`, `std::array`).
 (It is not possible to overload a function in `std` namespace, we use ADL to look up available `get` functions for other types.)
 That is to say, in order to use Destructure Pattern for structs or classes, we need to define a `get` function for them inside the same namespace of the struct or the class. (`std::tuple_size` needs to be specialized as well.)
@@ -331,7 +331,25 @@ We suggest using this only for very short and simple functions.
 
 Also note that `eval` cannot be used for constant expression until C++20, where more STL functions get marked as constexpr.
 
-Different from other value types that can be matched against Ds patterns, `std::vector` is not a fixed size type. We support it since it can be useful. Other containers' support will be determined later based on actual use cases. This decision is made to align with Rust's pattern matching feature.
+Now let's take a look at our support for destructuring STL containers:
+```C++
+template <typename Range>
+constexpr bool recursiveSymmetric(Range const &range)
+{
+    Id<int32_t> i;
+    Id<SubrangeT<Range const>> subrange;
+    return match(range)(
+        pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
+        pattern(i, ooo(subrange), _) = expr(false),
+        pattern(_)                   = expr(true)
+    );
+}
+```
+
+Given a range (or a container), we can check it is symmetric via recursive calls.
+`SubrangeT` is a trait function and it will return the subrange type based on a given range / container.
+We defined a `Subrange` class template (similar to what we will have in C++20) to make binding ooo patterns possible.
+When upgrading to C++20, we will replace the class with `std::ranges::subrange`.
 
 ## Match Guard
 
