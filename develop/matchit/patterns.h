@@ -1,10 +1,8 @@
 #ifndef MATCHIT_PATTERNS_H
 #define MATCHIT_PATTERNS_H
 
-#include <memory>
 #include <tuple>
 #include <functional>
-#include <vector>
 #include <variant>
 #include <array>
 #include <type_traits>
@@ -1168,7 +1166,6 @@ namespace matchit
 
         static_assert(!isRangeV<std::pair<int32_t, char>>);
         static_assert(isRangeV<const std::array<int32_t, 5>>);
-        static_assert(isRangeV<const std::vector<int32_t>>);
 
         template <typename... Patterns>
         class PatternTraits<Ds<Patterns...>>

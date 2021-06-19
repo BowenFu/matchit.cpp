@@ -19,15 +19,17 @@
 
 ## Features
 
-- Header-only library.
+- Single header library.
 - Macro-free APIs.
+- No heap memory allocation.
 - Composable patterns.
+- Extensible, users can define their own patterns, either via composing existent ones, or create brand new ones.
+- Support destructing tuple-like and range-like containers.
 - Partial support for constant expression.
-- Users can define their own patterns, either via composing existent ones, or create brand new ones.
 
 ## Related Work
 
-`match(it)` is influenced by multiple related work
+`match(it)` syntax / pattern designs are heavily influenced by these related work
 
 - [mpark/patterns](https://github.com/mpark/patterns)
 - [Racket Pattern Matching](https://docs.racket-lang.org/reference/match.html)

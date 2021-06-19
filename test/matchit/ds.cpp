@@ -5,6 +5,8 @@
 
 using namespace matchit;
 
+static_assert(impl::isRangeV<const std::vector<int32_t>>);
+
 TEST(Ds, matchTuple)
 {
   EXPECT_TRUE(matched(std::make_tuple("123", 123), ds("123", 123)));
