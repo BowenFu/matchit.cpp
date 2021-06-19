@@ -395,6 +395,12 @@ namespace matchit
             return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
         }
 
+        template <typename K1, typename V1, typename K2, typename V2>
+        auto operator==(std::pair<K1, V1> const& t, std::pair<K2, V2> const& u)
+        {
+        return t.first == u.first && t.second == u.second;
+        }
+
         template <typename T, typename... Ts>
         class WithinTypes
         {
