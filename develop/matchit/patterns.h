@@ -17,6 +17,61 @@ namespace matchit
         template <typename... Ts>
         class Debug;
 
+        template <typename I, typename S = I>
+        class Subrange
+        {
+            I mBegin;
+            S mEnd;
+
+        public:
+            constexpr Subrange(I const begin, S const end)
+                : mBegin{begin}, mEnd{end}
+            {
+            }
+
+            constexpr Subrange(Subrange const& other)
+                : mBegin{other.begin()}
+                , mEnd{other.end()}
+            {
+            }
+
+            Subrange& operator=(Subrange const& other)
+            {
+                mBegin = other.begin();
+                mEnd = other.end();
+                return *this;
+            }
+
+            size_t size() const
+            {
+                return static_cast<size_t>(std::distance(mBegin, mEnd));
+            }
+            auto begin() const
+            {
+                return mBegin;
+            }
+            auto end() const
+            {
+                return mEnd;
+            }
+        };
+
+        template <typename I, typename S>
+        constexpr auto makeSubrange(I begin, S end)
+        {
+            return Subrange<I, S>{begin, end};
+        }
+
+        template <typename RangeType>
+        using SubrangeT = decltype(makeSubrange(std::begin(std::declval<RangeType&>()), std::begin(std::declval<RangeType&>())));
+
+        template <typename I, typename S>
+        bool operator==(Subrange<I, S> const &lhs, Subrange<I, S> const &rhs)
+        {
+            using std::operator==;
+            return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+        }
+
         template <typename T, typename... Ts>
         class WithinTypes
         {
@@ -860,61 +915,6 @@ namespace matchit
         constexpr auto ds(Patterns const &...patterns) -> Ds<Patterns...>
         {
             return Ds<Patterns...>{patterns...};
-        }
-
-        template <typename I, typename S = I>
-        class Subrange
-        {
-            I mBegin;
-            S mEnd;
-
-        public:
-            constexpr Subrange(I const begin, S const end)
-                : mBegin{begin}, mEnd{end}
-            {
-            }
-
-            constexpr Subrange(Subrange const& other)
-                : mBegin{other.begin()}
-                , mEnd{other.end()}
-            {
-            }
-
-            Subrange& operator=(Subrange const& other)
-            {
-                mBegin = other.begin();
-                mEnd = other.end();
-                return *this;
-            }
-
-            size_t size() const
-            {
-                return static_cast<size_t>(std::distance(mBegin, mEnd));
-            }
-            auto begin() const
-            {
-                return mBegin;
-            }
-            auto end() const
-            {
-                return mEnd;
-            }
-        };
-
-        template <typename I, typename S>
-        constexpr auto makeSubrange(I begin, S end)
-        {
-            return Subrange<I, S>{begin, end};
-        }
-
-        template <typename RangeType>
-        using SubrangeT = decltype(makeSubrange(std::begin(std::declval<RangeType&>()), std::begin(std::declval<RangeType&>())));
-
-        using std::operator==;
-        template <typename I, typename S>
-        bool operator==(Subrange<I, S> const &lhs, Subrange<I, S> const &rhs)
-        {
-            return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
         }
 
         template <typename T>
