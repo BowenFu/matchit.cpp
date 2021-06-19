@@ -218,6 +218,16 @@ TEST(Id, AppToId5)
   EXPECT_EQ(*result, 11);
 }
 
+TEST(Id, AppToId5Plus)
+{
+  Id<std::unique_ptr<int32_t>> ii, jj;
+  auto const result = match(std::make_unique<int32_t>(11))(
+      pattern(and_(ii, jj)) = [&]
+      // { return ii.move(); });
+      { return **ii; });
+  EXPECT_EQ(result, 11);
+}
+
 TEST(Id, AppToId6)
 {
   Id<std::unique_ptr<int32_t>> ii;

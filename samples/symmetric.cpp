@@ -32,7 +32,7 @@ static_assert(symmetricArray(std::array<int32_t, 5>{5, 0, 3, 7, 10}) == false);
 static_assert(symmetricArray(std::array<int32_t, 5>{5, 0, 3, 0, 5}) == true);
 static_assert(symmetricArray(std::array<int32_t, 5>{5, 1, 3, 0, 5}) == false);
 
-int main()
+int32_t main()
 {
     std::cout << recursiveSymmetric(std::array<int32_t, 5>{5, 0, 3, 7, 10}) << std::endl;
     std::cout << recursiveSymmetric(std::array<int32_t, 5>{5, 0, 3, 0, 5}) << std::endl;

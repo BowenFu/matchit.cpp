@@ -24,7 +24,7 @@ constexpr auto result = eval(std::make_tuple('*', 5, 6));
 static_assert(result == 30);
 #endif
 
-int main()
+int32_t main()
 {
     std::cout << eval(std::make_tuple('*', 5, 6)) << std::endl;
     return 0;

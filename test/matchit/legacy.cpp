@@ -29,7 +29,7 @@ TEST(Match, test1)
 {
     auto const matchFunc = [](int32_t input)
     {
-        Id<int> ii;
+        Id<int32_t> ii;
         return match(input)(
             pattern(1) = func1,
             pattern(2) = func2,
@@ -57,8 +57,8 @@ TEST(Match, test2)
 {
     auto const matchFunc = [](auto &&input)
     {
-        Id<int> i;
-        Id<int> j;
+        Id<int32_t> i;
+        Id<int32_t> j;
         return match(input)(
             pattern('/', 1, 1) = expr(1),
             pattern('/', 0, _) = expr(0),
@@ -76,8 +76,8 @@ TEST(Match, test2)
 
 struct A
 {
-    int a;
-    int b;
+    int32_t a;
+    int32_t b;
 };
 bool operator==(A const lhs, A const rhs)
 {
@@ -88,9 +88,9 @@ TEST(Match, test3)
 {
     auto const matchFunc = [](A const &input)
     {
-        Id<int> i;
+        Id<int32_t> i;
         // compose patterns for destructuring struct A.
-        auto const dsA = [](Id<int> &x)
+        auto const dsA = [](Id<int32_t> &x)
         {
             return and_(app(&A::a, x), app(&A::b, 1));
         };
@@ -270,7 +270,7 @@ TEST(Match, test9)
     EXPECT_EQ(optional(std::optional<int32_t>{}), false);
     int32_t *p = nullptr;
     EXPECT_EQ(optional(p), false);
-    int a = 3;
+    int32_t a = 3;
     EXPECT_EQ(optional(&a), true);
 }
 
@@ -334,9 +334,9 @@ TEST(Match, test11)
 
 TEST(Match, test12)
 {
-    EXPECT_TRUE(matched(std::array<int, 2>{1, 2}, ds(ooo, _)));
-    EXPECT_TRUE(matched(std::array<int, 3>{1, 2, 3}, ds(ooo, _)));
-    EXPECT_TRUE(matched(std::array<int, 2>{1, 2}, ds(ooo, _)));
+    EXPECT_TRUE(matched(std::array<int32_t, 2>{1, 2}, ds(ooo, _)));
+    EXPECT_TRUE(matched(std::array<int32_t, 3>{1, 2, 3}, ds(ooo, _)));
+    EXPECT_TRUE(matched(std::array<int32_t, 2>{1, 2}, ds(ooo, _)));
 }
 
 template <size_t I>
@@ -364,7 +364,7 @@ TEST(Match, test13)
 {
     auto const dsAgg = [](auto const &v)
     {
-        Id<int> i;
+        Id<int32_t> i;
         return match(v)(
             pattern(1, i) = expr(i),
             pattern(_, i) = expr(i));
@@ -468,7 +468,7 @@ TEST(Match, test19)
 {
     auto const matchFunc = [](auto &&input)
     {
-        Id<int> j;
+        Id<int32_t> j;
         return match(input)(
             // `... / 2 3`
             pattern(ooo, '/', 2, 3) = expr(1),
@@ -481,9 +481,9 @@ TEST(Match, test19)
             // `3 3 3 3 ..` all 3
             pattern(ooo) = expr(333),
 
-            // `... int 3`
+            // `... int32_t 3`
             pattern(ooo, j, 3) = expr(7),
-            // `... int 3`
+            // `... int32_t 3`
             pattern(ooo, or_(j), 3) = expr(8),
 
             // `...`

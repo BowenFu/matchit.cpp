@@ -14,7 +14,7 @@ constexpr int32_t gcd(int32_t a, int32_t b)
 
 static_assert(gcd(12, 6) == 6);
 
-int main()
+int32_t main()
 {
     std::cout << gcd(12, -15) << std::endl;
     return 0;

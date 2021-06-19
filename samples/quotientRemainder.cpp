@@ -32,7 +32,7 @@ constexpr auto qrResult2 = quoRem(12, -5);
 static_assert(qrResult2[0]== -2);
 static_assert(qrResult2[1]== 2);
 
-int main()
+int32_t main()
 {
     auto const result = quoRem(12, 7);
     std::cout << result[0] << "\t" << result[1] << std::endl;

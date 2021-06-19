@@ -2,7 +2,7 @@
 #include "matchit.h"
 #include <iostream>
 
-constexpr bool sumIs(std::array<int32_t, 2> const &arr, int s)
+constexpr bool sumIs(std::array<int32_t, 2> const &arr, int32_t s)
 {
     using namespace matchit;
     Id<int32_t> i, j;
@@ -16,7 +16,7 @@ constexpr bool sumIs(std::array<int32_t, 2> const &arr, int s)
 
 static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));
 
-int main()
+int32_t main()
 {
     std::cout << sumIs(std::array<int32_t, 2>{5, 6}, 11) << std::endl;
     return 0;

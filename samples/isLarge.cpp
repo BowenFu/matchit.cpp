@@ -15,7 +15,7 @@ constexpr bool isLarge(double value)
 // app with projection returning scalar types is supported by constexpr match.
 static_assert(isLarge(100));
 
-int main()
+int32_t main()
 {
     std::cout << isLarge(10) << std::endl;
     return 0;

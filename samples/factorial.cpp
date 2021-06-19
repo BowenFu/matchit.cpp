@@ -15,7 +15,7 @@ constexpr int32_t factorial(int32_t n)
 
 static_assert(factorial(3) == 6);
 
-int main()
+int32_t main()
 {
     std::cout << factorial(10) << std::endl;
     return 0;

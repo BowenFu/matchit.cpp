@@ -15,7 +15,7 @@ constexpr double relu(double value)
 static_assert(relu(5) == 5);
 static_assert(relu(-5) == 0);
 
-int main()
+int32_t main()
 {
     std::cout << relu(3) << std::endl;
     return 0;

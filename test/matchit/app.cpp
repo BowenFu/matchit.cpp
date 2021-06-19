@@ -5,14 +5,14 @@ using namespace matchit;
 class Base
 {
 public:
-  virtual int index() const = 0;
+  virtual int32_t index() const = 0;
   virtual ~Base() = default;
 };
 
 class Derived : public Base
 {
 public:
-  int index() const override
+  int32_t index() const override
   {
     return 1;
   }

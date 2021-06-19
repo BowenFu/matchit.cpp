@@ -20,7 +20,7 @@ constexpr bool checkAndlogLarge(double value)
 // comment out std::cout then uncomment this.
 // static_assert(checkAndlogLarge(100));
 
-int main()
+int32_t main()
 {
     std::cout << checkAndlogLarge(100) << std::endl;
     return 0;

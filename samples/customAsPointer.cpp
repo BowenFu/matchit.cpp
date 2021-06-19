@@ -67,7 +67,7 @@ class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
 {
 };
 
-constexpr int staticCastAs(Num const &input)
+constexpr int32_t staticCastAs(Num const &input)
 {
     using namespace matchit;
     return match(input)(
@@ -85,7 +85,7 @@ static_assert(staticCastAs(One{}) == 1);
 #endif
 #endif
 
-int main()
+int32_t main()
 {
     std::cout << staticCastAs(One{}) << std::endl;
     return 0;

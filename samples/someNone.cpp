@@ -17,7 +17,7 @@ constexpr auto square(std::optional<T> const &t)
 constexpr auto x = std::make_optional(5);
 static_assert(square(x) == 25);
 
-int main()
+int32_t main()
 {
     auto t = std::make_optional(3);
     std::cout << square(t) << std::endl;
