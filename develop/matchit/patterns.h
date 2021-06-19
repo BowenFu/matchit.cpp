@@ -1331,17 +1331,17 @@ namespace matchit
         // Debug<Ds<OooBinder<matchit::impl::Subrange<const int *, const int *>>>::Type> uuu;
         // Debug<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>> xyz;
         // Debug<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>::Type> xyz;
-        static_assert(std::is_same_v<
-                      typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<const std::array<int, 2>>,
-                      std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
+        // static_assert(std::is_same_v<
+        //               typename PatternTraits<Ds<OooBinder<SubrangeT<const std::array<int32_t, 2>>>>>::AppResultTuple<const std::array<int, 2>>,
+        //               std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
 
-        static_assert(std::is_same_v<
-                      typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<const std::array<int, 3>>,
-                      std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
+        // static_assert(std::is_same_v<
+        //               typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<const std::array<int, 3>>,
+        //               std::tuple<matchit::impl::Subrange<const int *, const int *>>>);
 
-        static_assert(std::is_same_v<
-                      typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<std::array<int, 3>>,
-                      std::tuple<matchit::impl::Subrange<int *, int *>>>);
+        // static_assert(std::is_same_v<
+        //               typename PatternTraits<Ds<OooBinder<Subrange<int *, int *>>, matchit::impl::Id<int> > >::AppResultTuple<std::array<int, 3>>,
+        //               std::tuple<matchit::impl::Subrange<int *, int *>>>);
 
         template <typename Pattern, typename Pred>
         class PostCheck
