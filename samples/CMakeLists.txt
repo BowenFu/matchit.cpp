@@ -23,6 +23,7 @@ Identifier-pattern
 Wildcard-pattern
 Rest-pattern
 Range-pattern
+Reference-pattern
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
