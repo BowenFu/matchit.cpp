@@ -499,41 +499,48 @@ match t {
 In C++ with `match(it)`:
 
 ```C++
-struct Point {
-    uint32 x;
-    uint32 y;
-}
-constexpr auto s = Point{.x = 1, .y = 1};
-
-match(s)(
-    pattern(and_(app(&Point::x, 10), app(&Point::y, 20))) = []{},
-    pattern(and_(app(&Point::y, 10), app(&Point::x, 20))) = []{},    // order doesn't matter
-    pattern(app(&Point::x, 10))                           = []{},
-    pattern(_)                                            = []{}
-)
-
-using PointTuple = std::tuple<uint32_t, uint32_t>;
+#include <iostream>
+#include "matchit.h"
+using namespace matchit;
 
 template <size_t I>
-constexpr auto get = [](auto && pt)
+constexpr auto get = [](auto &&pt)
 {
     return std::get<I>(pt);
 };
 
 template <size_t I>
-constexpr auto appGet = [](auto&& pat)
+constexpr auto appGet = [](auto &&pat)
 {
     return app(get<I>, pat);
 };
 
-constexpr auto t = PointTuple{1, 2};
+void sample()
+{
+    struct Point
+    {
+        uint32_t x;
+        uint32_t y;
+    };
+    constexpr auto s = Point{1U, 1U};
 
-match(t)( 
-    pattern(and_(appGet<0>(10), appGet<1>(20))) = []{},
-    pattern(and_(appGet<1>(10), appGet<0>(20))) = []{},   // order doesn't matter
-    pattern(appGet<0>(10))                      = []{},
-    pattern(_)                                  = []{}
-);
+    match(s)(
+        pattern(and_(app(&Point::x, 10U), app(&Point::y, 20U))) = []{},
+        pattern(and_(app(&Point::y, 10U), app(&Point::x, 20U))) = []{},    // order doesn't matter
+        pattern(app(&Point::x, 10U))                            = []{},
+        pattern(_)                                              = []{}
+    );
+
+    using PointTuple = std::tuple<uint32_t, uint32_t>;
+    constexpr auto t = PointTuple{1U, 2U};
+
+    match(t)(
+        pattern(and_(appGet<0>(10U), appGet<1>(20U))) = []{},
+        pattern(and_(appGet<1>(10U), appGet<0>(20U))) = []{},   // order doesn't matter
+        pattern(appGet<0>(10U))                      = []{},
+        pattern(_)                                  = []{}
+    );
+}
 ```
 
 ### Tuple struct patterns

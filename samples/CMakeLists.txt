@@ -24,6 +24,7 @@ Wildcard-pattern
 Rest-pattern
 Range-pattern
 Reference-pattern
+Struct-pattern
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
