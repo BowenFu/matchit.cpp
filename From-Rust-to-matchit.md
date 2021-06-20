@@ -569,28 +569,6 @@ match(pair)(
 );
 ```
 
-### Grouped patterns
-
-In Rust:
-
-```Rust
-let int_reference = &3;
-match int_reference {
-    &(0..=5) => (),
-    _ => (),
-}
-```
-
-In C++ with `match(it)`:
-
-```C++
-auto const int_reference = &3;
-match(int_reference)( 
-    pattern(or_(&0, &1, &2, &3, &4, &5)) = []{},
-    pattern(_)                           = []{}
-);
-```
-
 ### Slice patterns
 
 In Rust:

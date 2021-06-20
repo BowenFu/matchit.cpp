@@ -25,6 +25,8 @@ Rest-pattern
 Range-pattern
 Reference-pattern
 Struct-pattern
+Tuple-struct-pattern
+Slice-pattern
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
