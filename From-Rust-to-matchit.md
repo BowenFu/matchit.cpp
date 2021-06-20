@@ -588,10 +588,10 @@ In C++ with `match(it)`:
 // Fixed size
 constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
 Id<int32_t> a, b, c;
-match(arr){
+match(arr)( 
     pattern(1, _, _) = expr("starts with one"),
     pattern(a, b, c) = expr("starts with something else")
-};
+);
 ```
 
 In Rust:
