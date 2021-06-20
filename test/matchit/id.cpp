@@ -245,7 +245,6 @@ TEST(Id, AppToId5PlusPro)
   EXPECT_EQ(*result, 11);
 }
 
-#if 0 // negative tests, not supported on some platforms.
 TEST(Id, AppToId5PlusProNegative)
 {
   auto const invalidMove = []
@@ -255,9 +254,8 @@ TEST(Id, AppToId5PlusProNegative)
       pattern(and_(ii, jj)) = [&]
       { return jj.move(); });
   };
-  EXPECT_EXIT((invalidMove(), exit(0)), testing::KilledBySignal(SIGSEGV), ".*");
+  EXPECT_THROW(invalidMove(), std::logic_error);
 }
-#endif
 
 TEST(Id, AppToId6)
 {
@@ -290,4 +288,23 @@ TEST(Id, AppToId8)
           ii)) = [&]
       { return ii.move(); });
   EXPECT_EQ(*result, 11);
+}
+
+TEST(Id, IdAtInt)
+{
+  Id<int32_t> ii;
+  auto const result = match(11)(
+      pattern(app(_ * _, ii.at(121))) = expr(ii));
+  EXPECT_EQ(result, 121);
+}
+
+TEST(Id, IdAtUnique)
+{
+  Id<std::unique_ptr<int32_t>> ii;
+  auto const result = match(11)(
+      pattern(app([](auto &&x)
+                  { return std::make_unique<int32_t>(x * x); },
+                  ii.at(some(_)))) = [&]
+      { return ii.move(); });
+  EXPECT_EQ(*result, 121);
 }

@@ -1,66 +1,80 @@
 #include <iostream>
 #include "matchit.h"
 
-struct A
+struct DummyStruct
 {
-    int32_t a;
-    char const *b;
+    int32_t size;
+    char const *name;
 };
-constexpr bool operator==(A const &lhs, A const &rhs)
+constexpr bool operator==(DummyStruct const &lhs, DummyStruct const &rhs)
 {
-    return lhs.a == rhs.a && lhs.b == rhs.b;
+    return lhs.size == rhs.size && lhs.name == rhs.name;
 }
 
 template <size_t I>
-constexpr auto const &get(A const &a)
+constexpr auto const &get(DummyStruct const &d)
 {
     if constexpr (I == 0)
     {
-        return a.a;
+        return d.size;
     }
     else if constexpr (I == 1)
     {
-        return a.b;
-    }
-}
-
-template <size_t I>
-constexpr auto &&get(A &&a)
-{
-    if constexpr (I == 0)
-    {
-        return std::move(a.a);
-    }
-    else if constexpr (I == 1)
-    {
-        return std::move(a.b);
+        return d.name;
     }
 }
 
 namespace std
 {
     template <>
-    class tuple_size<A> : public std::integral_constant<size_t, 2>
+    class tuple_size<DummyStruct> : public std::integral_constant<size_t, 2>
     {
     };
 } // namespace std
 
-template <typename T>
-constexpr auto getSecond(T &&v)
+constexpr auto getSecond(DummyStruct const&d)
 {
     using namespace matchit;
     Id<char const *> i;
-    return match(std::forward<T>(v))(
+    return match(d)(
+        // clang-format off
         pattern(2, i) = expr(i),
-        pattern(_, i) = expr(i));
+        pattern(_)    = expr("not matched")
+        // clang-format on
+    );
 }
 
 // #if __cplusplus > 201703L
-static_assert(getSecond(A{1, "123"}) == std::string_view{"123"});
+static_assert(getSecond(DummyStruct{1, "123"}) == std::string_view{"not matched"});
+static_assert(getSecond(DummyStruct{2, "123"}) == std::string_view{"123"});
 // #endif
+
+// Another option to destructure your struct / class.
+constexpr auto dsByMember(DummyStruct const&v)
+{
+    using namespace matchit;
+    // compose patterns for destructuring struct DummyStruct.
+    constexpr auto dsA = [](auto && x, auto && y)
+    {
+        return and_(app(&DummyStruct::size, x), app(&DummyStruct::name, y));
+    };
+    Id<char const*> i;
+    return match(v)(
+        // clang-format off
+        pattern(dsA(2, i)) = expr(i),
+        pattern(_) = expr("not matched")
+        // clang-format on
+    );
+}
+
+static_assert(dsByMember(DummyStruct{1, "123"}) == std::string_view{"not matched"});
+static_assert(dsByMember(DummyStruct{2, "123"}) == std::string_view{"123"});
 
 int32_t main()
 {
-    std::cout << getSecond(A{1, "123"}) << std::endl;
+    std::cout << getSecond(DummyStruct{1, "123"}) << std::endl;
+    std::cout << dsByMember(DummyStruct{1, "123"}) << std::endl;
+    std::cout << getSecond(DummyStruct{2, "123"}) << std::endl;
+    std::cout << dsByMember(DummyStruct{2, "123"}) << std::endl;
     return 0;
 }

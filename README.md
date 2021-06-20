@@ -209,7 +209,7 @@ bool checkAndlogLarge(double value)
     using namespace matchit;
     Id<double> s;
     return match(value)(
-        pattern(app(_ * _, and_(_ > 1000, s))) = [&] {
+        pattern(app(_ * _, s.at(_ > 1000))) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
         pattern(_) = expr(false));
@@ -223,9 +223,7 @@ But don't be upset. This added verbosity makes it possible for us to **use varia
 Here `*` operator is used to dereference the value inside identifiers.
 One thing to note is that identifiers are only valid inside `match` scope. Do not try to dereference it outside.
 
-Note that we used `and_` here to bind a value to the identifier under some conditions on the value.
-This practice can achieve the functionality of **`@` pattern** in Rust.
-We recommend **always put your identifiers at the end of And pattern**. It is like saying that bind the value to the identifier only when all previous patterns / conditions get met. (For Or pattern, you may get better perf since we `std::forward` the subject value for the last subpattern).
+`Id::at` is similar to the **`@` pattern** in Rust, i.e., bind the value when the subpattern gets matched.
 
 Also note when the same identifier is bound multiple times, the bound values must equal to each other via `operator==`.
 An sample to check if an array is symmetric:
@@ -247,7 +245,7 @@ static_assert(symmetric(std::array<int32_t, 5>{5, 0, 3, 0, 5}) == true);
 static_assert(symmetric(std::array<int32_t, 5>{5, 1, 3, 0, 5}) == false);
 ```
 
-### Hello Solar System!
+### Hello Mars!
 
 Now we come to the most powerful parts: **Destructure Pattern**.
 Destructure Pattern can be used for `std::tuple`, `std::pair`, `std::array` (fixed-sized containers), and dynamic containers or sized ranges(`std::vector`, `std::list`, `std::set`, and so on) with `std::begin` and `std::end` supports. 
@@ -277,6 +275,30 @@ constexpr auto eval(std::tuple<char, T1, T2> const& expr)
 ```
 
 Some operators have been overloaded for `Id`, so `i + j` will return a nullary function that return the value of `*i + *j`.
+
+There also ways to destructure your struct / class, make your struct / class tuple-like or adopt App Pattern.
+The second option looks like
+
+```C++
+// Another option to destructure your struct / class.
+constexpr auto dsByMember(DummyStruct const&v)
+{
+    using namespace matchit;
+    // compose patterns for destructuring struct DummyStruct.
+    constexpr auto dsA = [](auto && x, auto && y)
+    {
+        return and_(app(&DummyStruct::size, x), app(&DummyStruct::name, y));
+    };
+    Id<char const*> name;
+    return match(v)(
+        pattern(dsA(2, name)) = expr(name),
+        pattern(_) = expr("not matched")
+    );
+};
+
+static_assert(dsByMember(DummyStruct{1, "123"}) == std::string_view{"not matched"});
+static_assert(dsByMember(DummyStruct{2, "123"}) == std::string_view{"123"});
+```
 
 Let's continue the journey. 
 Sometimes you have multiple identifiers and you want exert a restriction on the relationship of them. Is that possible?
@@ -352,7 +374,7 @@ In the first pattern, we require that the head equals to the end. and if that is
 Once some nested call fails to meet that requirement (fall through to the second pattern), the checking fails.
 Otherwise when there are only one element left or the range size is zero, the last pattern gets matched, we return true.
 
-### Hello Milky Way!
+### Hello Sun!
 
 We've done with our core patterns. Now let's start the journey of **composing patterns**.
 
@@ -371,7 +393,7 @@ constexpr auto square(std::optional<T> const& t)
     Id<T> id;
     return match(t)(
         pattern(some(id)) = id * id,
-        pattern(none) = expr(0));
+        pattern(none)     = expr(0));
 }
 constexpr auto x = std::make_optional(5);
 static_assert(square(x) == 25);
@@ -400,7 +422,7 @@ constexpr auto none = app(cast<bool>, false);
 For Some pattern, first we cast the value to a boolean value, if the boolean value is true, we can further dereference it. Otherwise, the match fails.
 For None pattern we simply check if the converted boolean value is false.
 
-**As pattern** is very useful for handling `sum type`, including base / derived classes, `std::variant`, and `std::any`.
+**As pattern** is very useful for handling `sum type`, including class hierarchies, `std::variant`, and `std::any`.
 `std::variant` and `std::any` can be visited as
 
 ```C++
@@ -419,7 +441,8 @@ constexpr std::variant<int32_t, char const*> v = 123;
 static_assert(getClassName(v) == std::string_view{"int"});
 ```
 
-Base / derived classes can be visited as
+Class hierarchies can be matched as
+
 ```C++
 struct Shape
 {
@@ -519,7 +542,7 @@ int main()
 }
 ```
 
-### Hello Laniakea!
+### Hello Milky Way!
 
 There is additional **Customziation Point**.
 

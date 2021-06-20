@@ -262,7 +262,7 @@ TEST(Match, test9)
         Id<int32_t> x;
         return match(i)(
             pattern(some(x)) = expr(true),
-            pattern(none) = expr(false));
+            pattern(none)    = expr(false));
     };
     EXPECT_EQ(optional(std::make_unique<int32_t>(2)), true);
     EXPECT_EQ(optional(std::unique_ptr<int32_t>{}), false);
