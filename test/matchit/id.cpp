@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <optional>
+#include <signal.h>
 #include "matchit.h"
 using namespace matchit;
 
@@ -254,7 +255,7 @@ TEST(Id, AppToId5PlusProNegative)
       pattern(and_(ii, jj)) = [&]
       { return jj.move(); });
   };
-  EXPECT_EXIT((invalidMove(), exit(0)), ::testing::KilledBySignal(SIGSEGV), ".*");
+  EXPECT_EXIT((invalidMove(), exit(0)), testing::KilledBySignal(SIGSEGV), ".*");
 }
 
 TEST(Id, AppToId6)
