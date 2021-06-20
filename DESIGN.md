@@ -149,6 +149,8 @@ match(value)(
 You have to define / declare the identifiers first then bind them inside patterns and access them in handlers.
 `expr(s)` is a short for `[&]{ return *s; }`, i.e., a function returning the value bound to the identifier.
 
+Identifier Pattern supports binding non-constructable (via reference), non-copyable (via reference or moving) types.
+
 ## Match Guard
 
 Match Guard exists in most related works. The current syntax is borrowed from `mpark/patterns`.
@@ -196,9 +198,35 @@ match(expr)(
 ```
 
 We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and containers / ranges that can be called with `std::begin` and `std::end`. 
-in order to use Destructure Pattern for structs or classes, we need to define a get function for them inside the same namespace of the struct or the class. (std::tuple_size needs to be specialized as well.)
 Mismatch of element numbers is a compile error for fixed-size containers.
 Mismatch of element numbers is just a mismatch for dynamic containers, neither a compile error, nor a runtime error.
+
+There are also ways to destructure your struct / class, make your struct / class tuple-like or adopt App Pattern.
+To achieve that, we need to define a `get` function for them inside the same namespace of the struct or the class. (`std::tuple_size` needs to be specialized as well.)
+Refer to `samples/customDs.cpp` for more details.
+
+The second option looks like
+
+```C++
+// Another option to destructure your struct / class.
+constexpr auto dsByMember(DummyStruct const&v)
+{
+    using namespace matchit;
+    // compose patterns for destructuring struct DummyStruct.
+    constexpr auto dsA = [](auto && x, auto && y)
+    {
+        return and_(app(&DummyStruct::size, x), app(&DummyStruct::name, y));
+    };
+    Id<char const*> name;
+    return match(v)(
+        pattern(dsA(2, name)) = expr(name),
+        pattern(_) = expr("not matched")
+    );
+};
+
+static_assert(dsByMember(DummyStruct{1, "123"}) == std::string_view{"not matched"});
+static_assert(dsByMember(DummyStruct{2, "123"}) == std::string_view{"123"});
+```
 
 ## Ooo Pattern
 
@@ -239,13 +267,13 @@ Their usage can be
 ```C++
 match(t)(
     pattern(some(id)) = id * id,
-    pattern(none) = expr(0));
+    pattern(none)     = expr(0));
 ```
 
 ## As Pattern
 
 As Pattern is also a composed pattern. The syntax is borrowed from `mpark/patterns`.
-It can be used to handle sum type, including base / derived classes, std::variant, and std::any. A simple sample can be
+It can be used to handle sum type, including class hierarchies, std::variant, and std::any. A simple sample can be
 
 ```C++
 match(v)(

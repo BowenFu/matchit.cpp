@@ -245,7 +245,6 @@ TEST(Id, AppToId5PlusPro)
   EXPECT_EQ(*result, 11);
 }
 
-#if 0 // negative tests, not supported on some platforms.
 TEST(Id, AppToId5PlusProNegative)
 {
   auto const invalidMove = []
@@ -255,9 +254,8 @@ TEST(Id, AppToId5PlusProNegative)
       pattern(and_(ii, jj)) = [&]
       { return jj.move(); });
   };
-  EXPECT_EXIT((invalidMove(), exit(0)), testing::KilledBySignal(SIGSEGV), ".*");
+  EXPECT_THROW(invalidMove(), std::logic_error);
 }
-#endif
 
 TEST(Id, AppToId6)
 {

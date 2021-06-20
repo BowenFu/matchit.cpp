@@ -305,7 +305,7 @@ namespace matchit
 #include <variant>
 #include <array>
 #include <type_traits>
-#include <cassert>
+#include <stdexcept>
 
 namespace matchit
 {
@@ -1071,8 +1071,7 @@ namespace matchit
                             },
                             [](std::monostate const &) -> Type const &
                             {
-                                assert(false && "invalid state!");
-                                return *reinterpret_cast<Type const *>(1);
+                                throw std::logic_error("invalid state!");
                             }),
                         mVariant);
                 }
@@ -1086,13 +1085,11 @@ namespace matchit
                             },
                             [](Type const *) -> Type &
                             {
-                                assert(false && "Cannot get mutableValue for pointer type!");
-                                return *reinterpret_cast<Type *>(1);
+                                throw std::logic_error("Cannot get mutableValue for pointer type!");
                             },
                             [](std::monostate &) -> Type &
                             {
-                                assert(false && "invalid state!");
-                                return *reinterpret_cast<Type *>(1);
+                                throw std::logic_error("Invalid state!");
                             }),
                         mVariant);
                 }
