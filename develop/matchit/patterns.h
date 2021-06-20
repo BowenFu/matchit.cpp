@@ -729,6 +729,11 @@ namespace matchit
             return Overload<Ts...>{ts...};
         }
 
+        template <typename Pattern>
+        class OooBinder;
+
+        class Ooo;
+
         template <typename Type>
         class Id
         {
@@ -848,6 +853,11 @@ namespace matchit
             constexpr auto at(Pattern&& pattern) const
             {
                 return and_(pattern, *this);
+            }
+
+            constexpr auto at(Ooo const&) const
+            {
+                return OooBinder<Type>{*this};
             }
 
             constexpr Block &block() const
