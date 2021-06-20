@@ -40,9 +40,9 @@ void sample2()
     match(color)(
         pattern(dsRGBA(red, green, blue, _)) = [&]
         {
-            assert(color.r == red);
-            assert(color.g == green);
-            assert(color.b == blue);
+            assert(color.r == *red);
+            assert(color.g == *green);
+            assert(color.b == *blue);
         });
 
     // accept any Some, with any value
