@@ -268,8 +268,8 @@ constexpr auto tuple = std::make_tuple(1, 2, 3, 4, 5);
 Id<int32_t> y, z;
 match(tuple)(  
     pattern(1, ooo, y, z) = [&] { std::cout << "y=" << *y << "z=" << *z << std::endl; },
-    pattern(ooo, 5)       = [&] { std::cout << "tail must be 5"},
-    pattern(ooo)          = [&] { std::cout << "matches everything else"}
+    pattern(ooo, 5)       = [&] { std::cout << "tail must be 5" << std::endl; },
+    pattern(ooo)          = [&] { std::cout << "matches everything else" << std::endl; }
 );
 ```
 
