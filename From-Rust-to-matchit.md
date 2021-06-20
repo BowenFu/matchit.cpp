@@ -7,6 +7,7 @@ Here we will give equivalent code sinppets using `match(it)` for most samples gi
 ### Literal patterns
 
 In Rust:
+
 ```Rust
 for i in -2..5 {
     match i {
@@ -19,6 +20,7 @@ for i in -2..5 {
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 for (auto i = -2; i <= 5; ++i)
 {
@@ -36,6 +38,7 @@ for (auto i = -2; i <= 5; ++i)
 ### Identifier patterns
 
 In Rust:
+
 ```Rust
 let x = 2;
 
@@ -46,6 +49,7 @@ match x {
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 constexpr auto x = 2;
 Id<int32_t> e;
@@ -56,6 +60,7 @@ match(x)(
 ```
 
 In Rust:
+
 ```Rust
 struct Person {
    name: String,
@@ -66,6 +71,7 @@ if let Person { name: ref person_name, age: 18..=150 } = value { }
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 struct Person {
    std::string name;
@@ -84,6 +90,7 @@ match(value)(
 ```
 
 In Rust:
+
 ```Rust
 let x: &Option<i32> = &Some(3);
 if let Some(y) = x {
@@ -92,6 +99,7 @@ if let Some(y) = x {
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 constexpr auto x = std::make_optional(3);
 Id<int32_t> y;
@@ -102,12 +110,14 @@ match(x)(
 ```
 
 In Rust:
+
 ```Rust
 // `name` is moved from person and `age` referenced
 let Person { name, ref age } = person;
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 Id<std::string> person_name;
 Id<uint8_t> age;
@@ -121,6 +131,7 @@ match(std::move(value))
 ### Wildcard pattern
 
 In Rust:
+
 ```Rust
 let x = 20;
 let (a, _) = (10, x);   // the x is always matched by _
@@ -148,6 +159,7 @@ if let Some(_) = x {}
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 constexpr auto x = 20;
 Id<int32_t> a;
@@ -196,6 +208,7 @@ match(x)(
 ### Rest patterns
 
 In Rust:
+
 ```Rust
 let words = vec!["a", "b", "c"];
 let slice = &words[..];
@@ -232,6 +245,7 @@ match tuple {
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 auto const words = std::vector<std::string>{"a", "b", "c"};
 auto const& slice = words;
@@ -276,7 +290,77 @@ match(tuple)(
 ### Range patterns
 
 In Rust:
+
 ```Rust
+let c = 'f';
+let valid_variable = match c {
+    'a'..='z' => true,
+    'A'..='Z' => true,
+    'α'..='ω' => true,
+    _ => false,
+};
+
+let ph = 10;
+println!("{}", match ph {
+    0..=6 => "acid",
+    7 => "neutral",
+    8..=14 => "base",
+    _ => unreachable!(),
+});
+
+// using paths to constants:
+const TROPOSPHERE_MIN : u8 = 6;
+const TROPOSPHERE_MAX : u8 = 20;
+
+const STRATOSPHERE_MIN : u8 = TROPOSPHERE_MAX + 1;
+const STRATOSPHERE_MAX : u8 = 50;
+
+const MESOSPHERE_MIN : u8 = STRATOSPHERE_MAX + 1;
+const MESOSPHERE_MAX : u8 = 85;
+
+let altitude = 70;
+
+println!("{}", match altitude {
+    TROPOSPHERE_MIN..=TROPOSPHERE_MAX => "troposphere",
+    STRATOSPHERE_MIN..=STRATOSPHERE_MAX => "stratosphere",
+    MESOSPHERE_MIN..=MESOSPHERE_MAX => "mesosphere",
+    _ => "outer space, maybe",
+});
+
+pub mod binary {
+    pub const MEGA : u64 = 1024*1024;
+    pub const GIGA : u64 = 1024*1024*1024;
+}
+let n_items = 20_832_425;
+let bytes_per_item = 12;
+if let size @ binary::MEGA..=binary::GIGA = n_items * bytes_per_item {
+    println!("It fits and occupies {} bytes", size);
+}
+
+trait MaxValue {
+    const MAX: u64;
+}
+impl MaxValue for u8 {
+    const MAX: u64 = (1 << 8) - 1;
+}
+impl MaxValue for u16 {
+    const MAX: u64 = (1 << 16) - 1;
+}
+impl MaxValue for u32 {
+    const MAX: u64 = (1 << 32) - 1;
+}
+// using qualified paths:
+println!("{}", match 0xfacade {
+    0 ..= <u8 as MaxValue>::MAX => "fits in a u8",
+    0 ..= <u16 as MaxValue>::MAX => "fits in a u16",
+    0 ..= <u32 as MaxValue>::MAX => "fits in a u32",
+    _ => "too big",
+});
+```
+
+In C++ with `match(it)`:
+
+```C++
 constexpr auto c = 'f';
 constexpr auto valid_variable = match(c)( 
     pattern('a' <= _ && _ <= 'z') = expr(true),
@@ -339,6 +423,7 @@ std::cout << match(0xfacade)(
 ```
 
 Tips: feel free to use variables in `match(it)`. You can write codes like
+
 ```C++
 // using variables:
 std::cout << match(0xfacade)( 
@@ -350,6 +435,7 @@ std::cout << match(0xfacade)(
 ### Reference patterns
 
 In Rust:
+
 ```Rust
 let int_reference = &3;
 
@@ -360,6 +446,7 @@ assert_eq!(a, b);
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 int32_t const* reference = &3;
 
@@ -381,6 +468,7 @@ assert(a == b);
 ### Struct patterns
 
 In Rust:
+
 ```Rust
 struct Point {
     x: u32,
@@ -410,6 +498,7 @@ match t {
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 struct Point {
     uint32 x;
@@ -451,6 +540,7 @@ match(t)(
 ### Tuple struct patterns
 
 In Rust:
+
 ```Rust
 let pair = (10, "ten");
 let (a, b) = pair;
@@ -460,6 +550,7 @@ assert_eq!(b, "ten");
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 constexpr auto pair = std::make_pair(10, "ten");
 Id<int32_t> a;
@@ -475,6 +566,7 @@ match(pair)(
 ### Grouped patterns
 
 In Rust:
+
 ```Rust
 let int_reference = &3;
 match int_reference {
@@ -484,6 +576,7 @@ match int_reference {
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 auto const int_reference = &3;
 match(int_reference)( 
@@ -495,6 +588,7 @@ match(int_reference)(
 ### Slice patterns
 
 In Rust:
+
 ```Rust
 // Fixed size
 let arr = [1, 2, 3];
@@ -505,6 +599,7 @@ match arr {
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 // Fixed size
 constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
@@ -516,6 +611,7 @@ match(arr){
 ```
 
 In Rust:
+
 ```Rust
 // Dynamic size
 let v = vec![1, 2, 3];
@@ -527,6 +623,7 @@ match v[..] {
 ```
 
 In C++ with `match(it)`:
+
 ```C++
 // Dynamic size
 auto const v = std::vector<int32_t>{1, 2, 3};
