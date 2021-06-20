@@ -9,7 +9,7 @@ void sample1()
     Id<int32_t> a;
     match(10, x)(
         // the x is always matched by _
-        pattern(a, _) = [] { assert(*a == 10;); });
+        pattern(a, _) = [&] { assert(*a == 10;); });
 }
 
 void sample2()
