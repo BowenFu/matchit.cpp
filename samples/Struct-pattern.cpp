@@ -39,8 +39,8 @@ void sample()
         // clang-format off
         pattern(and_(appGet<0>(10U), appGet<1>(20U))) = []{},
         pattern(and_(appGet<1>(10U), appGet<0>(20U))) = []{},   // order doesn't matter
-        pattern(appGet<0>(10U))                      = []{},
-        pattern(_)                                  = []{}
+        pattern(appGet<0>(10U))                       = []{},
+        pattern(_)                                    = []{}
         // clang-format on
     );
 }
