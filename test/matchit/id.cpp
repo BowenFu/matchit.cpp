@@ -289,3 +289,22 @@ TEST(Id, AppToId8)
       { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
+
+TEST(Id, IdAtInt)
+{
+  Id<int32_t> ii;
+  auto const result = match(11)(
+      pattern(app(_ * _, ii.at(121))) = expr(ii));
+  EXPECT_EQ(result, 121);
+}
+
+TEST(Id, IdAtUnique)
+{
+  Id<std::unique_ptr<int32_t>> ii;
+  auto const result = match(11)(
+      pattern(app([](auto &&x)
+                  { return std::make_unique<int32_t>(x * x); },
+                  ii.at(some(_)))) = [&]
+      { return ii.move(); });
+  EXPECT_EQ(*result, 121);
+}
