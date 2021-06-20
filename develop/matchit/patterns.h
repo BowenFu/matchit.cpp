@@ -831,12 +831,23 @@ namespace matchit
             using BlockVT = std::variant<Block, Block *>;
             BlockVT mBlock = Block{};
 
+            constexpr Type const &internalValue() const
+            {
+                return block().value();
+            }
+
         public:
             constexpr Id() = default;
 
             constexpr Id(Id const &id)
             {
                 mBlock = BlockVT{&id.block()};
+            }
+
+            template <typename Pattern>
+            constexpr auto at(Pattern&& pattern) const
+            {
+                return and_(pattern, *this);
             }
 
             constexpr Block &block() const
@@ -865,7 +876,7 @@ namespace matchit
             {
                 if (hasValue())
                 {
-                    return value() == v;
+                    return internalValue() == v;
                 }
                 IdTrait::matchValueImpl(block().variant(), std::forward<Value>(v), StorePointer<Type, Value>{});
                 return true;
@@ -882,11 +893,13 @@ namespace matchit
             {
                 return block().hasValue();
             }
-            constexpr Type const &value() const
+            // non-const to inform users not to mark Id as const.
+            constexpr Type const &value()
             {
                 return block().value();
             }
-            constexpr Type const &operator*() const
+            // non-const to inform users not to mark Id as const.
+            constexpr Type const &operator*()
             {
                 return value();
             }

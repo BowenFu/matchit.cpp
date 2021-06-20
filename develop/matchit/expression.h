@@ -23,7 +23,7 @@ namespace matchit
         template <typename T>
         class Id;
         template <typename T>
-        constexpr auto expr(Id<T> const &id)
+        constexpr auto expr(Id<T> &id)
         {
             return nullary([&]
                            { return *id; });
@@ -65,7 +65,7 @@ namespace matchit
         public:
             constexpr static decltype(auto) evalImpl(Id<T> const &id)
             {
-                return *id;
+                return *const_cast<Id<T>&>(id);
             }
         };
 
