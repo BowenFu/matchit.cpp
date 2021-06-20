@@ -21,6 +21,7 @@ quotientRemainder
 Literal-pattern
 Identifier-pattern
 Wildcard-pattern
+Rest-pattern
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
