@@ -31,10 +31,19 @@ void sample2()
     match(value)(
         pattern(name_age(person_name, 18 <= _ && _ <= 150)) = [] {});
 }
+void sample3
+{
+    constexpr auto x = std::make_optional(3);
+    Id<int32_t> y;
+    match(x)(
+        // No need to worry about y's type, by ref or by value is automatically managed by `match(it)` library.
+        pattern(some(y)) = [] {})
+}
 
 int32_t main()
 {
     sample1();
     sample2();
+    sample3();
     return 0;
 }

@@ -18,7 +18,7 @@ for i in -2..5 {
 }
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 for (auto i = -2; i <= 5; ++i)
 {
@@ -45,7 +45,7 @@ match x {
 }
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 constexpr auto x = 2;
 Id<int32_t> e;
@@ -65,7 +65,7 @@ let value = Person { name: String::from("John"), age: 23 };
 if let Person { name: ref person_name, age: 18..=150 } = value { }
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 struct Person {
    std::string name;
@@ -91,7 +91,7 @@ if let Some(y) = x {
 }
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 constexpr auto x = std::make_optional(3);
 Id<int32_t> y;
@@ -107,7 +107,7 @@ In Rust:
 let Person { name, ref age } = person;
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 Id<std::string> person_name;
 Id<uint8_t> age;
@@ -147,7 +147,7 @@ let x = Some(10);
 if let Some(_) = x {}
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 constexpr auto x = 20;
 Id<int32_t> a;
@@ -231,7 +231,7 @@ match tuple {
 }
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 auto const words = std::vector<std::string>{"a", "b", "c"};
 auto const& slice = words;
@@ -359,7 +359,7 @@ let b = match int_reference { &0 => "zero", _ => "some" };
 assert_eq!(a, b);
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 int32_t const* reference = &3;
 
@@ -409,7 +409,7 @@ match t {
 }
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 struct Point {
     uint32 x;
@@ -459,7 +459,7 @@ assert_eq!(a, 10);
 assert_eq!(b, "ten");
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 constexpr auto pair = std::make_pair(10, "ten");
 Id<int32_t> a;
@@ -483,7 +483,7 @@ match int_reference {
 }
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 auto const int_reference = &3;
 match(int_reference)( 
@@ -504,7 +504,7 @@ match arr {
 };
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 // Fixed size
 constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
@@ -526,7 +526,7 @@ match v[..] {
 };
 ```
 
-In C++ with `match(it)`
+In C++ with `match(it)`:
 ```C++
 // Dynamic size
 auto const v = std::vector<int32_t>{1, 2, 3};
