@@ -251,8 +251,8 @@ We support binding a subrange to the ooo pattern now when destructuring a `std::
 Id<int32_t> i;
 Id<SubrangeT<Range const>> subrange;
 return match(range)(
-    pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
-    pattern(i, ooo(subrange), _) = expr(false),
+    pattern(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
+    pattern(i, subrange.at(ooo), _) = expr(false),
     pattern(_)                   = expr(true)
 );
 ```
@@ -278,7 +278,7 @@ It can be used to handle sum type, including class hierarchies, std::variant, an
 ```C++
 match(v)(
     pattern(as<char const*>(_)) = expr("chars"),
-    pattern(as<int32_t>(_))     = expr("int")
+    pattern(as<int32_t>(_))     = expr("int32_t")
 );
 ```
 

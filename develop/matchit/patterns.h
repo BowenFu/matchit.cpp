@@ -849,13 +849,15 @@ namespace matchit
                 mBlock = BlockVT{&id.block()};
             }
 
+            // non-const to inform users not to mark Id as const.
             template <typename Pattern>
-            constexpr auto at(Pattern&& pattern) const
+            constexpr auto at(Pattern&& pattern)
             {
                 return and_(pattern, *this);
             }
 
-            constexpr auto at(Ooo const&) const
+            // non-const to inform users not to mark Id as const.
+            constexpr auto at(Ooo const&)
             {
                 return OooBinder<Type>{*this};
             }
@@ -1083,7 +1085,7 @@ namespace matchit
         constexpr auto isOooOrBinderV = IsOoo<std::decay_t<T>>::value || isOooBinderV<T>;
 
         template <typename... Patterns>
-        constexpr auto nbOooOrBinderV = ((isOooOrBinderV<Patterns> ? 1 : 0) + ...);
+        constexpr auto nbOooOrBinderV = ((isOooOrBinderV<Patterns> ? 1 : 0) + ... + 0);
 
         static_assert(nbOooOrBinderV<int32_t &, Ooo const &, char const *, Wildcard, Ooo const> == 2);
 
