@@ -191,9 +191,9 @@ constexpr auto dsRGBA = [](auto r, auto g, auto b, auto a)
 Id<float> red, green, blue;
 match(color)(
     pattern(dsRGBA(red, green, blue, _)) = [&]{
-        assert(color.r == red);
-        assert(color.g == green);
-        assert(color.b == blue);
+        assert(color.r == *red);
+        assert(color.g == *green);
+        assert(color.b == *blue);
     }
 );
 
