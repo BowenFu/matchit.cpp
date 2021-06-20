@@ -6,6 +6,7 @@ Here we will give equivalent code sinppets using `match(it)` for most samples gi
 
 ### Literal patterns
 
+In Rust:
 ```Rust
 for i in -2..5 {
     match i {
@@ -17,6 +18,7 @@ for i in -2..5 {
 }
 ```
 
+In C++ with `match(it)`
 ```C++
 for (auto i = -2; i <= 5; ++i)
 {
@@ -33,6 +35,7 @@ for (auto i = -2; i <= 5; ++i)
 
 ### Identifier patterns
 
+In Rust:
 ```Rust
 let x = 2;
 
@@ -42,6 +45,7 @@ match x {
 }
 ```
 
+In C++ with `match(it)`
 ```C++
 constexpr auto x = 2;
 Id<int32_t> e;
@@ -51,6 +55,7 @@ match(x)(
 );
 ```
 
+In Rust:
 ```Rust
 struct Person {
    name: String,
@@ -60,24 +65,25 @@ let value = Person { name: String::from("John"), age: 23 };
 if let Person { name: ref person_name, age: 18..=150 } = value { }
 ```
 
+In C++ with `match(it)`
 ```C++
 struct Person {
    std::string name;
    uint8_t age;
 };
 
-constexpr auto value = Person{"John", 23};
-constexpr auto name_age = [](auto name_pat, auto age_pat)
+auto const value = Person{"John", 23};
+auto const name_age = [](auto name_pat, auto age_pat)
 {
     return and_(app(&Person::name, name_pat), app(&Person::age, age_pat));
 };
 Id<std::string> person_name;
-match(value)
-(
+match(value)(
     pattern(name_age(person_name, 18 <= _ && _ <= 150)) = []{}
 );
 ```
 
+In Rust:
 ```Rust
 let x: &Option<i32> = &Some(3);
 if let Some(y) = x {
@@ -85,6 +91,7 @@ if let Some(y) = x {
 }
 ```
 
+In C++ with `match(it)`
 ```C++
 constexpr auto x = std::make_optional(3);
 Id<int32_t> y;
@@ -94,11 +101,13 @@ match(x)(
 )
 ```
 
+In Rust:
 ```Rust
 // `name` is moved from person and `age` referenced
 let Person { name, ref age } = person;
 ```
 
+In C++ with `match(it)`
 ```C++
 Id<std::string> person_name;
 Id<uint8_t> age;
@@ -111,6 +120,7 @@ match(std::move(value))
 
 ### Wildcard pattern
 
+In Rust:
 ```Rust
 let x = 20;
 let (a, _) = (10, x);   // the x is always matched by _
@@ -137,6 +147,7 @@ let x = Some(10);
 if let Some(_) = x {}
 ```
 
+In C++ with `match(it)`
 ```C++
 constexpr auto x = 20;
 Id<int32_t> a;
@@ -184,6 +195,7 @@ match(x)(
 
 ### Rest patterns
 
+In Rust:
 ```Rust
 let words = vec!["a", "b", "c"];
 let slice = &words[..];
@@ -219,6 +231,7 @@ match tuple {
 }
 ```
 
+In C++ with `match(it)`
 ```C++
 auto const words = std::vector<std::string>{"a", "b", "c"};
 auto const& slice = words;
@@ -262,6 +275,7 @@ match(tuple)(
 
 ### Range patterns
 
+In Rust:
 ```Rust
 constexpr auto c = 'f';
 constexpr auto valid_variable = match(c)( 
@@ -335,6 +349,7 @@ std::cout << match(0xfacade)(
 
 ### Reference patterns
 
+In Rust:
 ```Rust
 let int_reference = &3;
 
@@ -344,6 +359,7 @@ let b = match int_reference { &0 => "zero", _ => "some" };
 assert_eq!(a, b);
 ```
 
+In C++ with `match(it)`
 ```C++
 int32_t const* reference = &3;
 
@@ -364,6 +380,7 @@ assert(a == b);
 
 ### Struct patterns
 
+In Rust:
 ```Rust
 struct Point {
     x: u32,
@@ -392,6 +409,7 @@ match t {
 }
 ```
 
+In C++ with `match(it)`
 ```C++
 struct Point {
     uint32 x;
@@ -432,6 +450,7 @@ match(t)(
 
 ### Tuple struct patterns
 
+In Rust:
 ```Rust
 let pair = (10, "ten");
 let (a, b) = pair;
@@ -440,6 +459,7 @@ assert_eq!(a, 10);
 assert_eq!(b, "ten");
 ```
 
+In C++ with `match(it)`
 ```C++
 constexpr auto pair = std::make_pair(10, "ten");
 Id<int32_t> a;
@@ -454,6 +474,7 @@ match(pair)(
 
 ### Grouped patterns
 
+In Rust:
 ```Rust
 let int_reference = &3;
 match int_reference {
@@ -462,6 +483,7 @@ match int_reference {
 }
 ```
 
+In C++ with `match(it)`
 ```C++
 auto const int_reference = &3;
 match(int_reference)( 
@@ -472,6 +494,7 @@ match(int_reference)(
 
 ### Slice patterns
 
+In Rust:
 ```Rust
 // Fixed size
 let arr = [1, 2, 3];
@@ -481,6 +504,7 @@ match arr {
 };
 ```
 
+In C++ with `match(it)`
 ```C++
 // Fixed size
 constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
@@ -491,6 +515,7 @@ match(arr){
 };
 ```
 
+In Rust:
 ```Rust
 // Dynamic size
 let v = vec![1, 2, 3];
@@ -501,6 +526,7 @@ match v[..] {
 };
 ```
 
+In C++ with `match(it)`
 ```C++
 // Dynamic size
 auto const v = std::vector<int32_t>{1, 2, 3};
