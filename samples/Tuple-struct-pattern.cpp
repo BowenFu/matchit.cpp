@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include "matchit.h"
 using namespace matchit;
 
