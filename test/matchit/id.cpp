@@ -223,9 +223,38 @@ TEST(Id, AppToId5Plus)
   Id<std::unique_ptr<int32_t>> ii, jj;
   auto const result = match(std::make_unique<int32_t>(11))(
       pattern(and_(ii, jj)) = [&]
-      // { return ii.move(); });
       { return **ii; });
   EXPECT_EQ(result, 11);
+}
+
+TEST(Id, AppToId5Plus2)
+{
+  Id<std::unique_ptr<int32_t>> ii, jj;
+  auto const result = match(std::make_unique<int32_t>(11))(
+      pattern(and_(ii, jj)) = [&]
+      { return **jj; });
+  EXPECT_EQ(result, 11);
+}
+
+TEST(Id, AppToId5PlusPro)
+{
+  Id<std::unique_ptr<int32_t>> jj;
+  auto const result = match(std::make_unique<int32_t>(11))(
+      pattern(and_(_, jj)) = [&]
+      { return jj.move(); });
+  EXPECT_EQ(*result, 11);
+}
+
+TEST(Id, AppToId5PlusProNegative)
+{
+  auto const invalidMove = []
+  {
+    Id<std::unique_ptr<int32_t>> ii, jj;
+    match(std::make_unique<int32_t>(11))(
+      pattern(and_(ii, jj)) = [&]
+      { return jj.move(); });
+  };
+  EXPECT_EXIT((invalidMove(), exit(0)), ::testing::KilledBySignal(SIGSEGV), ".*");
 }
 
 TEST(Id, AppToId6)
