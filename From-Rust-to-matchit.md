@@ -166,7 +166,7 @@ struct RGBA {
    float a;
 };
 
-constexpr auto color = RGBA{r: 0.4, g: 0.1, b: 0.9, a: 0.5};
+constexpr auto color = RGBA{0.4f, 0.1f, 0.9f, 0.5f};
 constexpr auto dsRGBA = [](auto r, auto g, auto b, auto a)
 {
     return and_(app(&RGBA::r, r),

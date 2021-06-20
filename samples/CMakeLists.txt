@@ -20,6 +20,7 @@ symmetric
 quotientRemainder
 Literal-pattern
 Identifier-pattern
+Wildcard-pattern
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
