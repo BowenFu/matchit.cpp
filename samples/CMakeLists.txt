@@ -18,6 +18,8 @@ sumIs
 variantAny
 symmetric
 quotientRemainder
+Literal-pattern
+Identifier-pattern
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
