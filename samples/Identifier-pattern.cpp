@@ -1,9 +1,10 @@
 #include <iostream>
+#include <optional>
 #include "matchit.h"
+using namespace matchit;
 
 void sample1()
 {
-    using namespace matchit;
     constexpr auto x = 2;
     Id<int32_t> e;
     match(x)(
@@ -19,25 +20,36 @@ struct Person {
    uint8_t age;
 };
 
+auto const name_age = [](auto name_pat, auto age_pat)
+{
+    return and_(app(&Person::name, name_pat), app(&Person::age, age_pat));
+};
+
 void sample2()
 {
-    using namespace matchit;
     auto const value = Person{"John", 23};
-    auto const name_age = [](auto name_pat, auto age_pat)
-    {
-        return and_(app(&Person::name, name_pat), app(&Person::age, age_pat));
-    };
     Id<std::string> person_name;
     match(value)(
         pattern(name_age(person_name, 18 <= _ && _ <= 150)) = [] {});
 }
-void sample3
+void sample3()
 {
     constexpr auto x = std::make_optional(3);
     Id<int32_t> y;
     match(x)(
         // No need to worry about y's type, by ref or by value is automatically managed by `match(it)` library.
-        pattern(some(y)) = [] {})
+        pattern(some(y)) = [] {});
+}
+
+void sample4()
+{
+    Id<std::string> person_name;
+    Id<uint8_t> age;
+    // auto value = Person{"John", 23};
+    match(Person{"John", 23})(
+    // match(std::move(value))(
+        // `name` is moved from person and `age` copied (scalar types are copied in `match(it)`)
+        pattern(name_age(person_name, age)) = [] {});
 }
 
 int32_t main()

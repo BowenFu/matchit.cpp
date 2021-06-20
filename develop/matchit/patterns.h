@@ -551,7 +551,7 @@ namespace matchit
             using AppResult = std::invoke_result_t<Unary, Value>;
             // We store value for scalar types in Id and they can not be moved. So to support constexpr.
             template <typename Value>
-            using AppResultCurTuple = std::conditional_t<std::is_lvalue_reference_v<AppResult<Value>> || std::is_scalar_v<AppResult<Value>>, std::tuple<>, std::tuple<AppResult<Value>>>;
+            using AppResultCurTuple = std::conditional_t<std::is_lvalue_reference_v<AppResult<Value>> || std::is_scalar_v<AppResult<Value>>, std::tuple<>, std::tuple<std::decay_t<AppResult<Value>>>>;
 
             template <typename Value>
             using AppResultTuple = decltype(std::tuple_cat(std::declval<AppResultCurTuple<Value>>(), std::declval<typename PatternTraits<Pattern>::template AppResultTuple<AppResult<Value>>>()));

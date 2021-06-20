@@ -98,7 +98,7 @@ Id<int32_t> y;
 match(x)(
     // No need to worry about y's type, by ref or by value is automatically managed by `match(it)` library.
     pattern(some(y)) = []{}
-)
+);
 ```
 
 In Rust:
