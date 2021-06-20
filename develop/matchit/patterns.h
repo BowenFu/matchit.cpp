@@ -7,6 +7,7 @@
 #include <array>
 #include <type_traits>
 #include <stdexcept>
+#include <cassert>
 
 namespace matchit
 {
@@ -1464,7 +1465,10 @@ namespace matchit
                 };
                 RetType result{};
                 bool const matched = (func(patterns, value, result) || ...);
-                assert(matched);
+                if (!matched)
+                {
+                    throw std::logic_error{"Error: no patterns got matched!"};
+                }
                 static_cast<void>(matched);
                 return result;
             }
