@@ -385,6 +385,8 @@ namespace matchit
             template <typename Value>
             using AppResultTuple = std::tuple<>;
 
+            constexpr static auto nbIdV = 0;
+
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, Pattern const &pattern, int32_t /* depth */, ContextT & /*context*/)
             {
@@ -409,6 +411,8 @@ namespace matchit
         public:
             template <typename Value>
             using AppResultTuple = std::tuple<>;
+
+            constexpr static auto nbIdV = 0;
 
             template <typename Value, typename ContextT>
             constexpr static bool matchPatternImpl(Value &&, Pattern const &, int32_t, ContextT &)
@@ -449,6 +453,8 @@ namespace matchit
         public:
             template <typename Value>
             using AppResultTuple = decltype(std::tuple_cat(typename PatternTraits<Patterns>::template AppResultTuple<Value>{}...));
+
+            constexpr static auto nbIdV = (PatternTraits<Patterns>::nbIdV + ... + 0);
 
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, Or<Patterns...> const &orPat, int32_t depth, ContextT &context)
@@ -492,6 +498,8 @@ namespace matchit
         public:
             template <typename Value>
             using AppResultTuple = std::tuple<>;
+
+            constexpr static auto nbIdV = 0;
 
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, Meet<Pred> const &meetPat, int32_t /* depth */, ContextT &)
@@ -547,6 +555,8 @@ namespace matchit
             template <typename Value>
             using AppResultTuple = decltype(std::tuple_cat(std::declval<AppResultCurTuple<Value>>(), std::declval<typename PatternTraits<Pattern>::template AppResultTuple<AppResult<Value>>>()));
 
+            constexpr static auto nbIdV = PatternTraits<Pattern>::nbIdV;
+
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, App<Unary, Pattern> const &appPat, int32_t depth, ContextT &context)
             {
@@ -590,6 +600,16 @@ namespace matchit
             return And<Patterns...>{patterns...};
         }
 
+        template <typename Tuple>
+        class NbIdInTuple;
+
+        template <typename... Patterns>
+        class NbIdInTuple<std::tuple<Patterns...>>
+        {
+        public:
+            constexpr static auto nbIdV = (PatternTraits<std::decay_t<Patterns>>::nbIdV + ... + 0);
+        };
+
         template <typename... Patterns>
         class PatternTraits<And<Patterns...>>
         {
@@ -597,18 +617,30 @@ namespace matchit
             template <typename Value>
             using AppResultTuple = decltype(std::tuple_cat(std::declval<typename PatternTraits<Patterns>::template AppResultTuple<Value>>()...));
 
+            constexpr static auto nbIdV = (PatternTraits<Patterns>::nbIdV + ... + 0);
+
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, And<Patterns...> const &andPat, int32_t depth, ContextT &context)
             {
                 constexpr auto patSize = sizeof...(Patterns);
-                return std::apply(
-                           [&value, depth, &context](auto const &...patterns)
-                           {
-                               return (matchPattern(value, patterns, depth + 1, context) && ...);
-                           },
-                           take<patSize - 1>(andPat.patterns())) &&
-                    //    matchPattern(std::forward<Value>(value), get<patSize - 1>(andPat.patterns()), depth + 1, context);
-                       matchPattern(value, get<patSize - 1>(andPat.patterns()), depth + 1, context);
+                auto const exceptLast = std::apply(
+                    [&value, depth, &context](auto const &...patterns)
+                    {
+                        return (matchPattern(value, patterns, depth + 1, context) && ...);
+                    },
+                    take<patSize - 1>(andPat.patterns()));
+
+                // No Id in patterns except the last one.
+                if constexpr (NbIdInTuple<std::decay_t<decltype(take<patSize - 1>(andPat.patterns()))>>::nbIdV == 0)
+                {
+                    return exceptLast &&
+                           matchPattern(std::forward<Value>(value), get<patSize - 1>(andPat.patterns()), depth + 1, context);
+                }
+                else
+                {
+                    return exceptLast &&
+                           matchPattern(value, get<patSize - 1>(andPat.patterns()), depth + 1, context);
+                }
             }
             constexpr static void processIdImpl(And<Patterns...> const &andPat, int32_t depth, IdProcess idProcess)
             {
@@ -650,6 +682,8 @@ namespace matchit
         public:
             template <typename Value>
             using AppResultTuple = typename PatternTraits<Pattern>::template AppResultTuple<Value>;
+
+            constexpr static auto nbIdV = PatternTraits<Pattern>::nbIdV;
 
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, Not<Pattern> const &notPat, int32_t depth, ContextT &context)
@@ -871,6 +905,8 @@ namespace matchit
             template <typename Value>
             using AppResultTuple = std::tuple<>;
 
+            constexpr static auto nbIdV = true;
+
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, Id<Type> const &idPat, int32_t /* depth */, ContextT &)
             {
@@ -967,6 +1003,8 @@ namespace matchit
             template <typename Value>
             using AppResultTuple = std::tuple<>;
 
+            constexpr static auto nbIdV = false;
+
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&, Ooo, int32_t /*depth*/, ContextT &)
             {
@@ -983,6 +1021,8 @@ namespace matchit
         public:
             template <typename Value>
             using AppResultTuple = typename PatternTraits<Pattern>::template AppResultTuple<Value>;
+
+            constexpr static auto nbIdV = PatternTraits<Pattern>::nbIdV;
 
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, OooBinder<Pattern> const &oooBinderPat, int32_t depth, ContextT &context)
@@ -1063,21 +1103,22 @@ namespace matchit
         }
 
         template <std::size_t patternStartIdx, std::size_t... I, typename RangeBegin, typename PatternTuple, typename ContextT>
-        constexpr decltype(auto) matchPatternRangeImpl(RangeBegin &&rangeBegin, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
+        constexpr decltype(auto) matchPatternRangeImpl(RangeBegin &&rangeBegin, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
         {
             auto const func = [&](auto &&value, auto &&pattern)
             {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1, context);
             };
             static_cast<void>(func);
-            return (func(*std::next(rangeBegin, static_cast<long>(I + valueStartIdx)), std::get<I + patternStartIdx>(patternTuple)) && ...);
+            // Fix Me, avoid call next from begin every time.
+            return (func(*std::next(rangeBegin, static_cast<long>(I)), std::get<I + patternStartIdx>(patternTuple)) && ...);
         }
 
-        template <std::size_t patternStartIdx, std::size_t size, typename ValueRange, typename PatternTuple, typename ContextT>
-        constexpr decltype(auto) matchPatternRange(ValueRange &&valueRange, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
+        template <std::size_t patternStartIdx, std::size_t size, typename ValueRangeBegin, typename PatternTuple, typename ContextT>
+        constexpr decltype(auto) matchPatternRange(ValueRangeBegin &&valueRangeBegin, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
         {
             return matchPatternRangeImpl<patternStartIdx>(
-                std::begin(valueRange), valueStartIdx, patternTuple, depth, context, std::make_index_sequence<size>{});
+                valueRangeBegin, patternTuple, depth, context, std::make_index_sequence<size>{});
         }
 
         template <std::size_t start, typename Indices, typename Tuple>
@@ -1236,6 +1277,8 @@ namespace matchit
             template <typename Value>
             using AppResultTuple = typename AppResultHelper<Value>::type;
 
+            constexpr static auto nbIdV = (PatternTraits<Patterns>::nbIdV + ... + 0);
+
             template <typename ValueTuple, typename ContextT>
             constexpr static auto matchPatternImpl(ValueTuple &&valueTuple, Ds<Patterns...> const &dsPat, int32_t depth, ContextT &context)
                 -> std::enable_if_t<isTupleLikeV<ValueTuple>, bool>
@@ -1296,7 +1339,7 @@ namespace matchit
                     {
                         return false;
                     }
-                    return matchPatternRange<0, nbPat>(std::forward<ValueRange>(valueRange), 0, dsPat.patterns(), depth, context);
+                    return matchPatternRange<0, nbPat>(std::begin(valueRange), dsPat.patterns(), depth, context);
                 }
                 else if constexpr (nbOooOrBinder == 1)
                 {
@@ -1306,21 +1349,22 @@ namespace matchit
                     }
                     constexpr auto idxOoo = findOooIdx<typename Ds<Patterns...>::Type>();
                     constexpr auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
-                    auto result = matchPatternRange<0, idxOoo>(std::forward<ValueRange>(valueRange), 0, dsPat.patterns(), depth, context);
+                    auto result = matchPatternRange<0, idxOoo>(std::begin(valueRange), dsPat.patterns(), depth, context);
                     auto const valLen = valueRange.size();
                     constexpr auto patLen = sizeof...(Patterns);
+                    auto const beginOoo = std::next(std::begin(valueRange), idxOoo);
                     if constexpr (isBinder)
                     {
                         auto const rangeSize = static_cast<long>(valLen - (patLen - 1));
-                        auto const begin = std::next(std::begin(valueRange), idxOoo);
-                        auto const end = std::next(begin, rangeSize);
-                        context.emplace_back(makeSubrange(begin, end));
-                        using type = decltype(makeSubrange(begin, end));
+                        auto const end = std::next(beginOoo, rangeSize);
+                        context.emplace_back(makeSubrange(beginOoo, end));
+                        using type = decltype(makeSubrange(beginOoo, end));
                         result = result &&
                                  matchPattern(std::get<type>(context.back()), std::get<idxOoo>(dsPat.patterns()), depth, context);
                     }
+                    auto const beginAfterOoo = std::next(beginOoo, static_cast<long>(valLen - patLen + 1));
                     return result &&
-                           matchPatternRange<idxOoo + 1, patLen - idxOoo - 1>(std::forward<ValueRange>(valueRange), valLen - patLen + idxOoo + 1, dsPat.patterns(), depth, context);
+                           matchPatternRange<idxOoo + 1, patLen - idxOoo - 1>(beginAfterOoo, dsPat.patterns(), depth, context);
                 }
             }
 
@@ -1394,6 +1438,12 @@ namespace matchit
         static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<int32_t>, std::tuple<>>);
         static_assert(std::is_same_v<PatternTraits<App<decltype(x), Wildcard>>::template AppResultTuple<std::array<int32_t, 3>>, std::tuple<std::array<int32_t, 3>>>);
         static_assert(std::is_same_v<PatternTraits<And<App<decltype(x), Wildcard>>>::template AppResultTuple<int32_t>, std::tuple<>>);
+
+        static_assert(PatternTraits<And<App<decltype(x), Wildcard>>>::nbIdV == 0);
+        static_assert(PatternTraits<And<App<decltype(x), Id<int32_t>>>>::nbIdV == 1);
+        static_assert(PatternTraits<And<Id<int32_t>, Id<float>>>::nbIdV == 2);
+        static_assert(PatternTraits<Or<Id<int32_t>, Id<float>>>::nbIdV == 2);
+        static_assert(PatternTraits<Or<Wildcard, float>>::nbIdV == 0);
 
         template <typename Value, typename... PatternPairs>
         constexpr auto matchPatterns(Value &&value, PatternPairs const &...patterns)
