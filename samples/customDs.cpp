@@ -65,7 +65,7 @@ constexpr auto dsByMember(DummyStruct const&v)
         pattern(_) = expr("not matched")
         // clang-format on
     );
-};
+}
 
 static_assert(dsByMember(DummyStruct{1, "123"}) == std::string_view{"not matched"});
 static_assert(dsByMember(DummyStruct{2, "123"}) == std::string_view{"123"});
