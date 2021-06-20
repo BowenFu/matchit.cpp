@@ -11,7 +11,7 @@ void sample()
         pattern(a, b) = [&]
         {
             assert(*a == 10);
-            assert(*b == "ten");
+            assert(*b == std::string_view{"ten"]);
         });
 }
 
