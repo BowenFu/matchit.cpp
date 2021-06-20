@@ -45,9 +45,8 @@ void sample4()
 {
     Id<std::string> person_name;
     Id<uint8_t> age;
-    // auto value = Person{"John", 23};
-    match(Person{"John", 23})(
-    // match(std::move(value))(
+    auto value = Person{"John", 23};
+    match(std::move(value))(
         // `name` is moved from person and `age` copied (scalar types are copied in `match(it)`)
         pattern(name_age(person_name, age)) = [] {});
 }
