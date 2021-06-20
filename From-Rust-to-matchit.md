@@ -448,19 +448,18 @@ assert_eq!(a, b);
 In C++ with `match(it)`:
 
 ```C++
-int32_t const* reference = &3;
+int32_t const value = 3;
+int32_t const *int_reference = &value;
 
-auto const a = match(*int_reference)
-(
-    pattern(0) = expr("zero"),
-    pattern(_) = expr("some") 
-);
+int32_t const zero = 0;
 
-auto const b = match(int_reference)
-(
-    pattern(&0) = expr("zero"),
-    pattern(_)  = expr("some") 
-);
+auto const a = match(*int_reference)(
+    pattern(zero) = expr("zero"),
+    pattern(_)    = expr("some"));
+
+auto const b = match(int_reference)(
+    pattern(&zero) = expr("zero"),
+    pattern(_)     = expr("some"));
 
 assert(a == b);
 ```
