@@ -1362,21 +1362,22 @@ namespace matchit
         }
 
         template <std::size_t patternStartIdx, std::size_t... I, typename RangeBegin, typename PatternTuple, typename ContextT>
-        constexpr decltype(auto) matchPatternRangeImpl(RangeBegin &&rangeBegin, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
+        constexpr decltype(auto) matchPatternRangeImpl(RangeBegin &&rangeBegin, PatternTuple &&patternTuple, int32_t depth, ContextT &context, std::index_sequence<I...>)
         {
             auto const func = [&](auto &&value, auto &&pattern)
             {
                 return matchPattern(std::forward<decltype(value)>(value), pattern, depth + 1, context);
             };
             static_cast<void>(func);
-            return (func(*std::next(rangeBegin, static_cast<long>(I + valueStartIdx)), std::get<I + patternStartIdx>(patternTuple)) && ...);
+            // Fix Me, avoid call next from begin every time.
+            return (func(*std::next(rangeBegin, static_cast<long>(I)), std::get<I + patternStartIdx>(patternTuple)) && ...);
         }
 
-        template <std::size_t patternStartIdx, std::size_t size, typename ValueRange, typename PatternTuple, typename ContextT>
-        constexpr decltype(auto) matchPatternRange(ValueRange &&valueRange, std::size_t valueStartIdx, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
+        template <std::size_t patternStartIdx, std::size_t size, typename ValueRangeBegin, typename PatternTuple, typename ContextT>
+        constexpr decltype(auto) matchPatternRange(ValueRangeBegin &&valueRangeBegin, PatternTuple &&patternTuple, int32_t depth, ContextT &context)
         {
             return matchPatternRangeImpl<patternStartIdx>(
-                std::begin(valueRange), valueStartIdx, patternTuple, depth, context, std::make_index_sequence<size>{});
+                valueRangeBegin, patternTuple, depth, context, std::make_index_sequence<size>{});
         }
 
         template <std::size_t start, typename Indices, typename Tuple>
@@ -1595,7 +1596,7 @@ namespace matchit
                     {
                         return false;
                     }
-                    return matchPatternRange<0, nbPat>(std::forward<ValueRange>(valueRange), 0, dsPat.patterns(), depth, context);
+                    return matchPatternRange<0, nbPat>(std::begin(valueRange), dsPat.patterns(), depth, context);
                 }
                 else if constexpr (nbOooOrBinder == 1)
                 {
@@ -1605,21 +1606,22 @@ namespace matchit
                     }
                     constexpr auto idxOoo = findOooIdx<typename Ds<Patterns...>::Type>();
                     constexpr auto isBinder = isOooBinderV<std::tuple_element_t<idxOoo, std::tuple<Patterns...>>>;
-                    auto result = matchPatternRange<0, idxOoo>(std::forward<ValueRange>(valueRange), 0, dsPat.patterns(), depth, context);
+                    auto result = matchPatternRange<0, idxOoo>(std::begin(valueRange), dsPat.patterns(), depth, context);
                     auto const valLen = valueRange.size();
                     constexpr auto patLen = sizeof...(Patterns);
+                    auto const beginOoo = std::next(std::begin(valueRange), idxOoo);
                     if constexpr (isBinder)
                     {
                         auto const rangeSize = static_cast<long>(valLen - (patLen - 1));
-                        auto const begin = std::next(std::begin(valueRange), idxOoo);
-                        auto const end = std::next(begin, rangeSize);
-                        context.emplace_back(makeSubrange(begin, end));
-                        using type = decltype(makeSubrange(begin, end));
+                        auto const end = std::next(beginOoo, rangeSize);
+                        context.emplace_back(makeSubrange(beginOoo, end));
+                        using type = decltype(makeSubrange(beginOoo, end));
                         result = result &&
                                  matchPattern(std::get<type>(context.back()), std::get<idxOoo>(dsPat.patterns()), depth, context);
                     }
+                    auto const beginAfterOoo = std::next(beginOoo, static_cast<long>(valLen - patLen + 1));
                     return result &&
-                           matchPatternRange<idxOoo + 1, patLen - idxOoo - 1>(std::forward<ValueRange>(valueRange), valLen - patLen + idxOoo + 1, dsPat.patterns(), depth, context);
+                           matchPatternRange<idxOoo + 1, patLen - idxOoo - 1>(beginAfterOoo, dsPat.patterns(), depth, context);
                 }
             }
 

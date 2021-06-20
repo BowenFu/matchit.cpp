@@ -333,7 +333,7 @@ static_assert(detectTuplePattern(std::make_tuple(2, 3, 5, 7, 2)) == 4);
 
 What is more, we can **bind a subrange to the ooo pattern** when destructuring a `std::array` or other containers / ranges.
 That is quite cool.
-We can check if an/a `array/vector/list/set/subrange/...` is symmetric with:
+We can check if an/a `array/vector/list/set/map/subrange/...` is symmetric with:
 
 ```C++
 template <typename Range>
