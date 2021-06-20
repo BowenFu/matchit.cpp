@@ -142,8 +142,8 @@ This means that handlers in `match(it)` are always nullary, but can be unary or 
 ```C++
 Id<double> s;
 match(value)(
-    pattern(app(_ * _, and_(_ > 1000, s))) = expr(s),
-    pattern(_)                             = expr(0));
+    pattern(app(_ * _, s.at(_ > 1000))) = expr(s),
+    pattern(_)                          = expr(0));
 ```
 
 You have to define / declare the identifiers first then bind them inside patterns and access them in handlers.

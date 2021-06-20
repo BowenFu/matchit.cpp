@@ -209,7 +209,7 @@ bool checkAndlogLarge(double value)
     using namespace matchit;
     Id<double> s;
     return match(value)(
-        pattern(app(_ * _, and_(_ > 1000, s))) = [&] {
+        pattern(app(_ * _, s.at(_ > 1000))) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
         pattern(_) = expr(false));
@@ -223,9 +223,7 @@ But don't be upset. This added verbosity makes it possible for us to **use varia
 Here `*` operator is used to dereference the value inside identifiers.
 One thing to note is that identifiers are only valid inside `match` scope. Do not try to dereference it outside.
 
-Note that we used `and_` here to bind a value to the identifier under some conditions on the value.
-This practice can achieve the functionality of **`@` pattern** in Rust.
-We recommend **always put your identifiers at the end of And pattern**. It is like saying that bind the value to the identifier only when all previous patterns / conditions get met. (For Or pattern, you may get better perf since we `std::forward` the subject value for the last subpattern).
+`Id::at` is similar to the **`@` pattern** in Rust, i.e., bind the value when the subpattern gets matched.
 
 Also note when the same identifier is bound multiple times, the bound values must equal to each other via `operator==`.
 An sample to check if an array is symmetric:
