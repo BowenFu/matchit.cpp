@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <optional>
-#include <signal.h>
 #include "matchit.h"
 using namespace matchit;
 
@@ -246,6 +245,7 @@ TEST(Id, AppToId5PlusPro)
   EXPECT_EQ(*result, 11);
 }
 
+#if 0 // negative tests, not supported on some platforms.
 TEST(Id, AppToId5PlusProNegative)
 {
   auto const invalidMove = []
@@ -257,6 +257,7 @@ TEST(Id, AppToId5PlusProNegative)
   };
   EXPECT_EXIT((invalidMove(), exit(0)), testing::KilledBySignal(SIGSEGV), ".*");
 }
+#endif
 
 TEST(Id, AppToId6)
 {

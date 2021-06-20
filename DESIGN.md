@@ -1,4 +1,4 @@
-# match(it): A light-weight header-only pattern-matching library for C++17.
+# match(it): A lightweight header-only pattern-matching library for C++17.
 
 ![match(it).cpp](./matchit.cpp.svg)
 
