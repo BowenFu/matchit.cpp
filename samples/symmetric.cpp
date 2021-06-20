@@ -9,7 +9,7 @@ constexpr bool recursiveSymmetric(Range const &range)
     Id<SubrangeT<Range const>> subrange;
     return match(range)(
         // clang-format off
-        pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
+        pattern(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
         pattern(_, ooo, _)           = expr(false),
         pattern(_)                   = expr(true)
         // clang-format on

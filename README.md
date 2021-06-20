@@ -314,7 +314,7 @@ Say, we want to match only when the sum of two identifiers equal to some value, 
 #include <array>
 #include "matchit.h"
 
-constexpr bool sumIs(std::array<int32_t, 2> const& arr, int s)
+constexpr bool sumIs(std::array<int32_t, 2> const& arr, int32_t s)
 {
     using namespace matchit;
     Id<int32_t> i, j;
@@ -364,7 +364,7 @@ constexpr bool recursiveSymmetric(Range const &range)
     Id<int32_t> i;
     Id<SubrangeT<Range const>> subrange;
     return match(range)(
-        pattern(i, ooo(subrange), i) = [&] { return recursiveSymmetric(*subrange); },
+        pattern(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
         pattern(_, ooo, _)           = expr(false),
         pattern(_)                   = expr(true)
     );
@@ -433,12 +433,12 @@ constexpr auto getClassName(T const& v)
     using namespace matchit;
     return match(v)(
         pattern(as<char const*>(_)) = expr("chars"),
-        pattern(as<int32_t>(_))     = expr("int")
+        pattern(as<int32_t>(_))     = expr("int32_t")
     );
 }
 
 constexpr std::variant<int32_t, char const*> v = 123;
-static_assert(getClassName(v) == std::string_view{"int"});
+static_assert(getClassName(v) == std::string_view{"int32_t"});
 ```
 
 Class hierarchies can be matched as
@@ -526,7 +526,7 @@ class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One> {};
 template <>
 class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
 
-int staticCastAs(Num const& input)
+int32_t staticCastAs(Num const& input)
 {
     using namespace matchit;
     return match(input)(
@@ -535,7 +535,7 @@ int staticCastAs(Num const& input)
         pattern(_)                = expr(3));
 }
 
-int main()
+int32_t main()
 {
     std::cout << staticCastAs(One{}) << std::endl;
     return 0;
@@ -547,3 +547,9 @@ int main()
 There is additional **Customziation Point**.
 
 Users can specialize `PatternTraits` if they want to add a brand new pattern.
+
+## What's next?
+
+The document [From Rsut to matchit](./From-Rust-to-matchit.md) gives equivalent samples for corresponding Rust samples.
+
+There you may have a better idea of what coding with `match(it)` would be like.

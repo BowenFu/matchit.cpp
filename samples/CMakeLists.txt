@@ -18,6 +18,15 @@ sumIs
 variantAny
 symmetric
 quotientRemainder
+Literal-pattern
+Identifier-pattern
+Wildcard-pattern
+Rest-pattern
+Range-pattern
+Reference-pattern
+Struct-pattern
+Tuple-struct-pattern
+Slice-pattern
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
@@ -25,4 +34,5 @@ foreach(sample ${MATCHIT_SAMPLES})
     target_compile_options(${sample} PRIVATE ${BASE_COMPILE_FLAGS})
     target_link_libraries(${sample} PRIVATE matchit)
     set_target_properties(${sample} PROPERTIES CXX_EXTENSIONS OFF)
+    add_test(${sample} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${sample})
 endforeach()

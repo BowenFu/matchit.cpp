@@ -551,7 +551,7 @@ namespace matchit
             using AppResult = std::invoke_result_t<Unary, Value>;
             // We store value for scalar types in Id and they can not be moved. So to support constexpr.
             template <typename Value>
-            using AppResultCurTuple = std::conditional_t<std::is_lvalue_reference_v<AppResult<Value>> || std::is_scalar_v<AppResult<Value>>, std::tuple<>, std::tuple<AppResult<Value>>>;
+            using AppResultCurTuple = std::conditional_t<std::is_lvalue_reference_v<AppResult<Value>> || std::is_scalar_v<AppResult<Value>>, std::tuple<>, std::tuple<std::decay_t<AppResult<Value>>>>;
 
             template <typename Value>
             using AppResultTuple = decltype(std::tuple_cat(std::declval<AppResultCurTuple<Value>>(), std::declval<typename PatternTraits<Pattern>::template AppResultTuple<AppResult<Value>>>()));
@@ -849,13 +849,15 @@ namespace matchit
                 mBlock = BlockVT{&id.block()};
             }
 
+            // non-const to inform users not to mark Id as const.
             template <typename Pattern>
-            constexpr auto at(Pattern&& pattern) const
+            constexpr auto at(Pattern&& pattern)
             {
                 return and_(pattern, *this);
             }
 
-            constexpr auto at(Ooo const&) const
+            // non-const to inform users not to mark Id as const.
+            constexpr auto at(Ooo const&)
             {
                 return OooBinder<Type>{*this};
             }
@@ -1083,7 +1085,7 @@ namespace matchit
         constexpr auto isOooOrBinderV = IsOoo<std::decay_t<T>>::value || isOooBinderV<T>;
 
         template <typename... Patterns>
-        constexpr auto nbOooOrBinderV = ((isOooOrBinderV<Patterns> ? 1 : 0) + ...);
+        constexpr auto nbOooOrBinderV = ((isOooOrBinderV<Patterns> ? 1 : 0) + ... + 0);
 
         static_assert(nbOooOrBinderV<int32_t &, Ooo const &, char const *, Wildcard, Ooo const> == 2);
 
