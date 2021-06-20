@@ -402,8 +402,8 @@ namespace binary
     constexpr uint64_t GIGA = 1024*1024*1024;
 } // namespace binary 
 
-constexpr auto n_items = 20'832'425;
-constexpr auto bytes_per_item = 12;
+constexpr auto n_items = 20'832'425U;
+constexpr auto bytes_per_item = 12U;
 
 Id<uint64_t> size;
 match(n_items * bytes_per_item)
@@ -414,11 +414,11 @@ match(n_items * bytes_per_item)
 );
 
 // using qualified paths:
-std::cout << match(0xfacade)( 
-    pattern(0 <= _ && _ <= numeric_limits<uint8_t>::max())  = expr("fits in a u8"),
-    pattern(0 <= _ && _ <= numeric_limits<uint16_t>::max()) = expr("fits in a u16"),
-    pattern(0 <= _ && _ <= numeric_limits<uint32_t>::max()) = expr("fits in a u32"),
-    pattern(_)                                              = expr("too big")
+std::cout << match(static_cast<size_t>(0xfacade))( 
+    pattern(0U <= _ && _ <= numeric_limits<uint8_t>::max())  = expr("fits in a u8"),
+    pattern(0U <= _ && _ <= numeric_limits<uint16_t>::max()) = expr("fits in a u16"),
+    pattern(0U <= _ && _ <= numeric_limits<uint32_t>::max()) = expr("fits in a u32"),
+    pattern(_)                                               = expr("too big")
 ) << std::endl;
 ```
 
