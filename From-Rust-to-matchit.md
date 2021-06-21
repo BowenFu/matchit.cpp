@@ -663,10 +663,10 @@ Result<uint8_t, std::exception> const age = parse("34");
 
 Id<std::string> color;
 match(favorite_color)(
-    pattern(some(color)) = "Using your favorite color, " + color + ", as the background",
+    pattern(some(color)) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
     pattern(_).when(is_tuesday) = expr("Tuesday is green day!"),
     pattern(_) = []{
-        Id<uint8_t> age;
+        Id<uint8_t> age_;
         match(age)(
             pattern(as<uint8_t>(age_)).when ( age_ > 30) = expr("Using purple as the background color"),
             pattern(as<uint8_t>(age_)) = expr("Using orange as the background color"),
@@ -707,7 +707,7 @@ while let Some(top) = stack.pop() {
 Id<int32_t> top;
 while (
     match(stack.pop())(
-        pattern(some(top)) = [] { std::cout << top << std::endl; return true; },
+        pattern(some(top)) = [&] { std::cout << *top << std::endl; return true; },
         pattern(_)         = expr(false)
     )
 )
@@ -768,14 +768,14 @@ int32_t main()
         pattern(as<Quit>(_)) = [] {
             std:: cout << "The Quit variant has no data to destructure." << std::endl;
         },
-        pattern(as<Move>(ds(x, y))) = [] {
+        pattern(as<Move>(ds(x, y))) = [&] {
             std::cout <<
                 "Move in the x direction " << *x << " and in the y direction " << *y << std::endl; 
         },
-        pattern(as<Write>(text)) = [] {
-            std::cout << "Text message: " << text << std::endl;
+        pattern(as<Write>(text)) = [&] {
+            std::cout << "Text message: " << *text << std::endl;
         },
-        pattern(as<ChangeColor>(ds(r, g, b))) = [] {
+        pattern(as<ChangeColor>(ds(r, g, b))) = [&] {
             std::cout <<
                 "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
         }
@@ -843,11 +843,11 @@ int32_t main()
     Id<int32_t> h, s, v;
     Id<std::string> text;
     match(msg)( 
-        pattern(as<ChangeColor>(as<Rgb>(ds(r, g, b)))) = [] {
+        pattern(as<ChangeColor>(as<Rgb>(ds(r, g, b)))) = [&] {
             std::cout <<
                 "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
         },
-        pattern(as<ChangeColor>(as<Hsv>(ds(h, s, v)))) = [] {
+        pattern(as<ChangeColor>(as<Hsv>(ds(h, s, v)))) = [&] {
             std::cout <<
                 "Change the color to hue " << *h << ", saturation " << *s << ", and value " << *v << std::endl;
         }
@@ -922,7 +922,7 @@ int32_t main() {
     Id<int32_t> first, third, fifth;
     match(numbers)( 
         pattern(first, _, third, _, fifth) = [&] {
-            std::cout << "Some numbers: " << first << ", " << third ", " << fifth << std::endl;
+            std::cout << "Some numbers: " << *first << ", " << *third ", " << *fifth << std::endl;
         }
      );
 }
@@ -952,10 +952,10 @@ int32_t main() {
 
     Id<int32_t> x;
     match(num)( 
-        // pattern(some(x)).when(x < 5) => [] { std::cout << "less than five: " << *x; },
-        pattern(some(x.at(_ < 5)))   => [] { std::cout << "less than five: " << *x; },
-        pattern(some(x))             => [] { std::cout <<  *x << std::endl; },
-        pattern(none)                => [] {}
+        // pattern(some(x)).when(x < 5) => [&] { std::cout << "less than five: " << *x; },
+        pattern(some(x.at(_ < 5)))   => [&] { std::cout << "less than five: " << *x; },
+        pattern(some(x))             => [&] { std::cout <<  *x << std::endl; },
+        pattern(none)                => [&] {}
     );
 }
 ```
