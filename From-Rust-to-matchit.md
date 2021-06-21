@@ -713,3 +713,144 @@ while (
 )
 {}
 ```
+
+### Destructuring Enums
+
+In Rust
+
+```Rust
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+}
+
+fn main() {
+    let msg = Message::ChangeColor(0, 160, 255);
+
+    match msg {
+        Message::Quit => {
+            println!("The Quit variant has no data to destructure.")
+        }
+        Message::Move { x, y } => {
+            println!(
+                "Move in the x direction {} and in the y direction {}",
+                x, y
+            );
+        }
+        Message::Write(text) => println!("Text message: {}", text),
+        Message::ChangeColor(r, g, b) => println!(
+            "Change the color to red {}, green {}, and blue {}",
+            r, g, b
+        ),
+    }
+}
+```
+
+In C++ with `match(it)`
+
+```C++
+struct Quit {};
+using Move = std::array<int32_t, 2>;
+using Write = std::string;
+using ChangeColor = std::array<int32_t, 3>;
+using Message = std::variant<Quit, Move, Write, ChangeColor>;
+
+int32_t main()
+{
+    Message const msg = ChangeColor{0, 160, 255};
+
+    Id<int32_t> x, y;
+    Id<std::string> text;
+    Id<int32_t> r, g, b;
+    match(msg)( 
+        pattern(as<Quit>(_)) = [] {
+            std:: cout << "The Quit variant has no data to destructure." << std::endl;
+        },
+        pattern(as<Move>(ds(x, y))) = [] {
+            std::cout <<
+                "Move in the x direction " << *x << " and in the y direction " << *y << std::endl; 
+        },
+        pattern(as<Write>(text)) = [] {
+            std::cout << "Text message: " << text << std::endl;
+        },
+        pattern(as<ChangeColor>(ds(r, g, b))) = [] {
+            std::cout <<
+                "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
+        }
+     );
+}
+```
+
+### Destructuring Nested Structs and Enums
+
+In Rust:
+
+```Rust
+enum Color {
+    Rgb(i32, i32, i32),
+    Hsv(i32, i32, i32),
+}
+
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(Color),
+}
+
+fn main() {
+    let msg = Message::ChangeColor(Color::Hsv(0, 160, 255));
+
+    match msg {
+        Message::ChangeColor(Color::Rgb(r, g, b)) => println!(
+            "Change the color to red {}, green {}, and blue {}",
+            r, g, b
+        ),
+        Message::ChangeColor(Color::Hsv(h, s, v)) => println!(
+            "Change the color to hue {}, saturation {}, and value {}",
+            h, s, v
+        ),
+        _ => (),
+    }
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+enum Color {
+    Rgb(i32, i32, i32),
+    Hsv(i32, i32, i32),
+}
+
+struct Rgb : std::array<int32_t, 3> {};
+struct Hsv : std::array<int32_t, 3> {};
+using Color = std::variant<Rgb, Hsv>;
+
+struct Quit {};
+using Move = std::array<int32_t, 2>;
+using Write = std::string;
+using ChangeColor = Color;
+using Message = std::variant<Quit, Move, Write, ChangeColor>;
+
+int32_t main()
+{
+    Message const msg = ChangeColor{Hsv{0, 160, 255}};
+
+    Id<int32_t> r, g, b;
+    Id<int32_t> h, s, v;
+    Id<std::string> text;
+    match(msg)( 
+        pattern(as<ChangeColor>(as<Rgb>(ds(r, g, b)))) = [] {
+            std::cout <<
+                "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
+        },
+        pattern(as<ChangeColor>(as<Hsv>(ds(h, s, v)))) = [] {
+            std::cout <<
+                "Change the color to hue " << *h << ", saturation " << *s << ", and value " << *v << std::endl;
+        }
+     );
+}
+```
