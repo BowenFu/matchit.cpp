@@ -177,10 +177,10 @@ The syntax is borrowed from `mpark/patterns`.
 Id<T1> i;
 Id<T2> j;
 match(expr)(
-    pattern(ds('+', i, j)) = i + j,
-    pattern(ds('-', i, j)) = i - j,
-    pattern(ds('*', i, j)) = i * j,
-    pattern(ds('/', i, j)) = i / j,
+    pattern('+', i, j) = i + j,
+    pattern('-', i, j) = i - j,
+    pattern('*', i, j) = i * j,
+    pattern('/', i, j) = i / j,
     pattern(_)             = expr(-1))
 ```
 
