@@ -54,6 +54,12 @@ If you have questions regarding the library, I would like to invite you to [open
 
 ---------
 
+## From Rust to matchit
+
+The document [From Rust to matchit](./From-Rust-to-matchit.md) gives equivalent samples for corresponding Rust samples.
+
+There you may have a picture of what coding with `match(it)` would be like.
+
 ## Quick start.
 
 Let's start a journey on the library!
@@ -547,9 +553,3 @@ int32_t main()
 There is additional **Customziation Point**.
 
 Users can specialize `PatternTraits` if they want to add a brand new pattern.
-
-## What's next?
-
-The document [From Rsut to matchit](./From-Rust-to-matchit.md) gives equivalent samples for corresponding Rust samples.
-
-There you may have a better idea of what coding with `match(it)` would be like.

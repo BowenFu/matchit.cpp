@@ -2,6 +2,8 @@
 
 ![match(it).cpp](./matchit.cpp.svg)
 
+## Rust Reference
+
 Here we will give equivalent code sinppets using `match(it)` for most samples given by [Rust Reference Patterns Section](https://doc.rust-lang.org/stable/reference/patterns.html). 
 
 ### Literal patterns
@@ -26,10 +28,10 @@ for (auto i = -2; i <= 5; ++i)
 {
     std::cout <<
         match(i)(
-            pattern(-1 )      = expr("It's minus one"),
-            pattern(1  )      = expr("It's a one"),
+            pattern(-1)       = expr("It's minus one"),
+            pattern(1)        = expr("It's a one"),
             pattern(or_(2,4)) = expr("It's either a two or a four"),
-            pattern(_  )      = expr("Matched none of the arms")
+            pattern(_)        = expr("Matched none of the arms")
         )
         << std::endl;
 }
@@ -617,4 +619,97 @@ match(v)(
     pattern(a, b, c) = [] { /* this arm will apply */ },
     pattern(_)       = [] { /* this wildcard is required, since the length is not known statically */ }
 );
+```
+
+---------------
+
+## Rust Book
+
+We will also add some equivalent samples from [Rust Book](https://doc.rust-lang.org/book/ch18-01-all-the-places-for-patterns.html).
+
+### Conditional if let Expressions
+
+In Rust:
+
+```Rust
+let favorite_color: Option<&str> = None;
+let is_tuesday = false;
+let age: Result<u8, _> = "34".parse();
+
+if let Some(color) = favorite_color {
+    println!("Using your favorite color, {}, as the background", color);
+} else if is_tuesday {
+    println!("Tuesday is green day!");
+} else if let Ok(age) = age {
+    if age > 30 {
+        println!("Using purple as the background color");
+    } else {
+        println!("Using orange as the background color");
+    }
+} else {
+    println!("Using blue as the background color");
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+auto const favorite_color = std::optional<std::string>{};
+auto const is_tuesday = false;
+
+template <typename V, typename E>
+using Result = std::variant<V, E>;
+Result<uint8_t, std::exception> const age = parse("34");
+
+Id<std::string> color;
+match(favorite_color)(
+    pattern(some(color)) = "Using your favorite color, " + color + ", as the background",
+    pattern(_).when(is_tuesday) = expr("Tuesday is green day!"),
+    pattern(_) = []{
+        Id<uint8_t> age;
+        match(age)(
+            pattern(as<uint8_t>(age_)).when ( age_ > 30) = expr("Using purple as the background color"),
+            pattern(as<uint8_t>(age_)) = expr("Using orange as the background color"),
+            pattern(_)                 = expr("Using blue as the background color")
+        )
+    }
+);
+```
+
+### while let Conditional Loops
+
+In Rust:
+
+```Rust
+let mut stack = Vec::new();
+
+stack.push(1);
+stack.push(2);
+stack.push(3);
+
+while let Some(top) = stack.pop() {
+    println!("{}", top);
+}
+
+In C++ with `match(it)`
+
+```C++
+std::stack<int32_t> stack;
+
+stack.push(1);
+stack.push(2);
+stack.push(3);
+
+while let Some(top) = stack.pop() {
+    println!("{}", top);
+}
+
+Id<int32_t> top;
+while (
+    match(stack.pop())(
+        pattern(some(top)) = [] { std::cout << top << std::endl; return true; },
+        pattern(_)         = expr(false)
+    )
+)
+{}
 ```
