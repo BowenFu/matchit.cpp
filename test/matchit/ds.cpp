@@ -263,7 +263,7 @@ TEST(Ds, setOooBinder)
   Id<SubrangeT<std::set<int32_t>>> subrange;
   Id<int32_t> e;
   match(std::set<int32_t>{123, 456, 789})(
-      pattern(ds(e, subrange.at(ooo))) = [&]
+      pattern(e, subrange.at(ooo)) = [&]
       {
         EXPECT_EQ(*e, 123);
         auto const expected = {456, 789};
@@ -276,7 +276,7 @@ TEST(Ds, mapId)
   Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
   Id<std::pair<int32_t, char const *>> e, f, g;
   match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
-      pattern(ds(e, f, g)) = [&]
+      pattern(e, f, g) = [&]
       {
         EXPECT_EQ(*e, std::make_pair(123, "a"));
         EXPECT_EQ(*f, std::make_pair(456, "b"));
@@ -289,7 +289,7 @@ TEST(Ds, mapOoo)
   Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
   Id<std::pair<int32_t, char const *>> e, f, g;
   match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
-      pattern(ds(e, f, g)) = [&]
+      pattern(e, f, g) = [&]
       {
         EXPECT_EQ(*e, std::make_pair(123, "a"));
         EXPECT_EQ(*f, std::make_pair(456, "b"));
@@ -302,8 +302,8 @@ TEST(Ds, mapOooBinder)
   Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
   Id<std::pair<int32_t, char const *>> e;
   match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
-      pattern(ds(e, subrange.at(ooo))) = [&]
-      // pattern(ds(e, f, g)) = [&]
+      pattern(e, subrange.at(ooo)) = [&]
+      // pattern(e, f, g) = [&]
       {
         EXPECT_EQ(*e, std::make_pair(123, "a"));
         auto const expected = {std::make_pair(456, "b"), std::make_pair(789, "c")};
@@ -316,9 +316,8 @@ TEST(Ds, mapOooAtBinder)
   Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
   Id<std::pair<int32_t, char const *>> e;
   match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
-      // pattern(ds(e, subrange.at(ooo))) = [&]
-      pattern(ds(e, subrange.at(ooo))) = [&]
-      // pattern(ds(e, f, g)) = [&]
+      pattern(e, subrange.at(ooo)) = [&]
+      // pattern(e, f, g) = [&]
       {
         EXPECT_EQ(*e, std::make_pair(123, "a"));
         auto const expected = {std::make_pair(456, "b"), std::make_pair(789, "c")};

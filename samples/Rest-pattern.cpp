@@ -25,7 +25,7 @@ void sample()
         // clang-format off
         pattern(ds())                   = [&] { std::cout << "slice is empty" << std::endl; },
         pattern(ds(head))               = [&] { std::cout << "single element " << *head << std::endl; },
-        pattern(ds(head, tail.at(ooo))) = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
+        pattern(head, tail.at(ooo)) = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
         // clang-format on
     );
 
@@ -33,13 +33,13 @@ void sample()
     match(slice)(
         // clang-format off
         // Ignore everything but the last element, which must be "!".
-        pattern(ds(ooo, "!"))              = [&] { std::cout << "!!!" << std::endl; },
+        pattern(ooo, "!")              = [&] { std::cout << "!!!" << std::endl; },
 
         // `subrange` is a slice of everything except the last element, which must be "z".
-        pattern(ds(subrange.at(ooo), "z")) = [&] { std::cout << "starts with: " << *subrange << std::endl; },
+        pattern(subrange.at(ooo), "z") = [&] { std::cout << "starts with: " << *subrange << std::endl; },
 
         // `subrange` is a slice of everything but the first element, which must be "a".
-        pattern(ds("a", subrange.at(ooo))) = [&] { std::cout << "ends with: " << *subrange << std::endl; },
+        pattern("a", subrange.at(ooo)) = [&] { std::cout << "ends with: " << *subrange << std::endl; },
 
         pattern(ds(subrange.at(ooo)))      = [&] { std::cout << *subrange << std::endl; }
         // clang-format on
