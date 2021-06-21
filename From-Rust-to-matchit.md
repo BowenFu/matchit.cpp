@@ -2,6 +2,8 @@
 
 ![match(it).cpp](./matchit.cpp.svg)
 
+## Rust Reference
+
 Here we will give equivalent code sinppets using `match(it)` for most samples given by [Rust Reference Patterns Section](https://doc.rust-lang.org/stable/reference/patterns.html). 
 
 ### Literal patterns
@@ -26,10 +28,10 @@ for (auto i = -2; i <= 5; ++i)
 {
     std::cout <<
         match(i)(
-            pattern(-1 )      = expr("It's minus one"),
-            pattern(1  )      = expr("It's a one"),
+            pattern(-1)       = expr("It's minus one"),
+            pattern(1)        = expr("It's a one"),
             pattern(or_(2,4)) = expr("It's either a two or a four"),
-            pattern(_  )      = expr("Matched none of the arms")
+            pattern(_)        = expr("Matched none of the arms")
         )
         << std::endl;
 }
@@ -617,4 +619,457 @@ match(v)(
     pattern(a, b, c) = [] { /* this arm will apply */ },
     pattern(_)       = [] { /* this wildcard is required, since the length is not known statically */ }
 );
+```
+
+---------------
+
+## Rust Book
+
+We will also add some equivalent samples from [Rust Book](https://doc.rust-lang.org/book/ch18-01-all-the-places-for-patterns.html).
+
+### Conditional if let Expressions
+
+In Rust:
+
+```Rust
+let favorite_color: Option<&str> = None;
+let is_tuesday = false;
+let age: Result<u8, _> = "34".parse();
+
+if let Some(color) = favorite_color {
+    println!("Using your favorite color, {}, as the background", color);
+} else if is_tuesday {
+    println!("Tuesday is green day!");
+} else if let Ok(age) = age {
+    if age > 30 {
+        println!("Using purple as the background color");
+    } else {
+        println!("Using orange as the background color");
+    }
+} else {
+    println!("Using blue as the background color");
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+auto const favorite_color = std::optional<std::string>{};
+auto const is_tuesday = false;
+
+template <typename V, typename E>
+using Result = std::variant<V, E>;
+Result<uint8_t, std::exception> const age = parse("34");
+
+Id<std::string> color;
+match(favorite_color)(
+    pattern(some(color)) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
+    pattern(_).when(is_tuesday) = expr("Tuesday is green day!"),
+    pattern(_) = []{
+        Id<uint8_t> age_;
+        match(age)(
+            pattern(as<uint8_t>(age_)).when ( age_ > 30) = expr("Using purple as the background color"),
+            pattern(as<uint8_t>(age_)) = expr("Using orange as the background color"),
+            pattern(_)                 = expr("Using blue as the background color")
+        )
+    }
+);
+```
+
+### while let Conditional Loops
+
+In Rust:
+
+```Rust
+let mut stack = Vec::new();
+
+stack.push(1);
+stack.push(2);
+stack.push(3);
+
+while let Some(top) = stack.pop() {
+    println!("{}", top);
+}
+
+In C++ with `match(it)`
+
+```C++
+std::stack<int32_t> stack;
+
+stack.push(1);
+stack.push(2);
+stack.push(3);
+
+while let Some(top) = stack.pop() {
+    println!("{}", top);
+}
+
+Id<int32_t> top;
+while (
+    match(stack.pop())(
+        pattern(some(top)) = [&] { std::cout << *top << std::endl; return true; },
+        pattern(_)         = expr(false)
+    )
+)
+{}
+```
+
+### Destructuring Enums
+
+In Rust
+
+```Rust
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+}
+
+fn main() {
+    let msg = Message::ChangeColor(0, 160, 255);
+
+    match msg {
+        Message::Quit => {
+            println!("The Quit variant has no data to destructure.")
+        }
+        Message::Move { x, y } => {
+            println!(
+                "Move in the x direction {} and in the y direction {}",
+                x, y
+            );
+        }
+        Message::Write(text) => println!("Text message: {}", text),
+        Message::ChangeColor(r, g, b) => println!(
+            "Change the color to red {}, green {}, and blue {}",
+            r, g, b
+        ),
+    }
+}
+```
+
+In C++ with `match(it)`
+
+```C++
+struct Quit {};
+using Move = std::array<int32_t, 2>;
+using Write = std::string;
+using ChangeColor = std::array<int32_t, 3>;
+using Message = std::variant<Quit, Move, Write, ChangeColor>;
+
+int32_t main()
+{
+    Message const msg = ChangeColor{0, 160, 255};
+
+    Id<int32_t> x, y;
+    Id<std::string> text;
+    Id<int32_t> r, g, b;
+    match(msg)( 
+        pattern(as<Quit>(_)) = [] {
+            std:: cout << "The Quit variant has no data to destructure." << std::endl;
+        },
+        pattern(as<Move>(ds(x, y))) = [&] {
+            std::cout <<
+                "Move in the x direction " << *x << " and in the y direction " << *y << std::endl; 
+        },
+        pattern(as<Write>(text)) = [&] {
+            std::cout << "Text message: " << *text << std::endl;
+        },
+        pattern(as<ChangeColor>(ds(r, g, b))) = [&] {
+            std::cout <<
+                "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
+        }
+     );
+}
+```
+
+### Destructuring Nested Structs and Enums
+
+In Rust:
+
+```Rust
+enum Color {
+    Rgb(i32, i32, i32),
+    Hsv(i32, i32, i32),
+}
+
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(Color),
+}
+
+fn main() {
+    let msg = Message::ChangeColor(Color::Hsv(0, 160, 255));
+
+    match msg {
+        Message::ChangeColor(Color::Rgb(r, g, b)) => println!(
+            "Change the color to red {}, green {}, and blue {}",
+            r, g, b
+        ),
+        Message::ChangeColor(Color::Hsv(h, s, v)) => println!(
+            "Change the color to hue {}, saturation {}, and value {}",
+            h, s, v
+        ),
+        _ => (),
+    }
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+enum Color {
+    Rgb(i32, i32, i32),
+    Hsv(i32, i32, i32),
+}
+
+struct Rgb : std::array<int32_t, 3> {};
+struct Hsv : std::array<int32_t, 3> {};
+using Color = std::variant<Rgb, Hsv>;
+
+struct Quit {};
+using Move = std::array<int32_t, 2>;
+using Write = std::string;
+using ChangeColor = Color;
+using Message = std::variant<Quit, Move, Write, ChangeColor>;
+
+int32_t main()
+{
+    Message const msg = ChangeColor{Hsv{0, 160, 255}};
+
+    Id<int32_t> r, g, b;
+    Id<int32_t> h, s, v;
+    Id<std::string> text;
+    match(msg)( 
+        pattern(as<ChangeColor>(as<Rgb>(ds(r, g, b)))) = [&] {
+            std::cout <<
+                "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
+        },
+        pattern(as<ChangeColor>(as<Hsv>(ds(h, s, v)))) = [&] {
+            std::cout <<
+                "Change the color to hue " << *h << ", saturation " << *s << ", and value " << *v << std::endl;
+        }
+     );
+}
+```
+
+### Ignoring Parts of a Value with a Nested _
+
+In Rust:
+
+```Rust
+fn main() {
+    let mut setting_value = Some(5);
+    let new_setting_value = Some(10);
+
+    match (setting_value, new_setting_value) {
+        (Some(_), Some(_)) => {
+            println!("Can't overwrite an existing customized value");
+        }
+        _ => {
+            setting_value = new_setting_value;
+        }
+    }
+
+    println!("setting is {:?}", setting_value);
+}
+```
+
+In C++ with `match(it)`
+
+```C++
+int32_t main()
+{
+    auto setting_value = std::make_optional(5);
+    auto const new_setting_value = std::make_optional(10);
+
+    match (setting_value, new_setting_value) ( 
+        pattern(some(_), some(_)) = [] {
+            std:: cout << "Can't overwrite an existing customized value" << std::endl;
+        },
+        pattern(_) = [&] {
+            setting_value = new_setting_value;
+        }
+     );
+
+    // need to implement std::cout << std::optional
+    std::cout << "setting is " << setting_value << std::endl;
+}
+```
+
+In Rust:
+
+```Rust
+fn main() {
+    let numbers = (2, 4, 8, 16, 32);
+
+    match numbers {
+        (first, _, third, _, fifth) => {
+            println!("Some numbers: {}, {}, {}", first, third, fifth)
+        }
+    }
+}
+```
+
+In C++ with `match(it)`
+
+```C++
+int32_t main() {
+    auto const numbers = std::make_tuple(2, 4, 8, 16, 32);
+
+    Id<int32_t> first, third, fifth;
+    match(numbers)( 
+        pattern(first, _, third, _, fifth) = [&] {
+            std::cout << "Some numbers: " << *first << ", " << *third ", " << *fifth << std::endl;
+        }
+     );
+}
+```
+
+### Extra Conditionals with Match Guards
+
+In Rust:
+
+```Rust
+fn main() {
+    let num = Some(4);
+
+    match num {
+        Some(x) if x < 5 => println!("less than five: {}", x),
+        Some(x) => println!("{}", x),
+        None => (),
+    }
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+int32_t main() {
+    auto const num = std::make_optional(4);
+
+    Id<int32_t> x;
+    match(num)( 
+        // pattern(some(x)).when(x < 5) => [&] { std::cout << "less than five: " << *x; },
+        pattern(some(x.at(_ < 5)))   => [&] { std::cout << "less than five: " << *x; },
+        pattern(some(x))             => [&] { std::cout <<  *x << std::endl; },
+        pattern(none)                => [&] {}
+    );
+}
+```
+
+In Rust:
+
+```Rust
+fn main() {
+    let x = Some(5);
+    let y = 10;
+
+    match x {
+        Some(50) => println!("Got 50"),
+        Some(n) if n == y => println!("Matched, n = {}", n),
+        _ => println!("Default case, x = {:?}", x),
+    }
+
+    println!("at the end: x = {:?}, y = {}", x, y);
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+int32_t main() {
+    auto const x = std::make_optional(5);
+    auto const y = 10;
+
+    Id<int32_t> n;
+    match(x)( 
+        pattern(some(50))             = [&]{ std::cout << "Got 50" << std::endl; },
+        // pattern(some(n)).when(n == y) = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
+        // In `match(it)`, you can use variable inside patterns, just like literals.
+        pattern(some(y))              = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
+        pattern(_)                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
+    );
+
+    std::cout << "at the end: x = " << x << ", y = " << y << std::endl;
+}
+```
+
+In Rust:
+
+```Rust
+fn main() {
+    let x = 4;
+    let y = false;
+
+    match x {
+        4 | 5 | 6 if y => println!("yes"),
+        _ => println!("no"),
+    }
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+int32_t main() {
+    auto const x = 4;
+    auto const y = false;
+
+    std::cout <<
+        match(x)( 
+            pattern(or_(4, 5, 6)).when(y) = expr("yes"),
+            pattern(_)                    = expr("no")
+    ) << std::endl;
+}
+```
+
+### @ Bindings
+
+In Rust:
+
+```Rust
+fn main() {
+    enum Message {
+        Hello { id: i32 },
+    }
+
+    let msg = Message::Hello { id: 5 };
+
+    match msg {
+        Message::Hello {
+            id: id_variable @ 3..=7,
+        } => println!("Found an id in range: {}", id_variable),
+        Message::Hello { id: 10..=12 } => {
+            println!("Found an id in another range")
+        }
+        Message::Hello { id } => println!("Found some other id: {}", id),
+    }
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+struct Hello { int32_t id; };
+using Message = std::variant<Hello>;
+
+int32_t main() {
+    Message const msg = Hello{5};
+
+    Id<int32_t> id_variable;
+    match(msg)( 
+        pattern(as<Hello>(app(&Hello::id, id_variable.at(3 <= _ && _ <= 7))) = [&] {
+            std::cout << "Found an id in range: " << *id_variable << std::endl;
+        },
+        pattern(as<Hello>(app(&Hello::id, 10 <= _ && _ <= 12)) = [&] {
+            std::cout << "Found an id in another range" << std::endl;
+        },
+        pattern(as<Hello>(app(&Hello::id, id_variable)) = [&] {
+            std::cout << "Found some other id: " << *id_variable << std::endl;
+        }
+    )
+}
 ```

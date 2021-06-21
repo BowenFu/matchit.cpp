@@ -20,9 +20,9 @@ void sample2()
     Id<int32_t> a, b, c;
     match(v)(
         // format off
-        pattern(a, b) = [] { /* this arm will not apply because the length doesn't match */ },
+        pattern(a, b)    = [] { /* this arm will not apply because the length doesn't match */ },
         pattern(a, b, c) = [] { /* this arm will apply */ },
-        pattern(_) = [] { /* this wildcard is required, since the length is not known statically */ }
+        pattern(_)       = [] { /* this wildcard is required, since the length is not known statically */ }
         // format on
     );
 }
