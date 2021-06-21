@@ -854,3 +854,222 @@ int32_t main()
      );
 }
 ```
+
+### Ignoring Parts of a Value with a Nested _
+
+In Rust:
+
+```Rust
+fn main() {
+    let mut setting_value = Some(5);
+    let new_setting_value = Some(10);
+
+    match (setting_value, new_setting_value) {
+        (Some(_), Some(_)) => {
+            println!("Can't overwrite an existing customized value");
+        }
+        _ => {
+            setting_value = new_setting_value;
+        }
+    }
+
+    println!("setting is {:?}", setting_value);
+}
+```
+
+In C++ with `match(it)`
+
+```C++
+int32_t main()
+{
+    auto setting_value = std::make_optional(5);
+    auto const new_setting_value = std::make_optional(10);
+
+    match (setting_value, new_setting_value) ( 
+        pattern(some(_), some(_)) = [] {
+            std:: cout << "Can't overwrite an existing customized value" << std::endl;
+        },
+        pattern(_) = [&] {
+            setting_value = new_setting_value;
+        }
+     );
+
+    // need to implement std::cout << std::optional
+    std::cout << "setting is " << setting_value << std::endl;
+}
+```
+
+In Rust:
+
+```Rust
+fn main() {
+    let numbers = (2, 4, 8, 16, 32);
+
+    match numbers {
+        (first, _, third, _, fifth) => {
+            println!("Some numbers: {}, {}, {}", first, third, fifth)
+        }
+    }
+}
+```
+
+In C++ with `match(it)`
+
+```C++
+int32_t main() {
+    auto const numbers = std::make_tuple(2, 4, 8, 16, 32);
+
+    Id<int32_t> first, third, fifth;
+    match(numbers)( 
+        pattern(first, _, third, _, fifth) = [&] {
+            std::cout << "Some numbers: " << first << ", " << third ", " << fifth << std::endl;
+        }
+     );
+}
+```
+
+### Extra Conditionals with Match Guards
+
+In Rust:
+
+```Rust
+fn main() {
+    let num = Some(4);
+
+    match num {
+        Some(x) if x < 5 => println!("less than five: {}", x),
+        Some(x) => println!("{}", x),
+        None => (),
+    }
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+int32_t main() {
+    auto const num = std::make_optional(4);
+
+    Id<int32_t> x;
+    match(num)( 
+        // pattern(some(x)).when(x < 5) => [] { std::cout << "less than five: " << *x; },
+        pattern(some(x.at(_ < 5)))   => [] { std::cout << "less than five: " << *x; },
+        pattern(some(x))             => [] { std::cout <<  *x << std::endl; },
+        pattern(none)                => [] {}
+    );
+}
+```
+
+In Rust:
+
+```Rust
+fn main() {
+    let x = Some(5);
+    let y = 10;
+
+    match x {
+        Some(50) => println!("Got 50"),
+        Some(n) if n == y => println!("Matched, n = {}", n),
+        _ => println!("Default case, x = {:?}", x),
+    }
+
+    println!("at the end: x = {:?}, y = {}", x, y);
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+int32_t main() {
+    auto const x = std::make_optional(5);
+    auto const y = 10;
+
+    Id<int32_t> n;
+    match(x)( 
+        pattern(some(50))             = [&]{ std::cout << "Got 50" << std::endl; },
+        // pattern(some(n)).when(n == y) = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
+        // In `match(it)`, you can use variable inside patterns, just like literals.
+        pattern(some(y))              = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
+        pattern(_)                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
+    );
+
+    std::cout << "at the end: x = " << x << ", y = " << y << std::endl;
+}
+```
+
+In Rust:
+
+```Rust
+fn main() {
+    let x = 4;
+    let y = false;
+
+    match x {
+        4 | 5 | 6 if y => println!("yes"),
+        _ => println!("no"),
+    }
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+int32_t main() {
+    auto const x = 4;
+    auto const y = false;
+
+    std::cout <<
+        match(x)( 
+            pattern(or_(4, 5, 6)).when(y) = expr("yes"),
+            pattern(_)                    = expr("no")
+    ) << std::endl;
+}
+```
+
+### @ Bindings
+
+In Rust:
+
+```Rust
+fn main() {
+    enum Message {
+        Hello { id: i32 },
+    }
+
+    let msg = Message::Hello { id: 5 };
+
+    match msg {
+        Message::Hello {
+            id: id_variable @ 3..=7,
+        } => println!("Found an id in range: {}", id_variable),
+        Message::Hello { id: 10..=12 } => {
+            println!("Found an id in another range")
+        }
+        Message::Hello { id } => println!("Found some other id: {}", id),
+    }
+}
+```
+
+In C++ with `match(it)`:
+
+```C++
+struct Hello { int32_t id; };
+using Message = std::variant<Hello>;
+
+int32_t main() {
+    Message const msg = Hello{5};
+
+    Id<int32_t> id_variable;
+    match(msg)( 
+        pattern(as<Hello>(app(&Hello::id, id_variable.at(3 <= _ && _ <= 7))) = [&] {
+            std::cout << "Found an id in range: " << *id_variable << std::endl;
+        },
+        pattern(as<Hello>(app(&Hello::id, 10 <= _ && _ <= 12)) = [&] {
+            std::cout << "Found an id in another range" << std::endl;
+        },
+        pattern(as<Hello>(app(&Hello::id, id_variable)) = [&] {
+            std::cout << "Found some other id: " << *id_variable << std::endl;
+        }
+    )
+}
+```
