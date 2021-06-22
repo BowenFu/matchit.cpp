@@ -25,7 +25,7 @@ int32_t main()
         }
         catch (...)
         {
-            return std::optional<int32_t>();
+            return std::optional<int32_t>{};
         }
         
     };
