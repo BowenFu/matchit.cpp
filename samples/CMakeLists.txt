@@ -27,6 +27,13 @@ Reference-pattern
 Struct-pattern
 Tuple-struct-pattern
 Slice-pattern
+Conditional-if-let-Expressions
+While-conditional-let-Loops
+Destructuring-Enums
+Destructuring-Nested-Structs-and-Enums
+Ignoring-Parts-of-a-Value-with-a-Nested-_
+Extra-Conditionals-with-Match-Guards
+at-Bindings
 )
 
 foreach(sample ${MATCHIT_SAMPLES})

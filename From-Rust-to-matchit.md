@@ -654,26 +654,41 @@ if let Some(color) = favorite_color {
 In C++ with `match(it)`:
 
 ```C++
-auto const favorite_color = std::optional<std::string>{};
-auto const is_tuesday = false;
+#include <iostream>
+#include <optional>
+#include "matchit.h"
 
 template <typename V, typename E>
 using Result = std::variant<V, E>;
-Result<uint8_t, std::exception> const age = parse("34");
 
-Id<std::string> color;
-match(favorite_color)(
-    pattern(some(color)) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
-    pattern(_).when(is_tuesday) = expr("Tuesday is green day!"),
-    pattern(_) = []{
-        Id<uint8_t> age_;
-        match(age)(
-            pattern(as<uint8_t>(age_)).when ( age_ > 30) = expr("Using purple as the background color"),
-            pattern(as<uint8_t>(age_)) = expr("Using orange as the background color"),
-            pattern(_)                 = expr("Using blue as the background color")
-        )
-    }
-);
+Result<uint8_t, std::exception> parse(std::string_view)
+{
+    return 34;
+}
+
+int32_t main()
+{
+    auto const favorite_color = std::optional<std::string>{};
+    auto const is_tuesday = false;
+
+    Result<uint8_t, std::exception> const age = parse("34");
+
+    using namespace matchit;
+    Id<std::string> color;
+    match(favorite_color)(
+        pattern(some(color)) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
+        pattern(_).when(expr(is_tuesday)) = expr("Tuesday is green day!"),
+        pattern(_) = [&]
+        {
+            Id<uint8_t> age_;
+            return match(age)(
+                pattern(as<uint8_t>(age_)).when(age_ > 30) = expr("Using purple as the background color"),
+                pattern(as<uint8_t>(age_))                 = expr("Using orange as the background color"),
+                pattern(_)                                 = expr("Using blue as the background color"));
+        });
+
+    return 0;
+}
 ```
 
 ### while let Conditional Loops
@@ -690,28 +705,56 @@ stack.push(3);
 while let Some(top) = stack.pop() {
     println!("{}", top);
 }
+```
 
 In C++ with `match(it)`
 
 ```C++
-std::stack<int32_t> stack;
+#include <iostream>
+#include <stack>
+#include <optional>
+#include "matchit.h"
 
-stack.push(1);
-stack.push(2);
-stack.push(3);
+int32_t main()
+{
+    std::stack<int32_t> stack;
 
-while let Some(top) = stack.pop() {
-    println!("{}", top);
+    stack.push(1);
+    stack.push(2);
+    stack.push(3);
+
+    auto const safePop = [](std::stack<int32_t>& s)
+    {
+        try
+        {
+            if (s.empty())
+            {
+                throw "empty";
+            }
+            auto top = s.top();
+            s.pop();
+            return std::make_optional(top);
+        }
+        catch (...)
+        {
+            return std::optional<int32_t>();
+        }
+        
+    };
+
+    using namespace matchit;
+    Id<int32_t> top;
+    while (
+        match(safePop(stack))(
+            pattern(some(top)) = [&]
+            {
+                std::cout << *top << std::endl;
+                return true;
+            },
+            pattern(_) = expr(false)))
+    {
+    };
 }
-
-Id<int32_t> top;
-while (
-    match(stack.pop())(
-        pattern(some(top)) = [&] { std::cout << *top << std::endl; return true; },
-        pattern(_)         = expr(false)
-    )
-)
-{}
 ```
 
 ### Destructuring Enums
@@ -761,6 +804,7 @@ int32_t main()
 {
     Message const msg = ChangeColor{0, 160, 255};
 
+    using namespace matchit;
     Id<int32_t> x, y;
     Id<std::string> text;
     Id<int32_t> r, g, b;
@@ -820,10 +864,10 @@ fn main() {
 In C++ with `match(it)`:
 
 ```C++
-enum Color {
-    Rgb(i32, i32, i32),
-    Hsv(i32, i32, i32),
-}
+#include <iostream>
+#include <stack>
+#include <optional>
+#include "matchit.h"
 
 struct Rgb : std::array<int32_t, 3> {};
 struct Hsv : std::array<int32_t, 3> {};
@@ -837,8 +881,9 @@ using Message = std::variant<Quit, Move, Write, ChangeColor>;
 
 int32_t main()
 {
-    Message const msg = ChangeColor{Hsv{0, 160, 255}};
+    Message const msg = ChangeColor{Hsv{{0, 160, 255}}};
 
+    using namespace matchit;
     Id<int32_t> r, g, b;
     Id<int32_t> h, s, v;
     Id<std::string> text;
@@ -853,6 +898,7 @@ int32_t main()
         }
      );
 }
+
 ```
 
 ### Ignoring Parts of a Value with a Nested _
@@ -880,11 +926,30 @@ fn main() {
 In C++ with `match(it)`
 
 ```C++
+#include <iostream>
+#include <optional>
+#include "matchit.h"
+
+template <typename T>
+std::ostream& operator<< (std::ostream& o, std::optional<T> const& op)
+{
+    if (op)
+    {
+        o << *op;
+    }
+    else
+    {
+        o << "none";
+    }
+    return o;
+}
+
 int32_t main()
 {
     auto setting_value = std::make_optional(5);
     auto const new_setting_value = std::make_optional(10);
 
+    using namespace matchit;
     match (setting_value, new_setting_value) ( 
         pattern(some(_), some(_)) = [] {
             std:: cout << "Can't overwrite an existing customized value" << std::endl;
@@ -894,9 +959,9 @@ int32_t main()
         }
      );
 
-    // need to implement std::cout << std::optional
     std::cout << "setting is " << setting_value << std::endl;
 }
+
 ```
 
 In Rust:
@@ -919,12 +984,10 @@ In C++ with `match(it)`
 int32_t main() {
     auto const numbers = std::make_tuple(2, 4, 8, 16, 32);
 
+    using namespace matchit;
     Id<int32_t> first, third, fifth;
-    match(numbers)( 
-        pattern(first, _, third, _, fifth) = [&] {
-            std::cout << "Some numbers: " << *first << ", " << *third ", " << *fifth << std::endl;
-        }
-     );
+    match(numbers)(
+        pattern(first, _, third, _, fifth) = [&] { std::cout << "Some numbers: " << *first << ", " << *third << ", " << *fifth << std::endl; });
 }
 ```
 
@@ -947,16 +1010,20 @@ fn main() {
 In C++ with `match(it)`:
 
 ```C++
-int32_t main() {
+int32_t main()
+{
     auto const num = std::make_optional(4);
 
+    using namespace matchit;
     Id<int32_t> x;
-    match(num)( 
-        // pattern(some(x)).when(x < 5) => [&] { std::cout << "less than five: " << *x; },
-        pattern(some(x.at(_ < 5)))   => [&] { std::cout << "less than five: " << *x; },
-        pattern(some(x))             => [&] { std::cout <<  *x << std::endl; },
-        pattern(none)                => [&] {}
-    );
+    match(num)(
+        // pattern(some(x)).when(x < 5) = [&] { std::cout << "less than five: " << *x; },
+        pattern(some(x.at(_ < 5))) = [&]
+        { std::cout << "less than five: " << *x << std::endl;  },
+        pattern(some(x)) = [&]
+        { std::cout << *x << std::endl; },
+        pattern(none) = [&] {});
+    return 0;
 }
 ```
 
