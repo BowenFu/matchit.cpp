@@ -13,6 +13,7 @@ int32_t main()
 
     auto const safePop = [](std::stack<int32_t>& s) -> std::optional<int32_t>
     {
+        auto const result = std::optional<int32_t>{};
         try
         {
             if (s.empty())
@@ -25,7 +26,7 @@ int32_t main()
         }
         catch (...)
         {
-            return {};
+            return result;
         }
         
     };
