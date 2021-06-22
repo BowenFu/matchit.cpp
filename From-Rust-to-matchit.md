@@ -1087,8 +1087,8 @@ int32_t main() {
 
     std::cout <<
         match(x)( 
-            pattern(or_(4, 5, 6)).when(y) = expr("yes"),
-            pattern(_)                    = expr("no")
+            pattern(or_(4, 5, 6)).when(expr(y)) = expr("yes"),
+            pattern(_)                          = expr("no")
     ) << std::endl;
 }
 ```
