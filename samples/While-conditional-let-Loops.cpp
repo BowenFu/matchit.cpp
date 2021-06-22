@@ -11,7 +11,7 @@ int32_t main()
     stack.push(2);
     stack.push(3);
 
-    auto const safePop = [](std::stack<int32_t>& s)
+    auto const safePop = [](std::stack<int32_t>& s) -> std::optional<int32_t>
     {
         try
         {
@@ -21,11 +21,11 @@ int32_t main()
             }
             auto top = s.top();
             s.pop();
-            return std::make_optional(top);
+            return top;
         }
         catch (...)
         {
-            return std::optional<int32_t>{};
+            return {};
         }
         
     };
