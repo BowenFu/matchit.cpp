@@ -7,7 +7,7 @@ using Result = std::variant<V, E>;
 
 Result<uint8_t, std::exception> parse(std::string_view)
 {
-    return 34;
+    return uint8_t{34U};
 }
 
 int32_t main()
