@@ -128,6 +128,7 @@ In `match(it)`:
 ```C++
 int get_area(const Shape& shape)
 {
+    Id <int> r, w, h;
     return match(shape) ( 
         // need to implement get for the structs.
         pattern(as<Circle>(ds(r)))       = 3.14 * r * r,
@@ -221,6 +222,296 @@ Op parseOp(Parser& parser) {
         }
     );
 }
+```
+
+### Wildcard Pattern
+
+In `P1371R3`:
+
+```C++
+int v = /* ... */;
+inspect (v) {
+    __ => { std::cout << "ignored"; }
+// ˆˆ wildcard pattern
+};
+```
+
+In `match(it)`:
+
+```C++
+int v = /* ... */;
+match(v) ( 
+    pattern(_) = [&]{ std::cout << "ignored"; }
+    //      ˆ wildcard pattern
+);
+```
+
+### Identifier Pattern
+
+In `P1371R3`:
+
+```C++
+int v = /* ... */;
+inspect (v) {
+    x => { std::cout << x; }
+//  ˆ identifier pattern
+};
+```
+
+In `match(it)`:
+
+```C++
+int v = /* ... */;
+match(v)( 
+    pattern(x) = [&]{ std::cout << *x; }
+//          ˆ identifier pattern
+);
+```
+
+### Expression Pattern
+
+In `P1371R3`:
+
+```C++
+int v = /* ... */;
+inspect (v){
+    0 => { std::cout << "got zero"; } 1 => { std::cout << "got one"; }
+//  ˆ expression pattern
+};
+```
+
+In `match(it)`:
+
+```C++
+int v = /* ... */;
+match(v)( 
+    pattern(0) = []{ std::cout << "got zero"; },
+    pattern(1) = []{ std::cout << "got one"; }
+//          ˆ expression pattern
+);
+```
+
+In `P1371R3`:
+
+```C++
+int v = /* ... */;
+enum class Color { Red, Green, Blue };
+Color color = /* ... */;
+inspect (color){
+    Color::Red => // ...
+    Color::Green => // ...
+    Color::Blue => // ...
+// ˆˆˆˆˆˆˆˆˆˆˆ expression pattern
+};
+```
+
+In `match(it)`:
+
+```C++
+int v = /* ... */;
+enum class Color { Red, Green, Blue };
+Color color = /* ... */;
+match(color)( 
+    pattern(Color::Red) = // ...
+    pattern(Color::Green) = // ...
+    pattern(Color::Blue) = // ...
+// ˆˆˆˆˆˆˆˆˆˆˆ expression pattern
+);
+```
+
+In `P1371R3`:
+By default, an identifier is an Identifier Pattern.
+
+```C++
+static constexpr int zero = 0, one = 1;
+int v = 42;
+inspect (v) {
+    zero => { std::cout << zero; }
+//  ˆˆˆˆ identifier pattern
+};
+// prints: 42
+```
+
+In `match(it)`:
+By default, an identifier is an expression pattern.
+Only Id variables are considered identifier patterns.
+
+```C++
+static constexpr int zero = 0, one = 1;
+int v = 42;
+match(v) {
+    pattern(zero) = [&]{ std::cout << zero; }
+//          ˆˆˆˆ expression pattern
+};
+// prints nothing. no match.
+```
+
+### Structured Binding Pattern
+
+In `P1371R3`:
+
+```C++
+std::pair<int, int> p = /* ... */;
+inspect (p) { 
+    [0, 0] => { std::cout << "on origin"; }
+    [0, y] => { std::cout << "on y-axis"; }
+//      ˆ identifier pattern
+    [x, 0] => { std::cout << "on x-axis"; }
+//      ˆ expression pattern
+    [x, y] => { std::cout << x << ',' << y; }
+//  ˆˆˆˆˆˆ structured binding pattern
+ };
+```
+
+In `match(it)`:
+
+```C++
+std::pair<int, int> p = /* ... */;
+Id<int> x, y;
+match(p) (  
+    pattern(ds(0, 0)) = []{ std::cout << "on origin"; },
+    pattern(ds(0, y)) = []{ std::cout << "on y-axis"; },
+//                ˆ identifier pattern
+    pattern(ds(x, 0)) = []{ std::cout << "on x-axis"; },
+//                ˆ expression pattern
+    pattern(ds(x, y)) = [&]{ std::cout << *x << ',' << *y; },
+//            ˆˆˆˆˆˆ structured binding pattern
+);
+```
+
+In `P1371R3`:
+
+```C++
+struct Player { std::string name; int hitpoints; int coins; };
+void get_hint(const Player& p){
+    inspect (p) {
+        [.hitpoints: 1] => { std::cout << "You're almost destroyed. Give up!\n"; }
+        [.hitpoints: 10, .coins: 10] => { std::cout << "I need the hints from you!\n"; }
+        [.coins: 10] => { std::cout << "Get more hitpoints!\n"; }
+        [.hitpoints: 10] => { std::cout << "Get more ammo!\n"; }
+        [.name: n] => {
+            if (n != "The Bruce Dickenson") {
+                std::cout << "Get more hitpoints and ammo!\n";
+            } else {
+                std::cout << "More cowbell!\n";
+            }
+        }
+    };
+}
+```
+
+In `match(it)`:
+
+```C++
+struct Player { std::string name; int hitpoints; int coins; };
+void get_hint(const Player& p){
+    Id<std::string> n;
+    match (p) ( 
+        pattern(app(&Player::hitpoints, 1)) = [&]{ std::cout << "You're almost destroyed. Give up!\n"; },
+        pattern(and_(app(&Player::hitpoints, 10))), app(&Player::coins, 10)) = [&]{ std::cout << "I need the hints from you!\n"; },
+        pattern(app(&Player::coins, 10)) = [&]{ std::cout << "Get more hitpoints!\n"; },
+        pattern(app(&Player::hitpoints, 10)) => [&]{ std::cout << "Get more ammo!\n"; },
+        pattern(app(&Player::name, n)) = [&]{
+            if (*n != "The Bruce Dickenson") {
+                std::cout << "Get more hitpoints and ammo!\n";
+            } else {
+                std::cout << "More cowbell!\n";
+            }
+        }
+    );
+}
+```
+
+### Case Pattern
+
+In `P1371R3`:
+
+```C++
+enum Color { Red, Green, Blue };
+Color color = /* ... */;
+inspect (color) {
+    case Red => // ...
+    case Green => // ...
+//       ˆˆˆˆˆ id-expression
+    case Blue => // ...
+//  ˆˆˆˆˆˆˆˆˆ case pattern
+};
+```
+
+In `match(it)`:
+
+```C++
+enum Color { Red, Green, Blue };
+Color color = /* ... */;
+match(color) ( 
+    pattern(Red) = // ...
+    pattern(Green) = // ...
+//          ˆˆˆˆˆ id-expression
+    pattern(Blue) => // ...
+//  ˆˆˆˆˆˆˆˆˆ^^^^ case pattern
+);
+```
+
+In `P1371R3`:
+
+```C++
+static constexpr int zero = 0;
+int v = /* ... */;
+inspect (v) {
+    case zero => { std::cout << "got zero"; }
+//       ˆˆˆˆ id-expression
+    case 1 => { std::cout << "got one"; }
+//       ˆ expression pattern
+    case 2 => { std::cout << "got two"; }
+//  ˆˆˆˆˆˆ case pattern
+};
+```
+
+In `match(it)`:
+
+```C++
+static constexpr int zero = 0;
+int v = /* ... */;
+match (v) ( 
+    pattern(zero) = [&] { std::cout << "got zero"; },
+//          ˆˆˆˆ id-expression
+    pattern(1) = [&] { std::cout << "got one"; },
+//          ˆ expression pattern or called case pattern
+    pattern(2) = [&] { std::cout << "got two"; }
+//          ˆ expression pattern or called case pattern
+);
+```
+
+In `P1371R3`:
+
+```C++
+static constexpr int zero = 0, one = 1;
+std::pair<int, int> p = /* ... */
+
+inspect (p) {
+    [case zero, case one] => {
+//        ˆˆˆˆ       ˆˆˆ id-expression
+        std::cout << zero << ' ' << one;
+//      Note that    ˆˆˆˆ and       ˆˆˆ are id-expressions
+//      that refer to the `static constexpr` variables.
+    }
+};
+```
+
+In `match(it)`:
+
+```C++
+static constexpr int zero = 0, one = 1;
+std::pair<int, int> p = /* ... */
+
+match(p) ( 
+    pattern(ds(zero, one)) = [&]( 
+//             ˆˆˆˆ  ˆˆˆ id-expression
+        std::cout << zero << ' ' << one;
+//      Note that    ˆˆˆˆ and       ˆˆˆ are id-expressions
+//      that refer to the `static constexpr` variables.
+    )
+);
 ```
 
 
