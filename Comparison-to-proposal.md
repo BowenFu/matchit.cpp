@@ -514,4 +514,150 @@ match(p) (
 );
 ```
 
+### Dereference Pattern
 
+In `P1371R3`:
+
+```C++
+struct Node {
+    int value;
+    std::unique_ptr<Node> lhs, rhs;
+};
+
+void print_leftmost(const Node& node) {
+    inspect (node) {
+        [.value: v, .lhs: nullptr] => { std::cout << v << '\n'; }
+        [.lhs: (*!) l] => { print_leftmost(l); }
+//             ˆˆˆˆ dereference pattern
+    };
+}
+```
+
+In `match(it)`:
+
+```C++
+struct Node {
+    int value;
+    std::unique_ptr<Node> lhs, rhs;
+};
+
+void print_leftmost(const Node& node) {
+    auto deref = [](auto&& e) { return *e; };
+    Id<int> v;
+    Id<Node> l;
+
+    match(node) ( 
+        pattern(and_(app(&Node::value, v), app(&Node::lhs, nullptr))) = [&]{ std::cout << *v << '\n'; },
+        // pattern(app(&Node::lhs, *_, l)) = [&]{ print_leftmost(*l); },
+        pattern(app(&Node::lhs, app(deref, l))) = [&]{ print_leftmost(*l); }
+//             ˆˆˆˆ dereference pattern
+    );
+}
+```
+
+### Extractor Pattern
+
+In `P1371R3`:
+
+```C++
+template <typename T>
+struct Is {
+    template <typename Arg>
+    Arg&& extract(Arg&& arg) const {
+        static_assert(std::is_same_v<T, std::remove_cvref_t<Arg>>);
+        return std::forward<Arg>(arg);
+    }
+};
+template <typename T>
+inline constexpr Is<T> is;
+// P0480: `auto&& [std::string s, int i] = f();`
+inspect (f()) {
+    [(is<std::string>!) s, (is<int>!) i] => // ...
+    // ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ ˆˆˆˆˆˆˆˆˆˆˆˆ extractor pattern
+};
+```
+
+In `match(it)`:
+
+```C++
+template <typename T>
+struct Is {
+    template <typename Arg>
+    Arg&& operator()(Arg&& arg) const {
+        static_assert(std::is_same_v<T, std::remove_cvref_t<Arg>>);
+        return std::forward<Arg>(arg);
+    }
+};
+
+template <typename T>
+inline constexpr Is<T> is;
+// P0480: `auto&& [std::string s, int i] = f();`
+Id<std::string> s;
+Id<int> i;
+match (f()) ( 
+    pattern(ds(app(is<std::string>, s), app(is<int>, i))) = // ...
+);
+```
+
+In `P1371R3`:
+
+```C++
+struct Email {
+    std::optional<std::array<std::string_view, 2>>
+    try_extract(std::string_view sv) const;
+};
+inline constexpr Email email;
+struct PhoneNumber {
+    std::optional<std::array<std::string_view, 3>>
+    try_extract(std::string_view sv) const;
+};
+inline constexpr PhoneNumber phone_number;
+inspect (s) {
+    (email?) [address, domain] => { std::cout << "got an email"; }
+    (phone_number?) ["415", __, __] => { std::cout << "got a San Francisco phone number"; }
+//  ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ extractor pattern
+};
+```
+
+In `match(it)`:
+
+```C++
+struct Email {
+    std::optional<std::array<std::string_view, 2>>
+    operator()(std::string_view sv) const;
+};
+inline constexpr Email email;
+struct PhoneNumber {
+    std::optional<std::array<std::string_view, 3>>
+    operator()(std::string_view sv) const;
+};
+inline constexpr PhoneNumber phone_number;
+Id<std::string_view> address, domain;
+match (s) ( 
+    pattern(app(email, some(ds(address, domain)))) = [&]{ std::cout << "got an email"; },
+    pattern(app(phone_number, some(ds("415", _, _)))) = [&]{ std::cout << "got a San Francisco phone number"; }
+//  ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ extractor pattern
+);
+```
+
+### Pattern Guard
+
+In `P1371R3`:
+
+```C++
+inspect (p) {
+    [x, y] if (test(x, y)) => { std::cout << x << ',' << y << " passed"; }
+//         ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ pattern guard
+};
+```
+
+In `match(it)`:
+
+```C++
+Id<xxx> x;
+Id<yyy> y;
+match(p) ( 
+    pattern(ds(x, y)).when([&]{test(*x, *y)}) = [&]{ std::cout << *x << ',' << *y << " passed"; }
+//                    ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ pattern guard
+);
+```
