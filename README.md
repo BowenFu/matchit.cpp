@@ -54,11 +54,17 @@ If you have questions regarding the library, I would like to invite you to [open
 
 ---------
 
-## From Rust to matchit
+## From Rust to match(it)
 
-The document [From Rust to matchit](./From-Rust-to-matchit.md) gives equivalent samples for corresponding Rust samples.
+The document [From Rust to match(it)](./From-Rust-to-matchit.md) gives equivalent samples for corresponding Rust samples.
 
 There you may have a picture of what coding with `match(it)` would be like.
+
+## From Pattern Matching Proposal to match(it)
+
+The document [From Pattern Matching Proposal to match(it)](./From-Pattern-Matching-Proposal-to-matchit.md) gives equivalent samples for corresponding samples in the Match Pattern Matching Proposal.
+
+There you will see the pros and cons of the library over the proposal.
 
 ## Quick start.
 
