@@ -24,10 +24,10 @@ void sample()
     constexpr auto ph = 10;
     std::cout << match(ph)(
                      // clang-format off
-                     pattern | 0 <= _ && _ <= 6  = expr("acid"),
-                     pattern | 7                 = expr("neutral"),
-                     pattern | 8 <= _ && _ <= 14 = expr("base"),
-                     pattern | _                 = [] { assert(false && "unreachable"); return ""; })
+                     pattern | (0 <= _ && _ <= 6 ) = expr("acid"),
+                     pattern | (7                ) = expr("neutral"),
+                     pattern | (8 <= _ && _ <= 14) = expr("base"),
+                     pattern | (_                ) = [] { assert(false && "unreachable"); return ""; })
                      // clang-format on
               << std::endl;
 
