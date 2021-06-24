@@ -16,7 +16,7 @@
 [![codecov](https://codecov.io/gh/BowenFu/matchit.cpp/branch/main/graph/badge.svg?token=G5B0RE6THD)](https://codecov.io/gh/BowenFu/matchit.cpp)
 
 [badge.godbolt]: https://img.shields.io/badge/try-godbolt-blue
-[godbolt]: https://godbolt.org/z/hxfTc7h49
+[godbolt]: https://godbolt.org/z/8YMr8Kz8j
 
 ## Features
 - Easy to get started.
