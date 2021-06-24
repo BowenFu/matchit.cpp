@@ -7,8 +7,8 @@ constexpr double clip(double value, double min, double max)
     return match(value)(
         // clang-format off
         pattern(and_(_ >= min, _ <= max)) = expr(value),
-        pattern(_ > max)                  = expr(max),
-        pattern(_)                        = expr(min)
+        pattern | _ > max                  = expr(max),
+        pattern | _                        = expr(min)
         // clang-format on
     );
 }

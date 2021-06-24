@@ -7,8 +7,8 @@
 ```C++
 match(VALUE)
 (
-    pattern(PATTERN1) = HANDLER1,
-    pattern(PATTERN2) = HANDLER2,
+    pattern | PATTERN1 = HANDLER1,
+    pattern | PATTERN2 = HANDLER2,
     ...
 )
 ```
@@ -23,7 +23,7 @@ The operator `=` between the pattern and handler can be any binary operators. It
 Handlers should always be nullary functions. This is different from `mpark/patterns` and `jbandela/simple_match`.
 `expr` can be called to return simple functions returning a single value.
 `expr(value)` syntax is inspired by `Boost/Lambda` library.
-`pattern(xxx) = expr(zzz)` or `pattern(xxx) = [&]{zzzzzz}` syntaxes can be aligned and it is easy to find out the pattern parts and handler parts.
+`pattern | xxx = expr(zzz)` or `pattern | xxx = [&]{zzzzzz}` syntaxes can be aligned and it is easy to find out the pattern parts and handler parts.
 
 ## Expression Pattern
 
@@ -33,7 +33,7 @@ You can even use a function call as Expression Pattern, the result of the functi
 ```C++
 match(map.find(key))(
     pattern(map.end()) = expr(false),
-    pattern(_)         = expr(true)
+    pattern | _         = expr(true)
 )
 ```
 
@@ -52,7 +52,7 @@ Predicate Pattern corresponds to `(? expr)`.
 ```C++
 match(value)(
     pattern(meet([](auto &&v) { return v >= 0; })) = expr(value),
-    pattern(_)                                     = expr(0))
+    pattern | _                                     = expr(0))
 ```
 
 Predicate Pattern syntax is `meet(predicate function)`.
@@ -60,8 +60,8 @@ Predicate Pattern syntax is `meet(predicate function)`.
 
 ```C++
 match(value)(
-    pattern(_ >= 0) = expr(value),
-    pattern(_)      = expr(0))
+    pattern | _ >= 0 = expr(value),
+    pattern | _      = expr(0))
 ```
 
 The short syntax is inspired by `jbandela/simple_match`.
@@ -74,7 +74,7 @@ The Racket syntax is `(or pat ...)`, and the corresponding C++ syntax is `or_(pa
 ```C++
 match(n)(
     pattern(or_(1, 3, 5)) = expr(true),
-    pattern(_)            = expr(false))
+    pattern | _            = expr(false))
 ```
 
 Note subpatterns of `or_` pattern can be any patterns, not just expression patterns.
@@ -83,7 +83,7 @@ Say Predicate Patterns
 ```C++
 match(n)(
     pattern(or_(_ < 3, 5)) = expr(true),
-    pattern(_)             = expr(false))
+    pattern | _             = expr(false))
 ```
 
 In Rust and some other related work, there exists a similar `anyof` pattern. But only literal patterns can be used as subpatterns.
@@ -96,8 +96,8 @@ The Racket syntax is `(and pat ...)`, and the corresponding C++ syntax is `and_(
 ```C++
 match(value)(
     pattern(and_(_ >= min, _ <= max)) = expr(value),
-    pattern(_ > max)                  = expr(max),
-    pattern(_)                        = expr(min))
+    pattern | _ > max                  = expr(max),
+    pattern | _                        = expr(min))
 ```
 
 Note this can also be written as

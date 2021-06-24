@@ -77,7 +77,7 @@ namespace matchit
             return match(std::forward<Value>(v))(
                 pattern(std::forward<Pattern>(p)) = []
                 { return true; },
-                pattern(_) = []
+                pattern | _ = []
                 { return false; });
         }
 
