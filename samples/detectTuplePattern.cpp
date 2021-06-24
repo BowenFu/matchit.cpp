@@ -8,10 +8,10 @@ constexpr int32_t detectTuplePattern(Tuple const &tuple)
     using namespace matchit;
     return match(tuple)(
         // clang-format off
-        pattern(2, ooo, 2) = expr(4),
-        pattern(2, ooo)    = expr(3),
-        pattern(ooo, 2)    = expr(2),
-        pattern(ooo)       = expr(1)
+        pattern | ds(2, ooo, 2) = expr(4),
+        pattern | ds(2, ooo   ) = expr(3),
+        pattern | ds(ooo, 2   ) = expr(2),
+        pattern | ds(ooo      ) = expr(1)
         // clang-format on
     );
 }

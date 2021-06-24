@@ -38,8 +38,8 @@ constexpr auto getSecond(DummyStruct const&d)
     Id<char const *> i;
     return match(d)(
         // clang-format off
-        pattern(2, i) = expr(i),
-        pattern(_)    = expr("not matched")
+        pattern | ds(2, i) = expr(i),
+        pattern | _        = expr("not matched")
         // clang-format on
     );
 }
@@ -61,8 +61,8 @@ constexpr auto dsByMember(DummyStruct const&v)
     Id<char const*> i;
     return match(v)(
         // clang-format off
-        pattern(dsA(2, i)) = expr(i),
-        pattern(_) = expr("not matched")
+        pattern | dsA(2, i) = expr(i),
+        pattern | _         = expr("not matched")
         // clang-format on
     );
 }
