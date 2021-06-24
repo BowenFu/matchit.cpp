@@ -8,8 +8,8 @@ constexpr bool sumIs(std::array<int32_t, 2> const &arr, int32_t s)
     Id<int32_t> i, j;
     return match(arr)(
         // clang-format off
-        pattern(i, j).when(i + j == s) = expr(true),
-        pattern(_)                     = expr(false)
+        pattern | i, j | when(i + j == s) = expr(true),
+        pattern | _                       = expr(false)
         // clang-format on
     );
 }

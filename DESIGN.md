@@ -157,7 +157,7 @@ Match Guard exists in most related works. The current syntax is borrowed from `m
 Match Guard can be used to exert extra restrictions on a pattern. The syntax is
 
 ```C++
-pattern(PATTERN).when(PREDICATE) = HANDLER
+pattern | PATTERN | when(PREDICATE) = HANDLER
 ```
 
 A simple sample can be
@@ -165,8 +165,8 @@ A simple sample can be
 ```C++
 Id<int32_t> i, j;
 return match(arr)(
-    pattern(i, j).when(i + j == s) = expr(true),
-    pattern | _                    = expr(false));
+    pattern | ds(i, j) | when(i + j == s) = expr(true),
+    pattern | _                           = expr(false));
 ```
 
 ## Destructure Pattern

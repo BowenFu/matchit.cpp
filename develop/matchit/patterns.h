@@ -329,6 +329,19 @@ namespace matchit
         template <typename Pattern, typename Pred>
         class PostCheck;
 
+        template <typename Pred>
+        class When
+        {
+        public:
+            Pred mPred;
+        };
+
+        template <typename Pred>
+        auto when(Pred const& pred)
+        {
+            return When<Pred>{mPred};
+        }
+
         template <typename Pattern>
         class PatternHelper
         {
@@ -343,9 +356,9 @@ namespace matchit
                 return PatternPair<Pattern, Func>{mPattern, func};
             }
             template <typename Pred>
-            constexpr auto when(Pred const &pred)
+            constexpr auto operator|(When<Pred> const &w)
             {
-                return PatternHelper<PostCheck<Pattern, Pred>>(PostCheck(mPattern, pred));
+                return PatternHelper<PostCheck<Pattern, Pred>>(PostCheck(mPattern, w.mPred));
             }
 
         private:

@@ -9,7 +9,6 @@ void sample1()
 
     Id<int32_t> x;
     match(num)(
-        // pattern(some(x)).when(x < 5) = [&] { std::cout << "less than five: " << *x; },
         pattern(some(x.at(_ < 5))) = [&]
         { std::cout << "less than five: " << *x << std::endl;  },
         pattern(some(x)) = [&]
@@ -40,7 +39,6 @@ void sample2()
     match(x)( 
         // clang-format off
         pattern(some(50))             = [&]{ std::cout << "Got 50" << std::endl; },
-        // pattern(some(n)).when(n == y) = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
         // In `match(it)`, you can use variable inside patterns, just like literals.
         pattern(some(y))              = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
         pattern | _                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
@@ -58,8 +56,8 @@ void sample3()
     std::cout <<
         match(x)( 
             // clang-format off
-            pattern(or_(4, 5, 6)).when(expr(y)) = expr("yes"),
-            pattern | _                          = expr("no")
+            pattern | or_(4, 5, 6) | when(expr(y)) = expr("yes"),
+            pattern | _                            = expr("no")
             // clang-format on
     ) << std::endl;
 }

@@ -677,13 +677,13 @@ int32_t main()
     Id<std::string> color;
     match(favorite_color)(
         pattern(some(color)) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
-        pattern(_).when(expr(is_tuesday)) = expr("Tuesday is green day!"),
+        pattern | _ | when(expr(is_tuesday)) = expr("Tuesday is green day!"),
         pattern | _ = [&]
         {
             Id<uint8_t> age_;
             return match(age)(
-                pattern(as<uint8_t>(age_)).when(age_ > 30) = expr("Using purple as the background color"),
-                pattern(as<uint8_t>(age_))                 = expr("Using orange as the background color"),
+                pattern | as<uint8_t>(age_) | when(age_ > 30) = expr("Using purple as the background color"),
+                pattern | as<uint8_t>(age_)                 = expr("Using orange as the background color"),
                 pattern | _                                 = expr("Using blue as the background color"));
         });
 
@@ -1017,7 +1017,6 @@ int32_t main()
     using namespace matchit;
     Id<int32_t> x;
     match(num)(
-        // pattern(some(x)).when(x < 5) = [&] { std::cout << "less than five: " << *x; },
         pattern(some(x.at(_ < 5))) = [&]
         { std::cout << "less than five: " << *x << std::endl;  },
         pattern(some(x)) = [&]
@@ -1054,7 +1053,6 @@ int32_t main() {
     Id<int32_t> n;
     match(x)( 
         pattern(some(50))             = [&]{ std::cout << "Got 50" << std::endl; },
-        // pattern(some(n)).when(n == y) = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
         // In `match(it)`, you can use variable inside patterns, just like literals.
         pattern(some(y))              = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
         pattern | _                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
@@ -1087,8 +1085,8 @@ int32_t main() {
 
     std::cout <<
         match(x)( 
-            pattern(or_(4, 5, 6)).when(expr(y)) = expr("yes"),
-            pattern | _                          = expr("no")
+            pattern | or_(4, 5, 6) | when(expr(y)) = expr("yes"),
+            pattern | _                            = expr("no")
     ) << std::endl;
 }
 ```

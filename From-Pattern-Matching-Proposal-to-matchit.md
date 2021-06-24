@@ -664,7 +664,7 @@ In `match(it)`:
 Id<xxx> x;
 Id<yyy> y;
 match(p) ( 
-    pattern(ds(x, y)).when([&]{test(*x, *y)}) = [&]{ std::cout << *x << ',' << *y << " passed"; }
+    pattern | ds(x, y) | when([&]{test(*x, *y)}) = [&]{ std::cout << *x << ',' << *y << " passed"; }
 //                    ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ pattern guard
 );
 ```

@@ -442,9 +442,9 @@ TEST(Match, test17)
     {
         Id<int32_t> i, j;
         return match(x)(
-            pattern(i, j).when(i + j == 10) = expr(3),
-            pattern(_ < 5, _) = expr(5),
-            pattern(_) = expr(1));
+            pattern | ds(i, j) | when(i + j == 10) = expr(3),
+            pattern | (_ < 5, _) = expr(5),
+            pattern | _          = expr(1));
     };
     EXPECT_EQ(whenX(std::make_pair(1, 9)), 3);
     EXPECT_EQ(whenX(std::make_pair(1, 7)), 5);
@@ -457,7 +457,7 @@ TEST(Match, test18)
     {
         Id<int32_t> i;
         return match(x)(
-            pattern(i).when(i == 5) = expr(1),
+            pattern(i) | when(i == 5) = expr(1),
             pattern(_) = expr(2));
     };
     EXPECT_EQ(idNotOwn(1), 2);

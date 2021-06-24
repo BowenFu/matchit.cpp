@@ -317,7 +317,7 @@ Sometimes you have multiple identifiers and you want exert a restriction on the 
 Sure! Here comes the **Match Guard**. Its syntax is
 
 ```C++
-pattern(PATTERN).when(GUARD) = HANDLER
+pattern | PATTERN | when(GUARD) = HANDLER
 ```
 
 Say, we want to match only when the sum of two identifiers equal to some value, we can write codes as
@@ -331,8 +331,8 @@ constexpr bool sumIs(std::array<int32_t, 2> const& arr, int32_t s)
     using namespace matchit;
     Id<int32_t> i, j;
     return match(arr)(
-        pattern(i, j).when(i + j == s) = expr(true),
-        pattern | _                     = expr(false));
+        pattern | ds(i, j) | when(i + j == s) = expr(true),
+        pattern | _                           = expr(false));
 }
 
 static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));
