@@ -18,7 +18,7 @@ constexpr std::array<int32_t, 2> quoRem(int32_t dividend, int32_t divisor)
     Id<int32_t> r;
     return match(dividend)(
         // clang-format off
-        pattern(qr(divisor)(q, r)) = [&] { return std::array<int32_t, 2>{*q, *r}; },
+        pattern | qr(divisor)(q, r) = [&] { return std::array<int32_t, 2>{*q, *r}; },
         pattern | _                 = [&] { return std::array<int32_t, 2>{0, 0}; }
         // clang-format on
     );

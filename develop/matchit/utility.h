@@ -75,7 +75,7 @@ namespace matchit
         constexpr auto matched(Value &&v, Pattern &&p)
         {
             return match(std::forward<Value>(v))(
-                pattern(std::forward<Pattern>(p)) = []
+                pattern | std::forward<Pattern>(p) = []
                 { return true; },
                 pattern | _ = []
                 { return false; });

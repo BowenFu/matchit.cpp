@@ -66,10 +66,10 @@ In `match(it)`:
 ```C++
 Id<int32_t> x, y;
 match(p) {
-    pattern(ds(0, 0)) = [&]{ std::cout << "on origin"; },
-    pattern(ds(0, y)) = [&]{ std::cout << "on y-axis"; },
-    pattern(ds(x, 0)) = [&]{ std::cout << "on x-axis"; },
-    pattern(ds(x, y)) = [&]{ std::cout << *x << ',' << *y; }
+    pattern | ds(0, 0) = [&]{ std::cout << "on origin"; },
+    pattern | ds(0, y) = [&]{ std::cout << "on y-axis"; },
+    pattern | ds(x, 0) = [&]{ std::cout << "on x-axis"; },
+    pattern | ds(x, y) = [&]{ std::cout << *x << ',' << *y; }
 };
 ```
 
@@ -94,10 +94,10 @@ In `match(it)`:
 Id<int> i;
 Id<float> f;
 match(v) ( 
-    pattern(as<int>(i)) = [&]{  
+    pattern | as<int>(i) = [&]{  
         strm << "got int: " << *i;
     },
-    pattern(as<float>(f)) = [&]{  
+    pattern | as<float>(f) = [&]{  
         strm << "got float: " << *f;
     }
 );
@@ -131,8 +131,8 @@ int get_area(const Shape& shape)
     Id <int> r, w, h;
     return match(shape) ( 
         // need to implement get for the structs.
-        pattern(as<Circle>(ds(r)))       = 3.14 * r * r,
-        pattern(as<Rectangle>(ds(w, h))) = w * h
+        pattern | as<Circle>(ds(r))       = 3.14 * r * r,
+        pattern | as<Rectangle>(ds(w, h)) = w * h
     );
 }
 ```
@@ -177,13 +177,13 @@ In `match(it)`:
 Id<Expr> e, l, r;
 int eval(const Expr& expr){
   return inspect (expr) ( 
-    pattern(as<int>(i))                       = i,
-    pattern(as<Neg>(ds(some(e))))             = [&]{ return -eval(*e); },
-    pattern(as<Add>(ds(some(l), some(r))))    = [&]{ return eval(*l) + eval(*r); },
+    pattern | as<int>(i)                       = i,
+    pattern | as<Neg>(ds(some(e)))             = [&]{ return -eval(*e); },
+    pattern | as<Add>(ds(some(l), some(r)))    = [&]{ return eval(*l) + eval(*r); },
     // Optimize multiplication by 0.
-    pattern(as<Mul>(ds(some(as<int>(0), _)))) = expr(0),
-    pattern(as<Mul>(ds(_, some(as<int>(0))))) = expr(0),
-    pattern(as<Mul>(ds(some(l), some(r))))    = [&]{ return eval(*l) * eval(*r); }
+    pattern | as<Mul>(ds(some(as<int>(0), _))) = expr(0),
+    pattern | as<Mul>(ds(_, some(as<int>(0)))) = expr(0),
+    pattern | as<Mul>(ds(some(l), some(r)))    = [&]{ return eval(*l) * eval(*r); }
   );
 }
 ```
@@ -371,12 +371,12 @@ In `match(it)`:
 std::pair<int, int> p = /* ... */;
 Id<int> x, y;
 match(p) (  
-    pattern(ds(0, 0)) = []{ std::cout << "on origin"; },
-    pattern(ds(0, y)) = []{ std::cout << "on y-axis"; },
+    pattern | ds(0, 0) = []{ std::cout << "on origin"; },
+    pattern | ds(0, y) = []{ std::cout << "on y-axis"; },
 //                ˆ identifier pattern
-    pattern(ds(x, 0)) = []{ std::cout << "on x-axis"; },
+    pattern | ds(x, 0) = []{ std::cout << "on x-axis"; },
 //                ˆ expression pattern
-    pattern(ds(x, y)) = [&]{ std::cout << *x << ',' << *y; },
+    pattern | ds(x, y) = [&]{ std::cout << *x << ',' << *y; },
 //            ˆˆˆˆˆˆ structured binding pattern
 );
 ```
@@ -409,15 +409,15 @@ struct Player { std::string name; int hitpoints; int coins; };
 void get_hint(const Player& p){
     Id<std::string> n;
     match (p) ( 
-        pattern(app(&Player::hitpoints, 1)) =
+        pattern | app(&Player::hitpoints, 1) =
             [&]{ std::cout << "You're almost destroyed. Give up!\n"; },
-        pattern(and_(app(&Player::hitpoints, 10), app(&Player::coins, 10))) =
+        pattern | and_(app(&Player::hitpoints, 10), app(&Player::coins, 10)) =
             [&]{ std::cout << "I need the hints from you!\n"; },
-        pattern(app(&Player::coins, 10)) =
+        pattern | app(&Player::coins, 10) =
             [&]{ std::cout << "Get more hitpoints!\n"; },
-        pattern(app(&Player::hitpoints, 10)) =
+        pattern | app(&Player::hitpoints, 10) =
             [&]{ std::cout << "Get more ammo!\n"; },
-        pattern(app(&Player::name, n)) =
+        pattern | app(&Player::name, n) =
             [&]{
                 if (*n != "The Bruce Dickenson") {
                     std::cout << "Get more hitpoints and ammo!\n";
@@ -512,7 +512,7 @@ static constexpr int zero = 0, one = 1;
 std::pair<int, int> p = /* ... */
 
 match(p) ( 
-    pattern(ds(zero, one)) = [&]( 
+    pattern | ds(zero, one) = [&]( 
 //             ˆˆˆˆ  ˆˆˆ id-expression
         std::cout << zero << ' ' << one;
 //      Note that    ˆˆˆˆ and       ˆˆˆ are id-expressions
@@ -554,9 +554,9 @@ void print_leftmost(const Node& node) {
     Id<Node> l;
 
     match(node) ( 
-        pattern(and_(app(&Node::value, v), app(&Node::lhs, nullptr))) = [&]{ std::cout << *v << '\n'; },
-        // pattern(app(&Node::lhs, *_, l)) = [&]{ print_leftmost(*l); },
-        pattern(app(&Node::lhs, app(deref, l))) = [&]{ print_leftmost(*l); }
+        pattern | and_(app(&Node::value, v), app(&Node::lhs, nullptr)) = [&]{ std::cout << *v << '\n'; },
+        // pattern | app(&Node::lhs, *_, l) = [&]{ print_leftmost(*l); },
+        pattern | app(&Node::lhs, app(deref, l)) = [&]{ print_leftmost(*l); }
 //             ˆˆˆˆ dereference pattern
     );
 }
@@ -602,7 +602,7 @@ inline constexpr Is<T> is;
 Id<std::string> s;
 Id<int> i;
 match (f()) ( 
-    pattern(ds(app(is<std::string>, s), app(is<int>, i))) = // ...
+    pattern | ds(app(is<std::string>, s), app(is<int>, i)) = // ...
 );
 ```
 
@@ -641,8 +641,8 @@ struct PhoneNumber {
 inline constexpr PhoneNumber phone_number;
 Id<std::string_view> address, domain;
 match (s) ( 
-    pattern(app(email, some(ds(address, domain)))) = [&]{ std::cout << "got an email"; },
-    pattern(app(phone_number, some(ds("415", _, _)))) = [&]{ std::cout << "got a San Francisco phone number"; }
+    pattern | app(email, some(ds(address, domain))) = [&]{ std::cout << "got an email"; },
+    pattern | app(phone_number, some(ds("415", _, _))) = [&]{ std::cout << "got a San Francisco phone number"; }
 //  ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ extractor pattern
 );
 ```
@@ -730,8 +730,8 @@ char* String::data() {
   Id<char*> l;
   Id<std::decay_t<decltype(remote)>> r;
   return match(*this) ( 
-    pattern(ds<Local>(l) = expr(l),
-    pattern(as<Remote>(r) = [&]{ return (*r).ptr; }
+    pattern | ds<Local>(l = expr(l),
+    pattern | as<Remote>(r = [&]{ return (*r).ptr; }
   );
 }
 ```
@@ -785,8 +785,8 @@ int get_area(const Shape& shape) {
   Id<Circle> c;
   Id<Rectangle> r;
   return match (shape) ( 
-    pattern(as<Circle>(c))    = [&] { return 3.14 * (*c).radius * (*c).radius; },
-    pattern(as<Rectangle>(r)) = [&] { return r.width * r.height; }
+    pattern | as<Circle>(c)    = [&] { return 3.14 * (*c).radius * (*c).radius; },
+    pattern | as<Rectangle>(r) = [&] { return r.width * r.height; }
   );
 }
 ```
@@ -862,7 +862,7 @@ auto within = [](auto first, auto last)
 };
 
 match (n) ( 
-  pattern(within(1, 10)) = [&] { // 1..10
+  pattern | within(1, 10) = [&] { // 1..10
     std::cout << n << " is in [1, 10].";
   },
   pattern | _ = [&] {
@@ -894,7 +894,7 @@ In `match(it)`:
 ```C++
 Id<int> x, y;
 match (v) (
-  pattern(and_(ds(x, 0), ds(0, y))) = // ...
+  pattern | and_(ds(x, 0), ds(0, y)) = // ...
 );
 ```
 
@@ -916,7 +916,7 @@ In `match(it)`:
 Id<Point> p;
 Id<int> x, y;
 match (v) ( 
-  pattern(as<Point>(p.at(ds(x, y)))) => // ... // ...
+  pattern | as<Point>(p.at(ds(x, y))) => // ... // ...
 );
 ```
 
@@ -971,19 +971,19 @@ void Node<T>::balance() {
   Id<T> x, y, z;
   *this = match (*this) ( 
     // left-left case
-    pattern(ds(Black, some(ds(Red, some(ds(Red, a, x, b )), y, c )), z, d ))
+    pattern | ds(Black, some(ds(Red, some(ds(Red, a, x, b )), y, c )), z, d )
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },
-    pattern(ds(Black, some(ds(Red, a, x, some(ds(Red, b, y, c )))), z, d )) // left-right case
+    pattern | ds(Black, some(ds(Red, a, x, some(ds(Red, b, y, c )))), z, d ) // left-right case
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },
-    pattern(ds(Black, a, x, some(ds(Red, some(ds(Red, b, y, c ))), z, d ))) // right-left case
+    pattern | ds(Black, a, x, some(ds(Red, some(ds(Red, b, y, c ))), z, d )) // right-left case
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },
-    pattern(ds(Black, a, x, some(ds(Red, b, y, some(ds(Red, c, z, d)))))) // right-right case
+    pattern | ds(Black, a, x, some(ds(Red, b, y, some(ds(Red, c, z, d))))) // right-right case
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },

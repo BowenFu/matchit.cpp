@@ -9,7 +9,7 @@ constexpr auto square(std::optional<T> const &t)
     Id<T> id;
     return match(t)(
         // clang-format off
-        pattern(some(id)) = id * id,
+        pattern | some(id) = id * id,
         pattern | none     = expr(0)
         // clang-format on
     );

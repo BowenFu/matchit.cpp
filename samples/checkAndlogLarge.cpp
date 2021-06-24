@@ -9,7 +9,7 @@ constexpr bool checkAndlogLarge(double value)
     { return v * v; };
     Id<double> s;
     return match(value)(
-        pattern(app(square, and_(_ > 1000, s))) = [&]
+        pattern | app(square, and_(_ > 1000, s)) = [&]
         {
             std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
             return true;

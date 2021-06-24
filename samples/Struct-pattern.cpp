@@ -25,9 +25,9 @@ void sample()
 
     match(s)(
         // clang-format off
-        pattern(and_(app(&Point::x, 10U), app(&Point::y, 20U))) = []{},
-        pattern(and_(app(&Point::y, 10U), app(&Point::x, 20U))) = []{},    // order doesn't matter
-        pattern(app(&Point::x, 10U))                            = []{},
+        pattern | and_(app(&Point::x, 10U), app(&Point::y, 20U)) = []{},
+        pattern | and_(app(&Point::y, 10U), app(&Point::x, 20U)) = []{},    // order doesn't matter
+        pattern | app(&Point::x, 10U)                            = []{},
         pattern | _                                              = []{}
         // clang-format on
     );
@@ -37,9 +37,9 @@ void sample()
 
     match(t)(
         // clang-format off
-        pattern(and_(appGet<0>(10U), appGet<1>(20U))) = []{},
-        pattern(and_(appGet<1>(10U), appGet<0>(20U))) = []{},   // order doesn't matter
-        pattern(appGet<0>(10U))                       = []{},
+        pattern | and_(appGet<0>(10U), appGet<1>(20U)) = []{},
+        pattern | and_(appGet<1>(10U), appGet<0>(20U)) = []{},   // order doesn't matter
+        pattern | appGet<0>(10U)                       = []{},
         pattern | _                                    = []{}
         // clang-format on
     );

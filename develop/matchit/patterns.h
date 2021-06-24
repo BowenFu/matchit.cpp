@@ -587,18 +587,18 @@ namespace matchit
             {
                 if constexpr (std::is_same_v<AppResultCurTuple<Value>, std::tuple<>>)
                 {
-                    return matchPattern(std::forward<AppResult<Value>>(invoke_(appPat.unary(), value)), appPat.pattern(), depth + 1, context);
+                    return matchPattern(std::forward<AppResult<Value>>(invoke_(appPat.unary(), value)), appPat.pattern | ), depth + 1, context;
                 }
                 else
                 {
                     context.emplace_back(invoke_(appPat.unary(), value));
                     decltype(auto) result = get<std::decay_t<AppResult<Value>>>(context.back());
-                    return matchPattern(std::forward<AppResult<Value>>(result), appPat.pattern(), depth + 1, context);
+                    return matchPattern(std::forward<AppResult<Value>>(result), appPat.pattern | ), depth + 1, context;
                 }
             }
             constexpr static void processIdImpl(App<Unary, Pattern> const &appPat, int32_t depth, IdProcess idProcess)
             {
-                return processId(appPat.pattern(), depth, idProcess);
+                return processId(appPat.pattern | ), depth, idProcess;
             }
         };
 
@@ -713,11 +713,11 @@ namespace matchit
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, Not<Pattern> const &notPat, int32_t depth, ContextT &context)
             {
-                return !matchPattern(std::forward<Value>(value), notPat.pattern(), depth + 1, context);
+                return !matchPattern(std::forward<Value>(value), notPat.pattern | ), depth + 1, context;
             }
             constexpr static void processIdImpl(Not<Pattern> const &notPat, int32_t depth, IdProcess idProcess)
             {
-                processId(notPat.pattern(), depth, idProcess);
+                processId(notPat.pattern | ), depth, idProcess;
             }
         };
 
@@ -1470,11 +1470,11 @@ namespace matchit
             template <typename Value, typename ContextT>
             constexpr static auto matchPatternImpl(Value &&value, PostCheck<Pattern, Pred> const &postCheck, int32_t depth, ContextT &context)
             {
-                return matchPattern(std::forward<Value>(value), postCheck.pattern(), depth + 1, context) && postCheck.check();
+                return matchPattern(std::forward<Value>(value), postCheck.pattern | ), depth + 1, context) && postCheck.check(;
             }
             constexpr static void processIdImpl(PostCheck<Pattern, Pred> const &postCheck, int32_t depth, IdProcess idProcess)
             {
-                processId(postCheck.pattern(), depth, idProcess);
+                processId(postCheck.pattern | ), depth, idProcess;
             }
         };
 
