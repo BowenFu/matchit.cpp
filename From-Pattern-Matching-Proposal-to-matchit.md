@@ -668,3 +668,323 @@ match(p) (
 //                    ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ pattern guard
 );
 ```
+
+### Predicate-based Discriminator
+
+```C++
+struct String {
+  enum Storage { Local, Remote };
+
+  int size;
+  union {
+    char local[32];
+    struct { char *ptr; int unused_allocated_space; } remote;
+  };
+
+  // Predicate-based discriminator derived from `size`.
+  Storage index() const { return size > sizeof(local) ? Remote : Local; }
+
+  // Opt into Variant-Like protocol.
+  template <Storage S>
+  auto &&get() {
+    if constexpr (S == Local) return local;
+    else if constexpr (S == Remote) return remote;
+  }
+
+  char *data();
+};
+
+namespace std {
+  // Opt into Variant-Like protocol.
+
+  template <>
+  struct variant_size<String> : std::integral_constant<std::size_t, 2> {};
+
+  template <>
+  struct variant_alternative<String::Local, String> {
+    using type = decltype(String::local);
+  };
+
+  template <>
+  struct variant_alternative<String::Remote, String> {
+    using type = decltype(String::remote);
+  };
+}
+```
+
+In `P1371R3`:
+
+```C++
+char* String::data() {
+  return inspect (*this) {
+    <Local> l => l;
+    <Remote> r => r.ptr;
+  };
+}
+```
+
+In `match(it)`:
+
+```C++
+char* String::data() {
+  Id<char*> l;
+  Id<std::decay_t<decltype(remote)>> r;
+  return match(*this) ( 
+    pattern(ds<Local>(l) = expr(l),
+    pattern(as<Remote>(r) = [&]{ return (*r).ptr; }
+  );
+}
+```
+
+### “Closed” Class Hierarchy
+
+```C++
+struct Shape { enum Kind { Circle, Rectangle } kind; };
+struct Circle : Shape {
+  Circle(int radius) : Shape{Shape::Kind::Circle}, radius(radius) {}
+  int radius;
+};
+
+struct Rectangle : Shape {
+  Rectangle(int width, int height)
+    : Shape{Shape::Kind::Rectangle}, width(width), height(height) {}
+  int width, height;
+};
+
+namespace std {
+template <>
+struct variant_size<Shape> : std::integral_constant<std::size_t, 2> {};
+
+template <>
+struct variant_alternative<Shape::Circle, Shape> { using type = Circle; };
+template <>
+struct variant_alternative<Shape::Rectangle, Shape> { using type = Rectangle; }; }
+
+Shape::Kind index(const Shape& shape) { return shape.kind; }
+
+template <Kind K>
+auto&& get(const Shape& shape) {
+return static_cast<const std::variant_alternative_t<K, Shape>&>(shape); }
+```
+
+In `P1371R3`:
+
+```C++
+int get_area(const Shape& shape) {
+  return inspect (shape) {
+    <Circle> c => 3.14 * c.radius * c.radius;
+    <Rectangle> r => r.width * r.height;
+  };
+}
+```
+
+In `match(it)`:
+
+```C++
+int get_area(const Shape& shape) {
+  Id<Circle> c;
+  Id<Rectangle> r;
+  return match (shape) ( 
+    pattern(as<Circle>(c))    = [&] { return 3.14 * (*c).radius * (*c).radius; },
+    pattern(as<Rectangle>(r)) = [&] { return r.width * r.height; }
+  );
+}
+```
+
+### Matcher: any_of
+
+In `P1371R3`:
+
+```C++
+template <typename... Ts>
+struct any_of : std::tuple<Ts...> {
+  using tuple::tuple;
+  template <typename U>
+  bool match(const U& u) const {
+    return std::apply([&](const auto&... xs)
+    {
+      return (... || xs == u);
+    },
+    *this);
+  }
+};
+
+int fib(int n) {
+  return inspect (n) {
+    x if (x < 0) => 0; any_of{1,2}=>n; //1|2
+    x => fib(x - 1) + fib(x - 2);
+  };
+}
+```
+
+In `match(it)`:
+
+```C++
+int fib(int n) {
+  return match (n) ( 
+    pattern(x < 0) = expr(0),
+    pattern(or_(1,2)) = expr(n), //1|2
+    pattern(x) = [&] { return fib(*x - 1) + fib(*x - 2); }
+  );
+}
+```
+
+### Matcher: within
+
+In `P1371R3`:
+
+```C++
+struct within {
+  int first, last;
+  bool match(int n) const
+  {
+    return first <= n && n <= last;
+  }
+};
+
+inspect (n) {
+  within{1, 10} => { // 1..10
+    std::cout << n << " is in [1, 10].";
+  }
+  __ => {
+    std::cout << n << " is not in [1, 10].";
+  }
+};
+```
+
+In `match(it)`:
+
+```C++
+auto within = [](auto first, auto last)
+{
+    return first <= _ && _ <= last;
+};
+
+match (n) ( 
+  pattern(within(1, 10)) = [&] { // 1..10
+    std::cout << n << " is in [1, 10].";
+  },
+  pattern(_) = [&] {
+    std::cout << n << " is not in [1, 10].";
+  }
+);
+```
+
+### Extractor: both
+
+In `P1371R3`:
+
+```C++
+struct Both {
+  template <typename U>
+  std::pair<U&&, U&&> extract(U&& u) const {
+    return {std::forward<U>(u), std::forward<U>(u)};
+  }
+};
+inline constexpr Both both;
+
+inspect (v) {
+  (both!) [[x, 0], [0, y]] => // ...
+};
+```
+
+In `match(it)`:
+
+```C++
+Id<int> x, y;
+match (v) (
+  pattern(and_(ds(x, 0), ds(0, y))) = // ...
+);
+```
+
+### Extractor: at
+
+In `P1371R3`:
+
+```C++
+inline constexpr at = both;
+
+inspect (v) {
+  <Point> (at!) [p, [x, y]] => // ... // ...
+};
+```
+
+In `match(it)`:
+
+```C++
+Id<Point> p;
+Id<int> x, y;
+match (v) ( 
+  pattern(as<Point>(p.at(ds(x, y)))) => // ... // ...
+);
+```
+
+### Red-black Tree Rebalancing
+
+```C++
+enum Color { Red, Black };
+template <typename T>
+struct Node {
+  void balance();
+  Color color;
+  std::shared_ptr<Node> lhs;
+  T value;
+  std::shared_ptr<Node> rhs;
+};
+```
+
+In `P1371R3`:
+
+```C++
+template <typename T>
+void Node<T>::balance() {
+  *this = inspect (*this) {
+    // left-left case
+    [case Black, (*?) [case Red, (*?) [case Red, a, x, b], y, c], z, d]
+      => Node{Red, std::make_shared<Node>(Black, a, x, b),
+                   y,
+                   std::make_shared<Node>(Black, c, z, d)};
+    [case Black, (*?) [case Red, a, x, (*?) [case Red, b, y, c]], z, d] // left-right case
+      => Node{Red, std::make_shared<Node>(Black, a, x, b),
+                   y,
+                   std::make_shared<Node>(Black, c, z, d)};
+    [case Black, a, x, (*?) [case Red, (*?) [case Red, b, y, c], z, d]] // right-left case
+      => Node{Red, std::make_shared<Node>(Black, a, x, b),
+                   y,
+                   std::make_shared<Node>(Black, c, z, d)};
+    [case Black, a, x, (*?) [case Red, b, y, (*?) [case Red, c, z, d]]] // right-right case
+    => Node{Red, std::make_shared<Node>(Black, a, x, b),
+                   y,
+                   std::make_shared<Node>(Black, c, z, d)};
+    self => self; // do nothing
+  };
+}
+```
+
+In `match(it)`:
+
+```C++
+template <typename T>
+void Node<T>::balance() {
+  *this = match (*this) ( 
+    // left-left case
+    pattern(ds(Black, some(ds(Red, some(ds(Red, a, x, b )), y, c )), z, d ))
+      = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
+                   *y,
+                   std::make_shared<Node>(Black, *c, *z, *d)}; },
+    pattern(ds(Black, some(ds(Red, a, x, some(ds(Red, b, y, c )))), z, d )) // left-right case
+      = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
+                   *y,
+                   std::make_shared<Node>(Black, *c, *z, *d)}; },
+    pattern(ds(Black, a, x, some(ds(Red, some(ds(Red, b, y, c ))), z, d ))) // right-left case
+      = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
+                   *y,
+                   std::make_shared<Node>(Black, *c, *z, *d)}; },
+    pattern(ds(Black, a, x, some(ds(Red, b, y, some(ds(Red, c, z, d)))))) // right-right case
+      = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
+                   *y,
+                   std::make_shared<Node>(Black, *c, *z, *d)}; },
+    pattern(self) = expr(self) // do nothing
+  );
+}
+```
