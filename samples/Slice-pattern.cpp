@@ -9,8 +9,8 @@ void sample1()
     constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
     Id<int32_t> a, b, c;
     match(arr)(
-        pattern | 1, _, _ = expr("starts with one"),
-        pattern | a, b, c = expr("starts with something else"));
+        pattern | ds(1, _, _) = expr("starts with one"),
+        pattern | ds(a, b, c) = expr("starts with something else"));
 }
 
 void sample2()
