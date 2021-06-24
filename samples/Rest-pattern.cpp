@@ -23,8 +23,8 @@ void sample()
     Id<SubrangeT<std::vector<std::string> const>> tail;
     match(slice)(
         // clang-format off
-        pattern | ds())                   = [&] { std::cout << "slice is empty" << std::endl; },
-        pattern | ds(head))               = [&] { std::cout << "single element " << *head << std::endl; },
+        pattern | ds()                   = [&] { std::cout << "slice is empty" << std::endl; },
+        pattern | ds(head)               = [&] { std::cout << "single element " << *head << std::endl; },
         pattern | ds(head, tail.at(ooo))  = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
         // clang-format on
     );
