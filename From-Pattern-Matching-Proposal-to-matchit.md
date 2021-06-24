@@ -821,6 +821,7 @@ In `match(it)`:
 
 ```C++
 int fib(int n) {
+  Id<int> x;
   return match (n) ( 
     pattern(x < 0) = expr(0),
     pattern(or_(1,2)) = expr(n), //1|2
