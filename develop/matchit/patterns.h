@@ -352,32 +352,43 @@ namespace matchit
             Pattern const mPattern;
         };
 
-        template <typename Pattern>
-        constexpr auto pattern(Pattern const &p)
-        {
-            return PatternHelper<decayArrayT<Pattern>>{p};
-        }
-
         template <typename... Patterns>
         class Ds;
 
         template <typename... Patterns>
         constexpr auto ds(Patterns const &...patterns) -> Ds<Patterns...>;
 
-        template <typename First, typename... Patterns>
-        constexpr auto pattern(First const &f, Patterns const &...ps)
-        {
-            return PatternHelper<Ds<First, Patterns...>>{ds(f, ps...)};
-        }
-        
         template <typename Pattern>
         class OooBinder;
 
-        template <typename Pattern>
-        constexpr auto pattern(OooBinder<Pattern> const &p)
+        class PatternPipable
         {
-            return pattern(ds(p));
-        }
+        public:
+            template <typename Pattern>
+            constexpr auto operator()(Pattern const &p) const
+            {
+                return PatternHelper<decayArrayT<Pattern>>{p};
+            }
+            template <typename First, typename... Patterns>
+            constexpr auto operator()(First const &f, Patterns const &...ps) const
+            {
+                return PatternHelper<Ds<First, Patterns...>>{ds(f, ps...)};
+            }
+
+            template <typename Pattern>
+            constexpr auto operator()(OooBinder<Pattern> const &p) const
+            {
+                return operator()(ds(p));
+            }
+
+            template <typename... Patterns>
+            constexpr auto operator|(Patterns&&... p) const
+            {
+                return operator()(p...);
+            }
+        };
+
+        constexpr PatternPipable pattern{};
 
         template <typename Pattern>
         class PatternTraits
