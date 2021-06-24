@@ -68,7 +68,7 @@ void sample()
                      pattern | (0U <= _ && _ <= std::numeric_limits<uint8_t>::max())  = expr("fits in a u8"),
                      pattern | (0U <= _ && _ <= std::numeric_limits<uint16_t>::max()) = expr("fits in a u16"),
                      pattern | (0U <= _ && _ <= std::numeric_limits<uint32_t>::max()) = expr("fits in a u32"),
-                     pattern | _                                                      = expr("too big"));
+                     pattern | _                                                      = expr("too big"))
               // clang-format on
               << std::endl;
 }
