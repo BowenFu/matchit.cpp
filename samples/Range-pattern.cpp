@@ -14,9 +14,8 @@ void sample()
     constexpr auto c = 'f';
     constexpr auto valid_variable = match(c)(
         // clang-format off
-        pattern | 'a' <= _ && _ <= 'z'    = expr(true),
-        pattern | 'A' <= _ && _ <= 'Z'    = expr(true),
-        // pattern | 'α' <= _ && _ <= 'ω' = expr(true),
+        pattern | ('a' <= _ && _ <= 'z')    = expr(true),
+        pattern | ('A' <= _ && _ <= 'Z')    = expr(true),
         pattern | _                       = expr(false)
         // clang-format on
     );
