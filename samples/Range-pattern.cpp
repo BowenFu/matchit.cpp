@@ -45,10 +45,10 @@ void sample()
 
     std::cout << match(altitude)(
                      // clang-format off
-                     pattern | TROPOSPHERE_MIN  <= _ && _ <= TROPOSPHERE_MAX  = expr("troposphere"),
-                     pattern | STRATOSPHERE_MIN <= _ && _ <= STRATOSPHERE_MAX = expr("stratosphere"),
-                     pattern | MESOSPHERE_MIN   <= _ && _ <= MESOSPHERE_MAX   = expr("mesosphere"),
-                     pattern | _                                              = expr("outer space, maybe"))
+                     pattern | (TROPOSPHERE_MIN  <= _ && _ <= TROPOSPHERE_MAX ) = expr("troposphere"),
+                     pattern | (STRATOSPHERE_MIN <= _ && _ <= STRATOSPHERE_MAX) = expr("stratosphere"),
+                     pattern | (MESOSPHERE_MIN   <= _ && _ <= MESOSPHERE_MAX  ) = expr("mesosphere"),
+                     pattern | (_                                             ) = expr("outer space, maybe"))
                      // clang-format on
               << std::endl;
 
