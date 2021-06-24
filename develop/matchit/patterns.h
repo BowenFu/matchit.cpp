@@ -337,7 +337,7 @@ namespace matchit
         };
 
         template <typename Pred>
-        auto when(Pred const& pred)
+        constexpr auto when(Pred const& pred)
         {
             return When<Pred>{pred};
         }
@@ -1555,6 +1555,7 @@ namespace matchit
     using impl::pattern;
     using impl::Subrange;
     using impl::SubrangeT;
+    using impl::when;
 } // namespace matchit
 
 #endif // MATCHIT_PATTERNS_H
