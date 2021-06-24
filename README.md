@@ -377,7 +377,7 @@ constexpr bool recursiveSymmetric(Range const &range)
     Id<SubrangeT<Range const>> subrange;
     return match(range)(
         pattern | ds(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
-        pattern | ds(ds(_, ooo, _))          = expr(false),
+        pattern | ds(_, ooo, _)              = expr(false),
         pattern | _                          = expr(true)
     );
 ```
