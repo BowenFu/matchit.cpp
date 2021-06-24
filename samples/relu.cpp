@@ -6,8 +6,8 @@ constexpr double relu(double value)
     using namespace matchit;
     return match(value)(
         // clang-format off
-        pattern(_ >= 0) = expr(value),
-        pattern(_)      = expr(0)
+        pattern | (_ >= 0) = expr(value),
+        pattern | _        = expr(0)
         // clang-format on
     );
 }

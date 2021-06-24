@@ -9,8 +9,8 @@ void sample1()
     constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
     Id<int32_t> a, b, c;
     match(arr)(
-        pattern(1, _, _) = expr("starts with one"),
-        pattern(a, b, c) = expr("starts with something else"));
+        pattern | 1, _, _ = expr("starts with one"),
+        pattern | a, b, c = expr("starts with something else"));
 }
 
 void sample2()
@@ -20,9 +20,9 @@ void sample2()
     Id<int32_t> a, b, c;
     match(v)(
         // format off
-        pattern(a, b)    = [] { /* this arm will not apply because the length doesn't match */ },
-        pattern(a, b, c) = [] { /* this arm will apply */ },
-        pattern(_)       = [] { /* this wildcard is required, since the length is not known statically */ }
+        pattern | ds(a, b   ) = [] { /* this arm will not apply because the length doesn't match */ },
+        pattern | ds(a, b, c) = [] { /* this arm will apply */ },
+        pattern | ds(_      ) = [] { /* this wildcard is required, since the length is not known statically */ }
         // format on
     );
 }

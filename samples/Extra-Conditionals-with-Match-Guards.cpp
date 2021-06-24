@@ -14,7 +14,7 @@ void sample1()
         { std::cout << "less than five: " << *x << std::endl;  },
         pattern(some(x)) = [&]
         { std::cout << *x << std::endl; },
-        pattern(none) = [&] {});
+        pattern | none = [&] {});
 }
 
 template <typename T>
@@ -43,7 +43,7 @@ void sample2()
         // pattern(some(n)).when(n == y) = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
         // In `match(it)`, you can use variable inside patterns, just like literals.
         pattern(some(y))              = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
-        pattern(_)                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
+        pattern | _                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
         // clang-format on
     );
 
@@ -59,7 +59,7 @@ void sample3()
         match(x)( 
             // clang-format off
             pattern(or_(4, 5, 6)).when(expr(y)) = expr("yes"),
-            pattern(_)                          = expr("no")
+            pattern | _                          = expr("no")
             // clang-format on
     ) << std::endl;
 }

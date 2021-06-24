@@ -7,7 +7,7 @@ constexpr bool isLarge(double value)
     return match(value)(
         // clang-format off
         pattern(app(_ * _, _ > 1000)) = expr(true),
-        pattern(_)                    = expr(false)
+        pattern | _                    = expr(false)
         // clang-format on
     );
 }

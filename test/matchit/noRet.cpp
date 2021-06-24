@@ -9,7 +9,7 @@ TEST(MatchStatement, test)
   match(4)(
       // clang-format off
       pattern(or_(_ < 0, 2)) = [] { std::cout << "mismatch!"; },
-      pattern(_)             = [] { std::cout << "match all!"; }
+      pattern | _             = [] { std::cout << "match all!"; }
       // clang-format on
   );
   std::string output = testing::internal::GetCapturedStdout();

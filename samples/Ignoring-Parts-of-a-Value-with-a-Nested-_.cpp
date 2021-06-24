@@ -26,7 +26,7 @@ void sample1()
         pattern(some(_), some(_)) = [] {
             std:: cout << "Can't overwrite an existing customized value" << std::endl;
         },
-        pattern(_) = [&] {
+        pattern | _ = [&] {
             setting_value = new_setting_value;
         }
      );
@@ -41,7 +41,7 @@ void sample2()
     using namespace matchit;
     Id<int32_t> first, third, fifth;
     match(numbers)(
-        pattern(first, _, third, _, fifth) = [&]
+        pattern | ds(first, _, third, _, fifth) = [&]
         { std::cout << "Some numbers: " << *first << ", " << *third << ", " << *fifth << std::endl; });
 }
 
