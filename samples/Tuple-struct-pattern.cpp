@@ -9,7 +9,7 @@ void sample()
     Id<int32_t> a;
     Id<char const *> b;
     match(pair)(
-        pattern(a, b) = [&]
+        pattern | ds(a, b) = [&]
         {
             assert(*a == 10);
             assert(*b == std::string_view{"ten"});

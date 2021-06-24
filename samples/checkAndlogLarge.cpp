@@ -14,7 +14,7 @@ constexpr bool checkAndlogLarge(double value)
             std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
             return true;
         },
-        pattern(_) = expr(false));
+        pattern | _ = expr(false));
 }
 
 // comment out std::cout then uncomment this.

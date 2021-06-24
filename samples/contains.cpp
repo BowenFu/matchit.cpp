@@ -9,7 +9,7 @@ constexpr bool contains(Map const &map, Key const &key)
     return match(map.find(key))(
         // clang-format off
         pattern(map.end()) = expr(false),
-        pattern(_)         = expr(true)
+        pattern | _         = expr(true)
         // clang-format on
     );
 }

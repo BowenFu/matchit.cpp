@@ -23,9 +23,9 @@ void sample()
     Id<SubrangeT<std::vector<std::string> const>> tail;
     match(slice)(
         // clang-format off
-        pattern(ds())                   = [&] { std::cout << "slice is empty" << std::endl; },
-        pattern(ds(head))               = [&] { std::cout << "single element " << *head << std::endl; },
-        pattern(head, tail.at(ooo)) = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
+        pattern | ds()                   = [&] { std::cout << "slice is empty" << std::endl; },
+        pattern | ds(head)               = [&] { std::cout << "single element " << *head << std::endl; },
+        pattern | ds(head, tail.at(ooo))  = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
         // clang-format on
     );
 
@@ -33,22 +33,22 @@ void sample()
     match(slice)(
         // clang-format off
         // Ignore everything but the last element, which must be "!".
-        pattern(ooo, "!")              = [&] { std::cout << "!!!" << std::endl; },
+        pattern | ds(ooo, "!")              = [&] { std::cout << "!!!" << std::endl; },
 
         // `subrange` is a slice of everything except the last element, which must be "z".
-        pattern(subrange.at(ooo), "z") = [&] { std::cout << "starts with: " << *subrange << std::endl; },
+        pattern | ds(subrange.at(ooo), "z") = [&] { std::cout << "starts with: " << *subrange << std::endl; },
 
         // `subrange` is a slice of everything but the first element, which must be "a".
-        pattern("a", subrange.at(ooo)) = [&] { std::cout << "ends with: " << *subrange << std::endl; },
+        pattern | ds("a", subrange.at(ooo)) = [&] { std::cout << "ends with: " << *subrange << std::endl; },
 
-        pattern(ds(subrange.at(ooo)))      = [&] { std::cout << *subrange << std::endl; }
+        pattern | ds(subrange.at(ooo))      = [&] { std::cout << *subrange << std::endl; }
         // clang-format on
     );
 
     Id<std::string> penultimate;
     match(slice)(
         // clang-format off
-        pattern(ooo, penultimate, _) = [&] { std::cout << "next to last is " << *penultimate << std::endl; }
+        pattern | ds(ooo, penultimate, _) = [&] { std::cout << "next to last is " << *penultimate << std::endl; }
         // clang-format on
     );
 
@@ -57,9 +57,9 @@ void sample()
     Id<int32_t> y, z;
     match(tuple)(
         // clang-format off
-        pattern(1, ooo, y, z) = [&] { std::cout << "y=" << *y << " z=" << *z << std::endl; },
-        pattern(ooo, 5)       = [&] { std::cout << "tail must be 5" << std::endl; },
-        pattern(ooo)          = [&] { std::cout << "matches everything else" << std::endl; }
+        pattern | ds(1, ooo, y, z) = [&] { std::cout << "y=" << *y << " z=" << *z << std::endl; },
+        pattern | ds(ooo, 5      ) = [&] { std::cout << "tail must be 5" << std::endl; },
+        pattern | ds(ooo         ) = [&] { std::cout << "matches everything else" << std::endl; }
         // clang-format on
     );
 }

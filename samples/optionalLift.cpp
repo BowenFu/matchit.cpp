@@ -13,7 +13,7 @@ auto optionalLift(Func func)
         return match(v)(
             // clang-format off
             pattern(some(x)) = [&] { return std::make_optional(func(*x)); },
-            pattern(none)    = expr(RetType{})
+            pattern | none    = expr(RetType{})
             // clang-format on
         );
     };

@@ -10,7 +10,7 @@ void sample1()
     match(x)(
         // clang-format off
         pattern(e.at(1 <= _ && _ <= 5)) = [&] { std::cout << "got a range element " << *e << std::endl; },
-        pattern(_)                      = [&] { std::cout << "anything" << std::endl; }
+        pattern | _                      = [&] { std::cout << "anything" << std::endl; }
         // clang-format on
     );
 }

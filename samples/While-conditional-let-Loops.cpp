@@ -40,7 +40,7 @@ int32_t main()
                 std::cout << *top << std::endl;
                 return true;
             },
-            pattern(_) = expr(false)))
+            pattern | _ = expr(false)))
     {
     };
 }

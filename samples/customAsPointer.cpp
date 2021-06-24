@@ -73,8 +73,8 @@ constexpr int32_t staticCastAs(Num const &input)
     return match(input)(
         // clang-format off
         pattern(as<One>(_))       = expr(1),
-        pattern(kind<Kind::kTWO>) = expr(2),
-        pattern(_)                = expr(3)
+        pattern | kind<Kind::kTWO> = expr(2),
+        pattern | _                = expr(3)
         // clang-format on
     );
 }
