@@ -58,17 +58,17 @@ void sample()
     Id<uint64_t> size;
     match(n_items * bytes_per_item)(
         // clang-format off
-        pattern(size.at(binary::MEGA <= _ && _ <= binary::GIGA)) = [&] { std::cout << "It fits and occupies " << *size << " bytes" << std::endl; }
+        pattern | size.at(binary::MEGA <= _ && _ <= binary::GIGA) = [&] { std::cout << "It fits and occupies " << *size << " bytes" << std::endl; }
         // clang-format on
     );
 
     // using qualified paths:
     std::cout << match(static_cast<uint64_t>(0xfacade))(
                      // clang-format off
-                     pattern(0U <= _ && _ <= std::numeric_limits<uint8_t>::max())  = expr("fits in a u8"),
-                     pattern(0U <= _ && _ <= std::numeric_limits<uint16_t>::max()) = expr("fits in a u16"),
-                     pattern(0U <= _ && _ <= std::numeric_limits<uint32_t>::max()) = expr("fits in a u32"),
-                     pattern | _                                                    = expr("too big"))
+                     pattern | (0U <= _ && _ <= std::numeric_limits<uint8_t>::max())  = expr("fits in a u8"),
+                     pattern | (0U <= _ && _ <= std::numeric_limits<uint16_t>::max()) = expr("fits in a u16"),
+                     pattern | (0U <= _ && _ <= std::numeric_limits<uint32_t>::max()) = expr("fits in a u32"),
+                     pattern | _                                                      = expr("too big"))
               // clang-format on
               << std::endl;
 }

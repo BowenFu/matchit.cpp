@@ -23,7 +23,7 @@ void sample1()
 
     using namespace matchit;
     match (setting_value, new_setting_value) ( 
-        pattern(some(_), some(_)) = [] {
+        pattern | ds(some(_), some(_)) = [] {
             std:: cout << "Can't overwrite an existing customized value" << std::endl;
         },
         pattern | _ = [&] {

@@ -137,7 +137,7 @@ constexpr bool contains(Map const& map, Key const& key)
 {
     using namespace matchit;
     return match(map.find(key))(
-        pattern(map.end()) = expr(false),
+        pattern | map.end() = expr(false),
         pattern | _         = expr(true)
     );
 }
@@ -170,7 +170,7 @@ constexpr bool isValid(int32_t n)
 {
     using namespace matchit;
     return match(n)(
-        pattern(or_(1, 3, 5)) = expr(true),
+        pattern | or_(1, 3, 5) = expr(true),
         pattern | _            = expr(false)
     );
 }
@@ -197,7 +197,7 @@ constexpr bool isLarge(double value)
 {
     using namespace matchit;
     return match(value)(
-        pattern(app(_ * _, _ > 1000)) = expr(true),
+        pattern | app(_ * _, _ > 1000) = expr(true),
         pattern | _                    = expr(false)
     );
 }
@@ -221,7 +221,7 @@ bool checkAndlogLarge(double value)
     using namespace matchit;
     Id<double> s;
     return match(value)(
-        pattern(app(_ * _, s.at(_ > 1000))) = [&] {
+        pattern | app(_ * _, s.at(_ > 1000)) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
         pattern | _ = expr(false));
@@ -303,7 +303,7 @@ constexpr auto dsByMember(DummyStruct const&v)
     };
     Id<char const*> name;
     return match(v)(
-        pattern(dsA(2, name)) = expr(name),
+        pattern | dsA(2, name) = expr(name),
         pattern | _ = expr("not matched")
     );
 };
@@ -317,7 +317,7 @@ Sometimes you have multiple identifiers and you want exert a restriction on the 
 Sure! Here comes the **Match Guard**. Its syntax is
 
 ```C++
-pattern(PATTERN).when(GUARD) = HANDLER
+pattern | PATTERN | when(GUARD) = HANDLER
 ```
 
 Say, we want to match only when the sum of two identifiers equal to some value, we can write codes as
@@ -331,8 +331,8 @@ constexpr bool sumIs(std::array<int32_t, 2> const& arr, int32_t s)
     using namespace matchit;
     Id<int32_t> i, j;
     return match(arr)(
-        pattern(i, j).when(i + j == s) = expr(true),
-        pattern | _                     = expr(false));
+        pattern | ds(i, j) | when(i + j == s) = expr(true),
+        pattern | _                           = expr(false));
 }
 
 static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));
@@ -376,7 +376,7 @@ constexpr bool recursiveSymmetric(Range const &range)
     Id<int32_t> i;
     Id<SubrangeT<Range const>> subrange;
     return match(range)(
-        pattern(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
+        pattern | i, subrange.at(ooo), i = [&] { return recursiveSymmetric(*subrange); },
         pattern | ds(_, ooo, _)         = expr(false),
         pattern | _                     = expr(true)
     );
@@ -404,7 +404,7 @@ constexpr auto square(std::optional<T> const& t)
     using namespace matchit;
     Id<T> id;
     return match(t)(
-        pattern(some(id)) = id * id,
+        pattern | some(id) = id * id,
         pattern | none     = expr(0));
 }
 constexpr auto x = std::make_optional(5);
@@ -444,8 +444,8 @@ constexpr auto getClassName(T const& v)
 {
     using namespace matchit;
     return match(v)(
-        pattern(as<char const*>(_)) = expr("chars"),
-        pattern(as<int32_t>(_))     = expr("int32_t")
+        pattern | as<char const*>(_) = expr("chars"),
+        pattern | as<int32_t>(_)     = expr("int32_t")
     );
 }
 
@@ -466,8 +466,8 @@ struct Square : Shape {};
 auto getClassName(Shape const &s)
 {
     return match(s)(
-        pattern(as<Circle>(_)) = expr("Circle"),
-        pattern(as<Square>(_)) = expr("Square")
+        pattern | as<Circle>(_) = expr("Circle"),
+        pattern | as<Square>(_) = expr("Square")
     );
 }
 ```

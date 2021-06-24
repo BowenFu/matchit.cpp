@@ -35,7 +35,7 @@ int32_t main()
     Id<int32_t> top;
     while (
         match(safePop(stack))(
-            pattern(some(top)) = [&]
+            pattern | some(top) = [&]
             {
                 std::cout << *top << std::endl;
                 return true;

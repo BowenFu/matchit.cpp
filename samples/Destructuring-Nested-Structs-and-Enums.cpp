@@ -22,11 +22,11 @@ int32_t main()
     Id<int32_t> h, s, v;
     Id<std::string> text;
     match(msg)( 
-        pattern(as<ChangeColor>(as<Rgb>(ds(r, g, b)))) = [&] {
+        pattern | as<ChangeColor>(as<Rgb>(ds(r, g, b))) = [&] {
             std::cout <<
                 "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
         },
-        pattern(as<ChangeColor>(as<Hsv>(ds(h, s, v)))) = [&] {
+        pattern | as<ChangeColor>(as<Hsv>(ds(h, s, v))) = [&] {
             std::cout <<
                 "Change the color to hue " << *h << ", saturation " << *s << ", and value " << *v << std::endl;
         }

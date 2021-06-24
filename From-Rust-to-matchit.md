@@ -30,7 +30,7 @@ for (auto i = -2; i <= 5; ++i)
         match(i)(
             pattern | -1       = expr("It's minus one"),
             pattern | 1        = expr("It's a one"),
-            pattern(or_(2,4)) = expr("It's either a two or a four"),
+            pattern | or_(2,4) = expr("It's either a two or a four"),
             pattern | _        = expr("Matched none of the arms")
         )
         << std::endl;
@@ -56,7 +56,7 @@ In C++ with `match(it)`:
 constexpr auto x = 2;
 Id<int32_t> e;
 match(x)(
-    pattern(e.at(1 <= _ && _ <= 5)) = [&] { std::cout << "got a range element " << *e << std::endl; },
+    pattern | e.at(1 <= _ && _ <= 5) = [&] { std::cout << "got a range element " << *e << std::endl; },
     pattern | _                      = [&] { std::cout << "anything" << std::endl; }
 );
 ```
@@ -87,7 +87,7 @@ auto const name_age = [](auto name_pat, auto age_pat)
 };
 Id<std::string> person_name;
 match(value)(
-    pattern(name_age(person_name, 18 <= _ && _ <= 150)) = []{}
+    pattern | name_age(person_name, 18 <= _ && _ <= 150) = []{}
 );
 ```
 
@@ -107,7 +107,7 @@ constexpr auto x = std::make_optional(3);
 Id<int32_t> y;
 match(x)(
     // No need to worry about y's type, by ref or by value is automatically managed by `match(it)` library.
-    pattern(some(y)) = []{}
+    pattern | some(y) = []{}
 );
 ```
 
@@ -126,7 +126,7 @@ Id<uint8_t> age;
 match(std::move(value))
 (
     // `name` is moved from person and `age` copied (scalar types are copied in `match(it)`)
-    pattern(name_age(person_name, age)) = []{}
+    pattern | name_age(person_name, age) = []{}
 );
 ```
 
@@ -192,7 +192,7 @@ constexpr auto dsRGBA = [](auto r, auto g, auto b, auto a)
 
 Id<float> red, green, blue;
 match(color)(
-    pattern(dsRGBA(red, green, blue, _)) = [&]{
+    pattern | dsRGBA(red, green, blue, _) = [&]{
         assert(color.r == *red);
         assert(color.g == *green);
         assert(color.b == *blue);
@@ -203,7 +203,7 @@ match(color)(
 constexpr auto x = std::make_optional(10);
 match(x)(
     // the x is always matched by _
-    pattern(some(_)) = []{}
+    pattern | some(_) = []{}
 );
 ```
 
@@ -254,10 +254,10 @@ auto const& slice = words;
 Id<std::string> head;
 Id<SubrangeT<std::vector<std::string> const>> tail;
 match(slice)(
-    pattern(ds()                  )  = [&] { std::cout << "slice is empty" << std::endl; },
-    pattern(ds(head)              )  = [&] { std::cout << "single element " << *head << std::endl; },
+    pattern | ds()                    = [&] { std::cout << "slice is empty" << std::endl; },
+    pattern | ds(head)                = [&] { std::cout << "single element " << *head << std::endl; },
     // need to implement << for subrange tail
-    pattern(head, tail.at(ooo))  = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
+    pattern | head, tail.at(ooo)  = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
 );
 
 Id<SubrangeT<std::vector<std::string> const>> subrange;
@@ -266,12 +266,12 @@ match(slice)(
     pattern | ooo, "!" = [&]{ std::cout << "!!!" << std::endl; },
 
     // `subrange` is a slice of everything except the last element, which must be "z".
-    pattern(subrange.at(ooo), "z") = [&]{ std::cout << "starts with: " << *subrange << std::endl; },
+    pattern | subrange.at(ooo), "z" = [&]{ std::cout << "starts with: " << *subrange << std::endl; },
 
     // `subrange` is a slice of everything but the first element, which must be "a".
-    pattern("a", subrange.at(ooo)) = [&]{ std::cout << "ends with: " << *subrange << std::endl; },
+    pattern | "a", subrange.at(ooo) = [&]{ std::cout << "ends with: " << *subrange << std::endl; },
 
-    pattern(ds(subrange.at(ooo))) = [&]{ std::cout << *subrange << std::endl; }
+    pattern | ds(subrange.at(ooo)) = [&]{ std::cout << *subrange << std::endl; }
 );
 
 Id<std::string> penultimate;
@@ -410,16 +410,16 @@ constexpr auto bytes_per_item = 12U;
 Id<uint64_t> size;
 match(n_items * bytes_per_item)
 (
-    pattern(size.at(binary::MEGA <= _ && _ <= binary::GIGA)) = [&] {
+    pattern | size.at(binary::MEGA <= _ && _ <= binary::GIGA) = [&] {
         std::cout << "It fits and occupies " << size << " bytes" << std::endl;
     }
 );
 
 // using qualified paths:
 std::cout << match(static_cast<size_t>(0xfacade))( 
-    pattern(0U <= _ && _ <= numeric_limits<uint8_t>::max())  = expr("fits in a u8"),
-    pattern(0U <= _ && _ <= numeric_limits<uint16_t>::max()) = expr("fits in a u16"),
-    pattern(0U <= _ && _ <= numeric_limits<uint32_t>::max()) = expr("fits in a u32"),
+    pattern | 0U <= _ && _ <= numeric_limits<uint8_t>::max())  = expr("fits in a u8",
+    pattern | 0U <= _ && _ <= numeric_limits<uint16_t>::max()) = expr("fits in a u16",
+    pattern | 0U <= _ && _ <= numeric_limits<uint32_t>::max()) = expr("fits in a u32",
     pattern | _                                               = expr("too big")
 ) << std::endl;
 ```
@@ -429,7 +429,7 @@ Tips: feel free to use variables in `match(it)`. You can write codes like
 ```C++
 // using variables:
 std::cout << match(0xfacade)( 
-    pattern(min(a, b) <= _ && _ <= max(a, b))  = expr("fits in the range"),
+    pattern | min(a, b <= _ && _ <= max(a, b))  = expr("fits in the range"),
     pattern | _                                 = expr("out of the range")
 ) << std::endl;
 ```
@@ -527,9 +527,9 @@ void sample()
     constexpr auto s = Point{1U, 1U};
 
     match(s)(
-        pattern(and_(app(&Point::x, 10U), app(&Point::y, 20U))) = []{},
-        pattern(and_(app(&Point::y, 10U), app(&Point::x, 20U))) = []{},    // order doesn't matter
-        pattern(app(&Point::x, 10U))                            = []{},
+        pattern | and_(app(&Point::x, 10U), app(&Point::y, 20U)) = []{},
+        pattern | and_(app(&Point::y, 10U), app(&Point::x, 20U)) = []{},    // order doesn't matter
+        pattern | app(&Point::x, 10U)                            = []{},
         pattern | _                                              = []{}
     );
 
@@ -537,9 +537,9 @@ void sample()
     constexpr auto t = PointTuple{1U, 2U};
 
     match(t)(
-        pattern(and_(appGet<0>(10U), appGet<1>(20U))) = []{},
-        pattern(and_(appGet<1>(10U), appGet<0>(20U))) = []{},   // order doesn't matter
-        pattern(appGet<0>(10U))                       = []{},
+        pattern | and_(appGet<0>(10U), appGet<1>(20U)) = []{},
+        pattern | and_(appGet<1>(10U), appGet<0>(20U)) = []{},   // order doesn't matter
+        pattern | appGet<0>(10U)                       = []{},
         pattern | _                                    = []{}
     );
 }
@@ -676,14 +676,14 @@ int32_t main()
     using namespace matchit;
     Id<std::string> color;
     match(favorite_color)(
-        pattern(some(color)) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
-        pattern(_).when(expr(is_tuesday)) = expr("Tuesday is green day!"),
+        pattern | some(color) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
+        pattern | _ | when(expr(is_tuesday)) = expr("Tuesday is green day!"),
         pattern | _ = [&]
         {
             Id<uint8_t> age_;
             return match(age)(
-                pattern(as<uint8_t>(age_)).when(age_ > 30) = expr("Using purple as the background color"),
-                pattern(as<uint8_t>(age_))                 = expr("Using orange as the background color"),
+                pattern | as<uint8_t>(age_) | when(age_ > 30) = expr("Using purple as the background color"),
+                pattern | as<uint8_t>(age_)                 = expr("Using orange as the background color"),
                 pattern | _                                 = expr("Using blue as the background color"));
         });
 
@@ -746,7 +746,7 @@ int32_t main()
     Id<int32_t> top;
     while (
         match(safePop(stack))(
-            pattern(some(top)) = [&]
+            pattern | some(top) = [&]
             {
                 std::cout << *top << std::endl;
                 return true;
@@ -809,17 +809,17 @@ int32_t main()
     Id<std::string> text;
     Id<int32_t> r, g, b;
     match(msg)( 
-        pattern(as<Quit>(_)) = [] {
+        pattern | as<Quit>(_) = [] {
             std:: cout << "The Quit variant has no data to destructure." << std::endl;
         },
-        pattern(as<Move>(ds(x, y))) = [&] {
+        pattern | as<Move>(ds(x, y)) = [&] {
             std::cout <<
                 "Move in the x direction " << *x << " and in the y direction " << *y << std::endl; 
         },
-        pattern(as<Write>(text)) = [&] {
+        pattern | as<Write>(text) = [&] {
             std::cout << "Text message: " << *text << std::endl;
         },
-        pattern(as<ChangeColor>(ds(r, g, b))) = [&] {
+        pattern | as<ChangeColor>(ds(r, g, b)) = [&] {
             std::cout <<
                 "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
         }
@@ -888,11 +888,11 @@ int32_t main()
     Id<int32_t> h, s, v;
     Id<std::string> text;
     match(msg)( 
-        pattern(as<ChangeColor>(as<Rgb>(ds(r, g, b)))) = [&] {
+        pattern | as<ChangeColor>(as<Rgb>(ds(r, g, b))) = [&] {
             std::cout <<
                 "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
         },
-        pattern(as<ChangeColor>(as<Hsv>(ds(h, s, v)))) = [&] {
+        pattern | as<ChangeColor>(as<Hsv>(ds(h, s, v))) = [&] {
             std::cout <<
                 "Change the color to hue " << *h << ", saturation " << *s << ", and value " << *v << std::endl;
         }
@@ -951,7 +951,7 @@ int32_t main()
 
     using namespace matchit;
     match (setting_value, new_setting_value) ( 
-        pattern(some(_), some(_)) = [] {
+        pattern | some(_), some(_) = [] {
             std:: cout << "Can't overwrite an existing customized value" << std::endl;
         },
         pattern | _ = [&] {
@@ -1017,10 +1017,9 @@ int32_t main()
     using namespace matchit;
     Id<int32_t> x;
     match(num)(
-        // pattern(some(x)).when(x < 5) = [&] { std::cout << "less than five: " << *x; },
-        pattern(some(x.at(_ < 5))) = [&]
+        pattern | some(x.at(_ < 5)) = [&]
         { std::cout << "less than five: " << *x << std::endl;  },
-        pattern(some(x)) = [&]
+        pattern | some(x) = [&]
         { std::cout << *x << std::endl; },
         pattern | none = [&] {});
     return 0;
@@ -1053,10 +1052,9 @@ int32_t main() {
 
     Id<int32_t> n;
     match(x)( 
-        pattern(some(50))             = [&]{ std::cout << "Got 50" << std::endl; },
-        // pattern(some(n)).when(n == y) = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
+        pattern | some(50)             = [&]{ std::cout << "Got 50" << std::endl; },
         // In `match(it)`, you can use variable inside patterns, just like literals.
-        pattern(some(y))              = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
+        pattern | some(y)              = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
         pattern | _                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
     );
 
@@ -1087,8 +1085,8 @@ int32_t main() {
 
     std::cout <<
         match(x)( 
-            pattern(or_(4, 5, 6)).when(expr(y)) = expr("yes"),
-            pattern | _                          = expr("no")
+            pattern | or_(4, 5, 6) | when(expr(y)) = expr("yes"),
+            pattern | _                            = expr("no")
     ) << std::endl;
 }
 ```
@@ -1128,13 +1126,13 @@ int32_t main() {
 
     Id<int32_t> id_variable;
     match(msg)( 
-        pattern(as<Hello>(app(&Hello::id, id_variable.at(3 <= _ && _ <= 7))) = [&] {
+        pattern | as<Hello>(app(&Hello::id, id_variable.at(3 <= _ && _ <= 7)) = [&] {
             std::cout << "Found an id in range: " << *id_variable << std::endl;
         },
-        pattern(as<Hello>(app(&Hello::id, 10 <= _ && _ <= 12)) = [&] {
+        pattern | as<Hello>(app(&Hello::id, 10 <= _ && _ <= 12) = [&] {
             std::cout << "Found an id in another range" << std::endl;
         },
-        pattern(as<Hello>(app(&Hello::id, id_variable)) = [&] {
+        pattern | as<Hello>(app(&Hello::id, id_variable) = [&] {
             std::cout << "Found some other id: " << *id_variable << std::endl;
         }
     )

@@ -38,7 +38,7 @@ void sample2()
 
     Id<float> red, green, blue;
     match(color)(
-        pattern(dsRGBA(red, green, blue, _)) = [&]
+        pattern | dsRGBA(red, green, blue, _) = [&]
         {
             assert(color.r == *red);
             assert(color.g == *green);
@@ -49,7 +49,7 @@ void sample2()
     constexpr auto x = std::make_optional(10);
     match(x)(
         // the x is always matched by _
-        pattern(some(_)) = [] {});
+        pattern | some(_) = [] {});
 }
 
 int32_t main()

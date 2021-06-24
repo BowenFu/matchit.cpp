@@ -18,17 +18,17 @@ int32_t main()
     Id<std::string> text;
     Id<int32_t> r, g, b;
     match(msg)( 
-        pattern(as<Quit>(_)) = [] {
+        pattern | as<Quit>(_) = [] {
             std:: cout << "The Quit variant has no data to destructure." << std::endl;
         },
-        pattern(as<Move>(ds(x, y))) = [&] {
+        pattern | as<Move>(ds(x, y)) = [&] {
             std::cout <<
                 "Move in the x direction " << *x << " and in the y direction " << *y << std::endl; 
         },
-        pattern(as<Write>(text)) = [&] {
+        pattern | as<Write>(text) = [&] {
             std::cout << "Text message: " << *text << std::endl;
         },
-        pattern(as<ChangeColor>(ds(r, g, b))) = [&] {
+        pattern | as<ChangeColor>(ds(r, g, b)) = [&] {
             std::cout <<
                 "Change the color to red " << *r << ", green " << *g << ", and blue " << *b << std::endl;
         }

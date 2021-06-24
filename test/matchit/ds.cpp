@@ -93,7 +93,7 @@ TEST(Ds, vecOooBinder1)
   auto const vec = std::vector<int32_t>{123, 456};
   Id<SubrangeT<decltype(vec)>> subrange;
   auto matched = match(vec)(
-      pattern(subrange.at(ooo)) = [&]
+      pattern | subrange.at(ooo) = [&]
       {
         auto const expected = {123, 456};
         expectRange(*subrange, expected);
@@ -107,7 +107,7 @@ TEST(Ds, vecOooBinder2)
 {
   Id<SubrangeT<std::vector<int32_t>>> subrange;
   match(std::vector<int32_t>{123, 456})(
-      pattern(subrange.at(ooo)) = [&]
+      pattern | subrange.at(ooo) = [&]
       {
         auto const expected = {123, 456};
         expectRange(*subrange, expected);
@@ -123,7 +123,7 @@ TEST(Ds, vecOooBinder3)
 {
   Id<SubrangeT<std::vector<int32_t>>> subrange;
   match(std::vector<int32_t>{123, 456})(
-      pattern(123, subrange.at(ooo), 456) = [&]
+      pattern | ds(123, subrange.at(ooo), 456) = [&]
       { EXPECT_EQ((*subrange).size(), 0); });
 }
 
@@ -131,7 +131,7 @@ TEST(Ds, vecOooBinder4)
 {
   Id<SubrangeT<std::vector<int32_t>>> subrange;
   match(std::vector<int32_t>{123, 456, 789})(
-      pattern(123, subrange.at(ooo)) = [&]
+      pattern | ds(123, subrange.at(ooo)) = [&]
       {
         auto const expected = {456, 789};
         expectRange(*subrange, expected);
@@ -147,7 +147,7 @@ TEST(Ds, listOooBinder4)
 {
   Id<SubrangeT<std::list<int32_t>>> subrange;
   match(std::list<int32_t>{123, 456, 789})(
-      pattern(123, subrange.at(ooo)) = [&]
+      pattern | ds(123, subrange.at(ooo)) = [&]
       {
         auto const expected = {456, 789};
         expectRange(*subrange, expected);
@@ -159,7 +159,7 @@ TEST(Ds, arrayOooBinder1)
   auto const array = std::array<int32_t, 2>{123, 456};
   Id<SubrangeT<decltype(array)>> subrange;
   auto matched = match(array)(
-      pattern(subrange.at(ooo)) = [&]
+      pattern | subrange.at(ooo) = [&]
       {
         auto const expected = {123, 456};
         expectRange(*subrange, expected);

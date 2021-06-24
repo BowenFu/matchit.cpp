@@ -32,7 +32,7 @@ You can even use a function call as Expression Pattern, the result of the functi
 
 ```C++
 match(map.find(key))(
-    pattern(map.end()) = expr(false),
+    pattern | map.end() = expr(false),
     pattern | _         = expr(true)
 )
 ```
@@ -51,7 +51,7 @@ Predicate Pattern corresponds to `(? expr)`.
 
 ```C++
 match(value)(
-    pattern(meet([](auto &&v) { return v >= 0; })) = expr(value),
+    pattern | meet([](auto &&v { return v >= 0; })) = expr(value),
     pattern | _                                     = expr(0))
 ```
 
@@ -73,7 +73,7 @@ The Racket syntax is `(or pat ...)`, and the corresponding C++ syntax is `or_(pa
 
 ```C++
 match(n)(
-    pattern(or_(1, 3, 5)) = expr(true),
+    pattern | or_(1, 3, 5) = expr(true),
     pattern | _            = expr(false))
 ```
 
@@ -82,7 +82,7 @@ Say Predicate Patterns
 
 ```C++
 match(n)(
-    pattern(or_(_ < 3, 5)) = expr(true),
+    pattern | or_(_ < 3, 5) = expr(true),
     pattern | _             = expr(false))
 ```
 
@@ -126,7 +126,7 @@ That is to say, Predicate Pattern can be expressed with App Pattern, `meet(unary
 
 ```C++
 match(value)(
-    pattern(app(_ * _, _ > 1000)) = expr(true),
+    pattern | app(_ * _, _ > 1000) = expr(true),
     pattern | _                    = expr(false))
 ```
 
@@ -142,7 +142,7 @@ This means that handlers in `match(it)` are always nullary, but can be unary or 
 ```C++
 Id<double> s;
 match(value)(
-    pattern(app(_ * _, s.at(_ > 1000))) = expr(s),
+    pattern | app(_ * _, s.at(_ > 1000)) = expr(s),
     pattern | _                          = expr(0));
 ```
 
@@ -157,7 +157,7 @@ Match Guard exists in most related works. The current syntax is borrowed from `m
 Match Guard can be used to exert extra restrictions on a pattern. The syntax is
 
 ```C++
-pattern(PATTERN).when(PREDICATE) = HANDLER
+pattern | PATTERN | when(PREDICATE) = HANDLER
 ```
 
 A simple sample can be
@@ -165,8 +165,8 @@ A simple sample can be
 ```C++
 Id<int32_t> i, j;
 return match(arr)(
-    pattern(i, j).when(i + j == s) = expr(true),
-    pattern | _                    = expr(false));
+    pattern | ds(i, j) | when(i + j == s) = expr(true),
+    pattern | _                           = expr(false));
 ```
 
 ## Destructure Pattern
@@ -219,7 +219,7 @@ constexpr auto dsByMember(DummyStruct const&v)
     };
     Id<char const*> name;
     return match(v)(
-        pattern(dsA(2, name)) = expr(name),
+        pattern | dsA(2, name) = expr(name),
         pattern | _ = expr("not matched")
     );
 };
@@ -251,8 +251,8 @@ We support binding a subrange to the ooo pattern now when destructuring a `std::
 Id<int32_t> i;
 Id<SubrangeT<Range const>> subrange;
 return match(range)(
-    pattern(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
-    pattern(i, subrange.at(ooo), _) = expr(false),
+    pattern | i, subrange.at(ooo), i = [&] { return recursiveSymmetric(*subrange); },
+    pattern | i, subrange.at(ooo), _ = expr(false),
     pattern | _                   = expr(true)
 );
 ```
@@ -266,7 +266,7 @@ Their usage can be
 
 ```C++
 match(t)(
-    pattern(some(id)) = id * id,
+    pattern | some(id) = id * id,
     pattern | none     = expr(0));
 ```
 
@@ -277,8 +277,8 @@ It can be used to handle sum type, including class hierarchies, std::variant, an
 
 ```C++
 match(v)(
-    pattern(as<char const*>(_)) = expr("chars"),
-    pattern(as<int32_t>(_))     = expr("int32_t")
+    pattern | as<char const*>(_) = expr("chars"),
+    pattern | as<int32_t>(_)     = expr("int32_t")
 );
 ```
 

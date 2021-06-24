@@ -7,8 +7,8 @@ constexpr auto getClassName(T const &v)
     using namespace matchit;
     return match(v)(
         // clang-format off
-        pattern(as<char const *>(_)) = expr("chars"),
-        pattern(as<int32_t>(_))      = expr("int32_t")
+        pattern | as<char const *>(_) = expr("chars"),
+        pattern | as<int32_t>(_)      = expr("int32_t")
         // clang-format on
     );
 }
@@ -24,8 +24,8 @@ constexpr auto print(T const &v)
     Id<int32_t> i;
     return match(v)(
         // clang-format off
-        pattern(as<char const *>(c)) = [&] { std::cout << "char const *: " << *c << std::endl;},
-        pattern(as<int32_t>(i))      = [&] { std::cout << "int32_t: " << *i << std::endl;}
+        pattern | as<char const *>(c) = [&] { std::cout << "char const *: " << *c << std::endl;},
+        pattern | as<int32_t>(i)      = [&] { std::cout << "int32_t: " << *i << std::endl;}
         // clang-format on
     );
 }

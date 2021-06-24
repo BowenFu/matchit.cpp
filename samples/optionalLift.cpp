@@ -12,7 +12,7 @@ auto optionalLift(Func func)
         using RetType = decltype(std::make_optional(func(*x)));
         return match(v)(
             // clang-format off
-            pattern(some(x)) = [&] { return std::make_optional(func(*x)); },
+            pattern | some(x) = [&] { return std::make_optional(func(*x)); },
             pattern | none    = expr(RetType{})
             // clang-format on
         );
