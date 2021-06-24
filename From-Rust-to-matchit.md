@@ -257,19 +257,19 @@ match(slice)(
     pattern | ds()                    = [&] { std::cout << "slice is empty" << std::endl; },
     pattern | ds(head)                = [&] { std::cout << "single element " << *head << std::endl; },
     // need to implement << for subrange tail
-    pattern | head, tail.at(ooo)  = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
+    pattern | ds(head, tail.at(ooo))  = [&] { std::cout << "head=" << *head << " tail=" << *tail << std::endl; }
 );
 
 Id<SubrangeT<std::vector<std::string> const>> subrange;
 match(slice)( 
     // Ignore everything but the last element, which must be "!".
-    pattern | ooo, "!" = [&]{ std::cout << "!!!" << std::endl; },
+    pattern | ds(ooo, "!") = [&]{ std::cout << "!!!" << std::endl; },
 
     // `subrange` is a slice of everything except the last element, which must be "z".
-    pattern | subrange.at(ooo), "z" = [&]{ std::cout << "starts with: " << *subrange << std::endl; },
+    pattern | ds(subrange.at(ooo), "z") = [&]{ std::cout << "starts with: " << *subrange << std::endl; },
 
     // `subrange` is a slice of everything but the first element, which must be "a".
-    pattern | "a", subrange.at(ooo) = [&]{ std::cout << "ends with: " << *subrange << std::endl; },
+    pattern | ds("a", subrange.at(ooo)) = [&]{ std::cout << "ends with: " << *subrange << std::endl; },
 
     pattern | ds(subrange.at(ooo)) = [&]{ std::cout << *subrange << std::endl; }
 );
@@ -417,10 +417,10 @@ match(n_items * bytes_per_item)
 
 // using qualified paths:
 std::cout << match(static_cast<size_t>(0xfacade))( 
-    pattern | 0U <= _ && _ <= numeric_limits<uint8_t>::max())  = expr("fits in a u8",
-    pattern | 0U <= _ && _ <= numeric_limits<uint16_t>::max()) = expr("fits in a u16",
-    pattern | 0U <= _ && _ <= numeric_limits<uint32_t>::max()) = expr("fits in a u32",
-    pattern | _                                               = expr("too big")
+    pattern | (0U <= _ && _ <= numeric_limits<uint8_t>::max())  = expr("fits in a u8",
+    pattern | (0U <= _ && _ <= numeric_limits<uint16_t>::max()) = expr("fits in a u16",
+    pattern | (0U <= _ && _ <= numeric_limits<uint32_t>::max()) = expr("fits in a u32",
+    pattern | _                                                 = expr("too big")
 ) << std::endl;
 ```
 
@@ -951,7 +951,7 @@ int32_t main()
 
     using namespace matchit;
     match (setting_value, new_setting_value) ( 
-        pattern | some(_), some(_) = [] {
+        pattern | ds(some(_), some(_)) = [] {
             std:: cout << "Can't overwrite an existing customized value" << std::endl;
         },
         pattern | _ = [&] {
