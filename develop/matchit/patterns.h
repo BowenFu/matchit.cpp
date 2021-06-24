@@ -587,18 +587,18 @@ namespace matchit
             {
                 if constexpr (std::is_same_v<AppResultCurTuple<Value>, std::tuple<>>)
                 {
-                    return matchPattern(std::forward<AppResult<Value>>(invoke_(appPat.unary(), value)), appPat.pattern | ), depth + 1, context;
+                    return matchPattern(std::forward<AppResult<Value>>(invoke_(appPat.unary(), value)), appPat.pattern(), depth + 1, context;
                 }
                 else
                 {
                     context.emplace_back(invoke_(appPat.unary(), value));
                     decltype(auto) result = get<std::decay_t<AppResult<Value>>>(context.back());
-                    return matchPattern(std::forward<AppResult<Value>>(result), appPat.pattern | ), depth + 1, context;
+                    return matchPattern(std::forward<AppResult<Value>>(result), appPat.pattern(), depth + 1, context;
                 }
             }
             constexpr static void processIdImpl(App<Unary, Pattern> const &appPat, int32_t depth, IdProcess idProcess)
             {
-                return processId(appPat.pattern | ), depth, idProcess;
+                return processId(appPat.pattern(), depth, idProcess;
             }
         };
 
