@@ -339,7 +339,7 @@ namespace matchit
         template <typename Pred>
         auto when(Pred const& pred)
         {
-            return When<Pred>{mPred};
+            return When<Pred>{pred};
         }
 
         template <typename Pattern>
