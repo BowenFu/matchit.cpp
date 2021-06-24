@@ -302,9 +302,9 @@ TEST(Id, IdAtUnique)
 {
   Id<std::unique_ptr<int32_t>> ii;
   auto const result = match(11)(
-      pattern | app([](auto &&x
+      pattern | app([](auto &&x)
                   { return std::make_unique<int32_t>(x * x); },
-                  ii.at(some(_)))) = [&]
+                  ii.at(some(_))) = [&]
       { return ii.move(); });
   EXPECT_EQ(*result, 121);
 }
