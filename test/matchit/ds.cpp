@@ -123,7 +123,7 @@ TEST(Ds, vecOooBinder3)
 {
   Id<SubrangeT<std::vector<int32_t>>> subrange;
   match(std::vector<int32_t>{123, 456})(
-      pattern | 123, subrange.at(ooo), 456 = [&]
+      pattern | ds(123, subrange.at(ooo), 456) = [&]
       { EXPECT_EQ((*subrange).size(), 0); });
 }
 
