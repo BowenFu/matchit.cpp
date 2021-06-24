@@ -20,9 +20,9 @@ In `match(it)`:
 
 ```C++
 match(x) ( 
-    pattern(0) = [&]{ std::cout << "got zero"; },
-    pattern(1) = [&]{ std::cout << "got one"; },
-    pattern(_) = [&]{ std::cout << "don't care"; },
+    pattern | 0 = [&]{ std::cout << "got zero"; },
+    pattern | 1 = [&]{ std::cout << "got one"; },
+    pattern | _ = [&]{ std::cout << "don't care"; },
 );
 ```
 
@@ -42,9 +42,9 @@ In `match(it)`:
 
 ```C++
 match(s)( 
-    pattern("foo") = [&]{ std::cout << "got foo"; },
-    pattern("bar") = [&]{ std::cout << "got bar"; },
-    pattern(_)     = [&]{ std::cout << "don't care"; }
+    pattern | "foo" = [&]{ std::cout << "got foo"; },
+    pattern | "bar" = [&]{ std::cout << "got bar"; },
+    pattern | _     = [&]{ std::cout << "don't care"; }
 );
 ```
 
@@ -213,11 +213,11 @@ enum class Op { Add, Sub, Mul, Div };
 Op parseOp(Parser& parser) {
     Id<char> token;
     return match(parser.consumeToken()) ( 
-        pattern('+') = expr(Op::Add),
-        pattern('-') = expr(Op::Sub),
-        pattern('*') = expr(Op::Mul),
-        pattern('/') = expr(Op::Div),
-        pattern(token) => [&]{
+        pattern | '+' = expr(Op::Add),
+        pattern | '-' = expr(Op::Sub),
+        pattern | '*' = expr(Op::Mul),
+        pattern | '/' = expr(Op::Div),
+        pattern | token => [&]{
             std::cerr << "Unexpected: " << *token;
             std::terminate();
         }
@@ -242,7 +242,7 @@ In `match(it)`:
 ```C++
 int v = /* ... */;
 match(v) ( 
-    pattern(_) = [&]{ std::cout << "ignored"; }
+    pattern | _ = [&]{ std::cout << "ignored"; }
     //      ˆ wildcard pattern
 );
 ```
@@ -264,7 +264,7 @@ In `match(it)`:
 ```C++
 int v = /* ... */;
 match(v)( 
-    pattern(x) = [&]{ std::cout << *x; }
+    pattern | x = [&]{ std::cout << *x; }
 //          ˆ identifier pattern
 );
 ```
@@ -287,8 +287,8 @@ In `match(it)`:
 ```C++
 int v = /* ... */;
 match(v)( 
-    pattern(0) = []{ std::cout << "got zero"; },
-    pattern(1) = []{ std::cout << "got one"; }
+    pattern | 0 = []{ std::cout << "got zero"; },
+    pattern | 1 = []{ std::cout << "got one"; }
 //          ˆ expression pattern
 );
 ```
@@ -314,9 +314,9 @@ int v = /* ... */;
 enum class Color { Red, Green, Blue };
 Color color = /* ... */;
 match(color)( 
-    pattern(Color::Red) = // ...
-    pattern(Color::Green) = // ...
-    pattern(Color::Blue) = // ...
+    pattern | Color::Red = // ...
+    pattern | Color::Green = // ...
+    pattern | Color::Blue = // ...
 // ˆˆˆˆˆˆˆˆˆˆˆ expression pattern
 );
 ```
@@ -342,7 +342,7 @@ Only Id variables are considered identifier patterns.
 static constexpr int zero = 0, one = 1;
 int v = 42;
 match(v) {
-    pattern(zero) = [&]{ std::cout << zero; }
+    pattern | zero = [&]{ std::cout << zero; }
 //          ˆˆˆˆ expression pattern
 };
 // prints nothing. no match.
@@ -451,10 +451,10 @@ In `match(it)`:
 enum Color { Red, Green, Blue };
 Color color = /* ... */;
 match(color) ( 
-    pattern(Red) = // ...
-    pattern(Green) = // ...
+    pattern | Red = // ...
+    pattern | Green = // ...
 //          ˆˆˆˆˆ id-expression
-    pattern(Blue) => // ...
+    pattern | Blue => // ...
 //  ˆˆˆˆˆˆˆˆˆ^^^^ case pattern
 );
 ```
@@ -480,11 +480,11 @@ In `match(it)`:
 static constexpr int zero = 0;
 int v = /* ... */;
 match (v) ( 
-    pattern(zero) = [&] { std::cout << "got zero"; },
+    pattern | zero = [&] { std::cout << "got zero"; },
 //          ˆˆˆˆ id-expression
-    pattern(1) = [&] { std::cout << "got one"; },
+    pattern | 1 = [&] { std::cout << "got one"; },
 //          ˆ expression pattern or called case pattern
-    pattern(2) = [&] { std::cout << "got two"; }
+    pattern | 2 = [&] { std::cout << "got two"; }
 //          ˆ expression pattern or called case pattern
 );
 ```
@@ -823,9 +823,9 @@ In `match(it)`:
 int fib(int n) {
   Id<int> x;
   return match (n) ( 
-    pattern(x < 0) = expr(0),
-    pattern(or_(1,2)) = expr(n), //1|2
-    pattern(x) = [&] { return fib(*x - 1) + fib(*x - 2); }
+    pattern | (x < 0)  = expr(0),
+    pattern | or_(1,2) = expr(n), //1|2
+    pattern | x        = [&] { return fib(*x - 1) + fib(*x - 2); }
   );
 }
 ```
@@ -865,7 +865,7 @@ match (n) (
   pattern(within(1, 10)) = [&] { // 1..10
     std::cout << n << " is in [1, 10].";
   },
-  pattern(_) = [&] {
+  pattern | _ = [&] {
     std::cout << n << " is not in [1, 10].";
   }
 );
@@ -987,7 +987,7 @@ void Node<T>::balance() {
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },
-    pattern(self) = expr(self) // do nothing
+    pattern | self = expr(self) // do nothing
   );
 }
 ```

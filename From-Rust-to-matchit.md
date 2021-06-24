@@ -28,10 +28,10 @@ for (auto i = -2; i <= 5; ++i)
 {
     std::cout <<
         match(i)(
-            pattern(-1)       = expr("It's minus one"),
-            pattern(1)        = expr("It's a one"),
+            pattern | -1       = expr("It's minus one"),
+            pattern | 1        = expr("It's a one"),
             pattern(or_(2,4)) = expr("It's either a two or a four"),
-            pattern(_)        = expr("Matched none of the arms")
+            pattern | _        = expr("Matched none of the arms")
         )
         << std::endl;
 }
@@ -57,7 +57,7 @@ constexpr auto x = 2;
 Id<int32_t> e;
 match(x)(
     pattern(e.at(1 <= _ && _ <= 5)) = [&] { std::cout << "got a range element " << *e << std::endl; },
-    pattern(_                     ) = [&] { std::cout << "anything" << std::endl; }
+    pattern | _                      = [&] { std::cout << "anything" << std::endl; }
 );
 ```
 
@@ -167,7 +167,7 @@ constexpr auto x = 20;
 Id<int32_t> a;
 match(10, x)(
     // the x is always matched by _
-    pattern(a, _) = []{ assert(*a == 10;); }
+    pattern | a, _ = []{ assert(*a == 10;); }
 );
 // ignore a function/closure param
 constexpr auto real_part = [](float a, float) { return a; };
@@ -263,7 +263,7 @@ match(slice)(
 Id<SubrangeT<std::vector<std::string> const>> subrange;
 match(slice)( 
     // Ignore everything but the last element, which must be "!".
-    pattern(ooo, "!") = [&]{ std::cout << "!!!" << std::endl; },
+    pattern | ooo, "!" = [&]{ std::cout << "!!!" << std::endl; },
 
     // `subrange` is a slice of everything except the last element, which must be "z".
     pattern(subrange.at(ooo), "z") = [&]{ std::cout << "starts with: " << *subrange << std::endl; },
@@ -276,16 +276,16 @@ match(slice)(
 
 Id<std::string> penultimate;
 match(slice)(
-    pattern(ooo, penultimate, _) = [&] { std::cout << "next to last is " << *penultimate << std::endl; }
+    pattern | ds(ooo, penultimate, _) = [&] { std::cout << "next to last is " << *penultimate << std::endl; }
 );
 
 constexpr auto tuple = std::make_tuple(1, 2, 3, 4, 5);
 // Rest patterns may also be used in tuple and tuple struct patterns.
 Id<int32_t> y, z;
 match(tuple)(  
-    pattern(1, ooo, y, z) = [&] { std::cout << "y=" << *y << "z=" << *z << std::endl; },
-    pattern(ooo, 5)       = [&] { std::cout << "tail must be 5" << std::endl; },
-    pattern(ooo)          = [&] { std::cout << "matches everything else" << std::endl; }
+    pattern | ds(1, ooo, y, z) = [&] { std::cout << "y=" << *y << "z=" << *z << std::endl; },
+    pattern | ds(ooo, 5      ) = [&] { std::cout << "tail must be 5" << std::endl; },
+    pattern | ds(ooo         ) = [&] { std::cout << "matches everything else" << std::endl; }
 );
 ```
 
@@ -365,18 +365,18 @@ In C++ with `match(it)`:
 ```C++
 constexpr auto c = 'f';
 constexpr auto valid_variable = match(c)( 
-    pattern('a' <= _ && _ <= 'z') = expr(true),
-    pattern('A' <= _ && _ <= 'Z') = expr(true),
-    pattern('α' <= _ && _ <= 'ω') = expr(true),
-    pattern(_)                    = expr(false)
+    pattern | ('a' <= _ && _ <= 'z') = expr(true),
+    pattern | ('A' <= _ && _ <= 'Z') = expr(true),
+    // pattern | ('α' <= _ && _ <= 'ω') = expr(true),
+    pattern | _                    = expr(false)
 );
 
 constexpr auto ph = 10;
 std::cout << match(ph)( 
-    pattern(0 <= _ && _ <= 6 ) = expr("acid"),
-    pattern(7     )            = expr("neutral"),
-    pattern(8 <= _ && _ <= 14) = expr("base"),
-    pattern(_)                 = [] { assert(false && "unreachable"); }
+    pattern | (0 <= _ && _ <= 6 ) = expr("acid"),
+    pattern | (7                ) = expr("neutral"),
+    pattern | (8 <= _ && _ <= 14) = expr("base"),
+    pattern | _                   = [] { assert(false && "unreachable"); }
 ) << std::endl;
 
 // using paths to constants:
@@ -392,10 +392,10 @@ constexpr uint8_t MESOSPHERE_MAX = 85;
 constexpr auto altitude = 70;
 
 std::cout << match(altitude)( 
-    pattern(TROPOSPHERE_MIN  <= _ && _ <= TROPOSPHERE_MAX)  = expr("troposphere"),
-    pattern(STRATOSPHERE_MIN <= _ && _ <= STRATOSPHERE_MAX) = expr("stratosphere"),
-    pattern(MESOSPHERE_MIN   <= _ && _ <= MESOSPHERE_MAX)   = expr("mesosphere"),
-    pattern(_)                                              = expr("outer space, maybe")
+    pattern | (TROPOSPHERE_MIN  <= _ && _ <= TROPOSPHERE_MAX ) = expr("troposphere"),
+    pattern | (STRATOSPHERE_MIN <= _ && _ <= STRATOSPHERE_MAX) = expr("stratosphere"),
+    pattern | (MESOSPHERE_MIN   <= _ && _ <= MESOSPHERE_MAX  ) = expr("mesosphere"),
+    pattern | _                                                = expr("outer space, maybe")
 ) << std::endl;
 
 namespace binary
@@ -420,7 +420,7 @@ std::cout << match(static_cast<size_t>(0xfacade))(
     pattern(0U <= _ && _ <= numeric_limits<uint8_t>::max())  = expr("fits in a u8"),
     pattern(0U <= _ && _ <= numeric_limits<uint16_t>::max()) = expr("fits in a u16"),
     pattern(0U <= _ && _ <= numeric_limits<uint32_t>::max()) = expr("fits in a u32"),
-    pattern(_)                                               = expr("too big")
+    pattern | _                                               = expr("too big")
 ) << std::endl;
 ```
 
@@ -430,7 +430,7 @@ Tips: feel free to use variables in `match(it)`. You can write codes like
 // using variables:
 std::cout << match(0xfacade)( 
     pattern(min(a, b) <= _ && _ <= max(a, b))  = expr("fits in the range"),
-    pattern(_)                                 = expr("out of the range")
+    pattern | _                                 = expr("out of the range")
 ) << std::endl;
 ```
 
@@ -456,12 +456,12 @@ int32_t const *int_reference = &value;
 int32_t const zero = 0;
 
 auto const a = match(*int_reference)(
-    pattern(zero) = expr("zero"),
-    pattern(_)    = expr("some"));
+    pattern | zero = expr("zero"),
+    pattern | _    = expr("some"));
 
 auto const b = match(int_reference)(
-    pattern(&zero) = expr("zero"),
-    pattern(_)     = expr("some"));
+    pattern | &zero = expr("zero"),
+    pattern | _     = expr("some"));
 
 assert(a == b);
 ```
@@ -530,7 +530,7 @@ void sample()
         pattern(and_(app(&Point::x, 10U), app(&Point::y, 20U))) = []{},
         pattern(and_(app(&Point::y, 10U), app(&Point::x, 20U))) = []{},    // order doesn't matter
         pattern(app(&Point::x, 10U))                            = []{},
-        pattern(_)                                              = []{}
+        pattern | _                                              = []{}
     );
 
     using PointTuple = std::tuple<uint32_t, uint32_t>;
@@ -540,7 +540,7 @@ void sample()
         pattern(and_(appGet<0>(10U), appGet<1>(20U))) = []{},
         pattern(and_(appGet<1>(10U), appGet<0>(20U))) = []{},   // order doesn't matter
         pattern(appGet<0>(10U))                       = []{},
-        pattern(_)                                    = []{}
+        pattern | _                                    = []{}
     );
 }
 ```
@@ -564,7 +564,7 @@ constexpr auto pair = std::make_pair(10, "ten");
 Id<int32_t> a;
 Id<char const*> b;
 match(pair)(
-    pattern(a, b) = [&]{
+    pattern | ds(a, b) = [&]{
         assert(*a == 10);
         assert(*b == "ten");
     }
@@ -591,8 +591,8 @@ In C++ with `match(it)`:
 constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
 Id<int32_t> a, b, c;
 match(arr)( 
-    pattern(1, _, _) = expr("starts with one"),
-    pattern(a, b, c) = expr("starts with something else")
+    pattern | ds(1, _, _) = expr("starts with one"),
+    pattern | ds(a, b, c) = expr("starts with something else")
 );
 ```
 
@@ -615,9 +615,9 @@ In C++ with `match(it)`:
 auto const v = std::vector<int32_t>{1, 2, 3};
 Id<int32_t> a, b, c;
 match(v)( 
-    pattern(a, b)    = [] { /* this arm will not apply because the length doesn't match */ },
-    pattern(a, b, c) = [] { /* this arm will apply */ },
-    pattern(_)       = [] { /* this wildcard is required, since the length is not known statically */ }
+    pattern | ds(a, b   ) = [] { /* this arm will not apply because the length doesn't match */ },
+    pattern | ds(a, b, c) = [] { /* this arm will apply */ },
+    pattern | _           = [] { /* this wildcard is required, since the length is not known statically */ }
 );
 ```
 
@@ -678,13 +678,13 @@ int32_t main()
     match(favorite_color)(
         pattern(some(color)) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
         pattern(_).when(expr(is_tuesday)) = expr("Tuesday is green day!"),
-        pattern(_) = [&]
+        pattern | _ = [&]
         {
             Id<uint8_t> age_;
             return match(age)(
                 pattern(as<uint8_t>(age_)).when(age_ > 30) = expr("Using purple as the background color"),
                 pattern(as<uint8_t>(age_))                 = expr("Using orange as the background color"),
-                pattern(_)                                 = expr("Using blue as the background color"));
+                pattern | _                                 = expr("Using blue as the background color"));
         });
 
     return 0;
@@ -751,7 +751,7 @@ int32_t main()
                 std::cout << *top << std::endl;
                 return true;
             },
-            pattern(_) = expr(false)))
+            pattern | _ = expr(false)))
     {
     };
 }
@@ -954,7 +954,7 @@ int32_t main()
         pattern(some(_), some(_)) = [] {
             std:: cout << "Can't overwrite an existing customized value" << std::endl;
         },
-        pattern(_) = [&] {
+        pattern | _ = [&] {
             setting_value = new_setting_value;
         }
      );
@@ -987,7 +987,7 @@ int32_t main() {
     using namespace matchit;
     Id<int32_t> first, third, fifth;
     match(numbers)(
-        pattern(first, _, third, _, fifth) = [&] { std::cout << "Some numbers: " << *first << ", " << *third << ", " << *fifth << std::endl; });
+        pattern | ds(first, _, third, _, fifth) = [&] { std::cout << "Some numbers: " << *first << ", " << *third << ", " << *fifth << std::endl; });
 }
 ```
 
@@ -1022,7 +1022,7 @@ int32_t main()
         { std::cout << "less than five: " << *x << std::endl;  },
         pattern(some(x)) = [&]
         { std::cout << *x << std::endl; },
-        pattern(none) = [&] {});
+        pattern | none = [&] {});
     return 0;
 }
 ```
@@ -1057,7 +1057,7 @@ int32_t main() {
         // pattern(some(n)).when(n == y) = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
         // In `match(it)`, you can use variable inside patterns, just like literals.
         pattern(some(y))              = [&]{ std::cout << "Matched, n = " << *n << std::endl; },
-        pattern(_)                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
+        pattern | _                    = [&]{ std::cout << "Default case, x = " << x << std::endl; }
     );
 
     std::cout << "at the end: x = " << x << ", y = " << y << std::endl;
@@ -1088,7 +1088,7 @@ int32_t main() {
     std::cout <<
         match(x)( 
             pattern(or_(4, 5, 6)).when(expr(y)) = expr("yes"),
-            pattern(_)                          = expr("no")
+            pattern | _                          = expr("no")
     ) << std::endl;
 }
 ```

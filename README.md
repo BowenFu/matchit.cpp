@@ -82,8 +82,8 @@ constexpr int32_t factorial(int32_t n)
     using namespace matchit;
     assert(n >= 0);
     return match(n)(
-        pattern(0) = expr(1),
-        pattern(_) = [n] { return n * factorial(n - 1); }
+        pattern | 0 = expr(1),
+        pattern | _ = [n] { return n * factorial(n - 1); }
     );
 }
 ```
@@ -93,8 +93,8 @@ The **basic syntax** for pattern matching is
 ```C++
 match(VALUE)
 (
-    pattern(PATTERN1) = HANDLER1,
-    pattern(PATTERN2) = HANDLER2,
+    pattern | PATTERN1 = HANDLER1,
+    pattern | PATTERN2 = HANDLER2,
     ...
 )
 ```
@@ -116,8 +116,8 @@ constexpr int32_t gcd(int32_t a, int32_t b)
 {
     using namespace matchit;
     return match(a, b)(
-        pattern(_, 0) = [&] { return a >= 0 ? a : -a; },
-        pattern(_)    = [&] { return gcd(b, a%b); }
+        pattern | ds(_, 0) = [&] { return a >= 0 ? a : -a; },
+        pattern | _        = [&] { return gcd(b, a%b); }
     );
 }
 
@@ -138,7 +138,7 @@ constexpr bool contains(Map const& map, Key const& key)
     using namespace matchit;
     return match(map.find(key))(
         pattern(map.end()) = expr(false),
-        pattern(_)         = expr(true)
+        pattern | _         = expr(true)
     );
 }
 ```
@@ -151,8 +151,8 @@ We can use **Predicate Pattern** to put some restrictions on the value to be mat
 constexpr double relu(double value)
 {
     return match(value)(
-        pattern(_ >= 0) = expr(value),
-        pattern(_)      = expr(0));
+        pattern | (_ >= 0) = expr(value),
+        pattern | _        = expr(0));
 }
 
 static_assert(relu(5) == 5);
@@ -171,7 +171,7 @@ constexpr bool isValid(int32_t n)
     using namespace matchit;
     return match(n)(
         pattern(or_(1, 3, 5)) = expr(true),
-        pattern(_)            = expr(false)
+        pattern | _            = expr(false)
     );
 }
 
@@ -198,7 +198,7 @@ constexpr bool isLarge(double value)
     using namespace matchit;
     return match(value)(
         pattern(app(_ * _, _ > 1000)) = expr(true),
-        pattern(_)                    = expr(false)
+        pattern | _                    = expr(false)
     );
 }
 
@@ -224,7 +224,7 @@ bool checkAndlogLarge(double value)
         pattern(app(_ * _, s.at(_ > 1000))) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
-        pattern(_) = expr(false));
+        pattern | _ = expr(false));
 }
 ```
 
@@ -247,8 +247,8 @@ constexpr bool symmetric(std::array<int32_t, 5> const& arr)
     using namespace matchit;
     Id<int32_t> i, j; 
     return match(arr)(
-        pattern(i, j, _, j, i) = expr(true),
-        pattern(_)             = expr(false)
+        pattern | ds(i, j, _, j, i) = expr(true),
+        pattern | _                 = expr(false)
     );
 }
 
@@ -274,11 +274,11 @@ constexpr auto eval(std::tuple<char, T1, T2> const& expr)
     Id<T1> i;
     Id<T2> j;
     return match(expr)(
-        pattern('+', i, j) = i + j,
-        pattern('-', i, j) = i - j,
-        pattern('*', i, j) = i * j,
-        pattern('/', i, j) = i / j,
-        pattern(_) = []
+        pattern | ds('+', i, j) = i + j,
+        pattern | ds('-', i, j) = i - j,
+        pattern | ds('*', i, j) = i * j,
+        pattern | ds('/', i, j) = i / j,
+        pattern | _ = []
         {
             assert(false);
             return -1;
@@ -304,7 +304,7 @@ constexpr auto dsByMember(DummyStruct const&v)
     Id<char const*> name;
     return match(v)(
         pattern(dsA(2, name)) = expr(name),
-        pattern(_) = expr("not matched")
+        pattern | _ = expr("not matched")
     );
 };
 
@@ -332,7 +332,7 @@ constexpr bool sumIs(std::array<int32_t, 2> const& arr, int32_t s)
     Id<int32_t> i, j;
     return match(arr)(
         pattern(i, j).when(i + j == s) = expr(true),
-        pattern(_)                     = expr(false));
+        pattern | _                     = expr(false));
 }
 
 static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));
@@ -355,10 +355,10 @@ constexpr int32_t detectTuplePattern(Tuple const& tuple)
     using namespace matchit;
     return match(tuple)
     (
-        pattern(2, ooo, 2)  = expr(4),
-        pattern(2, ooo)     = expr(3),
-        pattern(ooo, 2)     = expr(2),
-        pattern(ooo)        = expr(1)
+        pattern | ds(2, ooo, 2)  = expr(4),
+        pattern | ds(2, ooo   )  = expr(3),
+        pattern | ds(ooo, 2   )  = expr(2),
+        pattern | ds(ooo      )  = expr(1)
     );
 }
 
@@ -377,8 +377,8 @@ constexpr bool recursiveSymmetric(Range const &range)
     Id<SubrangeT<Range const>> subrange;
     return match(range)(
         pattern(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
-        pattern(_, ooo, _)           = expr(false),
-        pattern(_)                   = expr(true)
+        pattern | ds(_, ooo, _)         = expr(false),
+        pattern | _                     = expr(true)
     );
 ```
 
@@ -405,7 +405,7 @@ constexpr auto square(std::optional<T> const& t)
     Id<T> id;
     return match(t)(
         pattern(some(id)) = id * id,
-        pattern(none)     = expr(0));
+        pattern | none     = expr(0));
 }
 constexpr auto x = std::make_optional(5);
 static_assert(square(x) == 25);
@@ -542,9 +542,9 @@ int32_t staticCastAs(Num const& input)
 {
     using namespace matchit;
     return match(input)(
-        pattern(as<One>(_))       = expr(1),
-        pattern(kind<Kind::kTWO>) = expr(2),
-        pattern(_)                = expr(3));
+        pattern | as<One>(_)       = expr(1),
+        pattern | kind<Kind::kTWO> = expr(2),
+        pattern | _                = expr(3));
 }
 
 int32_t main()

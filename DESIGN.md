@@ -60,8 +60,8 @@ Predicate Pattern syntax is `meet(predicate function)`.
 
 ```C++
 match(value)(
-    pattern | _ >= 0 = expr(value),
-    pattern | _      = expr(0))
+    pattern | (_ >= 0) = expr(value),
+    pattern | _        = expr(0))
 ```
 
 The short syntax is inspired by `jbandela/simple_match`.
@@ -95,18 +95,18 @@ The Racket syntax is `(and pat ...)`, and the corresponding C++ syntax is `and_(
 
 ```C++
 match(value)(
-    pattern(and_(_ >= min, _ <= max)) = expr(value),
-    pattern | _ > max                  = expr(max),
-    pattern | _                        = expr(min))
+    pattern | and_(_ >= min, _ <= max)) = expr(value),
+    pattern | (_ > max)                 = expr(max),
+    pattern | _                         = expr(min))
 ```
 
 Note this can also be written as
 
 ```C++
 match(value)(
-    pattern(min <= _ && _ <= max) = expr(value),
-    pattern(_ > max)              = expr(max),
-    pattern(_)                    = expr(min))
+    pattern | (min <= _ && _ <= max) = expr(value),
+    pattern | (_ > max)              = expr(max),
+    pattern | _                      = expr(min))
 ```
 
 But `&&` can only be used between Predicate patterns, while `and_` can be used for all kinds of patterns (except Ooo Pattern).
@@ -127,7 +127,7 @@ That is to say, Predicate Pattern can be expressed with App Pattern, `meet(unary
 ```C++
 match(value)(
     pattern(app(_ * _, _ > 1000)) = expr(true),
-    pattern(_)                    = expr(false))
+    pattern | _                    = expr(false))
 ```
 
 ## Identifier Pattern
@@ -143,7 +143,7 @@ This means that handlers in `match(it)` are always nullary, but can be unary or 
 Id<double> s;
 match(value)(
     pattern(app(_ * _, s.at(_ > 1000))) = expr(s),
-    pattern(_)                          = expr(0));
+    pattern | _                          = expr(0));
 ```
 
 You have to define / declare the identifiers first then bind them inside patterns and access them in handlers.
@@ -166,7 +166,7 @@ A simple sample can be
 Id<int32_t> i, j;
 return match(arr)(
     pattern(i, j).when(i + j == s) = expr(true),
-    pattern(_)                     = expr(false));
+    pattern | _                    = expr(false));
 ```
 
 ## Destructure Pattern
@@ -177,11 +177,11 @@ The syntax is borrowed from `mpark/patterns`.
 Id<T1> i;
 Id<T2> j;
 match(expr)(
-    pattern('+', i, j) = i + j,
-    pattern('-', i, j) = i - j,
-    pattern('*', i, j) = i * j,
-    pattern('/', i, j) = i / j,
-    pattern(_)             = expr(-1))
+    pattern | ds('+', i, j) = i + j,
+    pattern | ds('-', i, j) = i - j,
+    pattern | ds('*', i, j) = i * j,
+    pattern | ds('/', i, j) = i / j,
+    pattern | _             = expr(-1))
 ```
 
 Note the outermost `ds` inside pattern can be saved. That is to say, when pattern receives multiple parameters, they are treated as subpatterns of a ds pattern.
@@ -190,11 +190,11 @@ Note the outermost `ds` inside pattern can be saved. That is to say, when patter
 Id<T1> i;
 Id<T2> j;
 match(expr)(
-    pattern('+', i, j) = i + j,
-    pattern('-', i, j) = i - j,
-    pattern('*', i, j) = i * j,
-    pattern('/', i, j) = i / j,
-    pattern(_)         = expr(-1))
+    pattern | ds('+', i, j) = i + j,
+    pattern | ds('-', i, j) = i - j,
+    pattern | ds('*', i, j) = i * j,
+    pattern | ds('/', i, j) = i / j,
+    pattern | _             = expr(-1))
 ```
 
 We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and containers / ranges that can be called with `std::begin` and `std::end`. 
@@ -220,7 +220,7 @@ constexpr auto dsByMember(DummyStruct const&v)
     Id<char const*> name;
     return match(v)(
         pattern(dsA(2, name)) = expr(name),
-        pattern(_) = expr("not matched")
+        pattern | _ = expr("not matched")
     );
 };
 
@@ -238,10 +238,10 @@ It can only be used inside ds patterns and at most one Ooo pattern can appear in
 ```C++
 match(tuple)
 (
-    pattern(2, ooo, 2)  = expr(4),
-    pattern(2, ooo)     = expr(3),
-    pattern(ooo, 2)     = expr(2),
-    pattern(ooo)        = expr(1)
+    pattern | ds(2, ooo, 2)  = expr(4),
+    pattern | ds(2, ooo   )  = expr(3),
+    pattern | ds(ooo, 2   )  = expr(2),
+    pattern | ds(ooo      )  = expr(1)
 )
 ```
 
@@ -253,7 +253,7 @@ Id<SubrangeT<Range const>> subrange;
 return match(range)(
     pattern(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
     pattern(i, subrange.at(ooo), _) = expr(false),
-    pattern(_)                   = expr(true)
+    pattern | _                   = expr(true)
 );
 ```
 
@@ -267,7 +267,7 @@ Their usage can be
 ```C++
 match(t)(
     pattern(some(id)) = id * id,
-    pattern(none)     = expr(0));
+    pattern | none     = expr(0));
 ```
 
 ## As Pattern
