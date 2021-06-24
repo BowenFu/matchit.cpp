@@ -966,6 +966,8 @@ In `match(it)`:
 ```C++
 template <typename T>
 void Node<T>::balance() {
+  Id<std::shared_ptr<Node<T>>> a, b, c;
+  Id<T> x, y, z;
   *this = match (*this) ( 
     // left-left case
     pattern(ds(Black, some(ds(Red, some(ds(Red, a, x, b )), y, c )), z, d ))
