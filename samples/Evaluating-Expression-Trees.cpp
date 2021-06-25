@@ -63,7 +63,7 @@ static_cast<void>(dsMul);
 int32_t main()
 {
     auto e = Expr{5};
-    // std::cout << eval(e) << std::endl;
+    std::cout << eval(e) << std::endl;
 
     return 0;
 }
