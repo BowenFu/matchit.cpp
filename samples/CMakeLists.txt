@@ -34,6 +34,8 @@ Destructuring-Nested-Structs-and-Enums
 Ignoring-Parts-of-a-Value-with-a-Nested-_
 Extra-Conditionals-with-Match-Guards
 at-Bindings
+Matching-Integrals
+Matching-Strings
 )
 
 foreach(sample ${MATCHIT_SAMPLES})

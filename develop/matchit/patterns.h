@@ -382,6 +382,11 @@ namespace matchit
             {
                 return PatternHelper<decayArrayT<Pattern>>{p};
             }
+            template <typename T>
+            constexpr auto operator()(T const *p) const
+            {
+                return PatternHelper<T const*>{p};
+            }
             template <typename First, typename... Patterns>
             constexpr auto operator()(First const &f, Patterns const &...ps) const
             {
@@ -395,7 +400,7 @@ namespace matchit
             }
 
             template <typename... Patterns>
-            constexpr auto operator|(Patterns&&... p) const
+            constexpr auto operator|(Patterns const&... p) const
             {
                 return operator()(p...);
             }

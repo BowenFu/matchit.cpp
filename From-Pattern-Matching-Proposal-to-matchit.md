@@ -22,7 +22,7 @@ In `match(it)`:
 match(x) ( 
     pattern | 0 = [&]{ std::cout << "got zero"; },
     pattern | 1 = [&]{ std::cout << "got one"; },
-    pattern | _ = [&]{ std::cout << "don't care"; },
+    pattern | _ = [&]{ std::cout << "don't care"; }
 );
 ```
 
