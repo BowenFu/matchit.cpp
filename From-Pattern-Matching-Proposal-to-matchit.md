@@ -65,12 +65,12 @@ In `match(it)`:
 
 ```C++
 Id<int32_t> x, y;
-match(p) {
+match(p) ( 
     pattern | ds(0, 0) = [&]{ std::cout << "on origin"; },
     pattern | ds(0, y) = [&]{ std::cout << "on y-axis"; },
     pattern | ds(x, 0) = [&]{ std::cout << "on x-axis"; },
     pattern | ds(x, y) = [&]{ std::cout << *x << ',' << *y; }
-};
+);
 ```
 
 ### Matching Variants

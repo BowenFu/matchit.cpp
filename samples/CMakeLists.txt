@@ -36,6 +36,9 @@ Extra-Conditionals-with-Match-Guards
 at-Bindings
 Matching-Integrals
 Matching-Strings
+Matching-Tuples
+Matching-Variants
+Matching-Polymorphic-Types
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
