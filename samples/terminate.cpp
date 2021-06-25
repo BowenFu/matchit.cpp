@@ -17,7 +17,6 @@ Op parseOp(char t) {
     );
 }
 
-
 int32_t main()
 {
     std::cout << static_cast<int>(parseOp('*')) << std::endl;
