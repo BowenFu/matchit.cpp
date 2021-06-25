@@ -39,6 +39,7 @@ Matching-Strings
 Matching-Tuples
 Matching-Variants
 Matching-Polymorphic-Types
+Evaluating-Expression-Trees
 )
 
 foreach(sample ${MATCHIT_SAMPLES})

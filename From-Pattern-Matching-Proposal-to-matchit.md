@@ -141,15 +141,10 @@ int get_area(const Shape& shape)
 
 ```C++
 struct Expr;
-struct Neg { std::shared_ptr<Expr> expr;
-};
-struct Add { std::shared_ptr<Expr> lhs, rhs;
-};
-struct Mul { std::shared_ptr<Expr> lhs, rhs;
-};
-struct Expr : std::variant<int, Neg, Add, Mul> {
-  using variant::variant;
-};
+struct Neg { std::shared_ptr<Expr> expr; };
+struct Add { std::shared_ptr<Expr> lhs, rhs; };
+struct Mul { std::shared_ptr<Expr> lhs, rhs; };
+struct Expr : std::variant<int, Neg, Add, Mul> { using variant::variant; };
 namespace std {
 template <>
 struct variant_size<Expr> : variant_size<Expr::variant> {};
@@ -174,9 +169,9 @@ int eval(const Expr& expr) {
 In `match(it)`:
 
 ```C++
-Id<Expr> e, l, r;
 int eval(const Expr& expr){
-  return inspect (expr) ( 
+  Id<Expr> e, l, r;
+  return match (expr) ( 
     pattern | as<int>(i)                       = i,
     pattern | as<Neg>(ds(some(e)))             = [&]{ return -eval(*e); },
     pattern | as<Add>(ds(some(l), some(r)))    = [&]{ return eval(*l) + eval(*r); },

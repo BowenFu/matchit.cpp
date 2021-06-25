@@ -27,19 +27,21 @@ namespace matchit
         class AsPointerBase
         {
         public:
-            template <typename B>
-            constexpr auto operator()(B const &b) const
-            {
-                return dynamic_cast<T const *>(std::addressof(b));
-            }
-            template <typename... Types>
-            constexpr auto operator()(std::variant<Types...> const &v) const
+            template <template <class...> class Variant, typename... Ts>
+            constexpr auto operator()(Variant<Ts...> const &v) const
+            -> decltype(std::get_if<T>(std::addressof(v)))
             {
                 return std::get_if<T>(std::addressof(v));
             }
             constexpr auto operator()(std::any const &a) const
             {
                 return std::any_cast<T>(std::addressof(a));
+            }
+            template <typename B>
+            constexpr auto operator()(B const &b) const
+            -> decltype(dynamic_cast<T const *>(std::addressof(b)))
+            {
+                return dynamic_cast<T const *>(std::addressof(b));
             }
         };
 
