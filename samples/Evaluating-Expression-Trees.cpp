@@ -40,22 +40,19 @@ constexpr auto dsMul = [](auto &&lhs, auto &&rhs)
 
 int eval(const Expr &ex)
 {
-static_cast<void>(dsNeg);
-static_cast<void>(dsAdd);
-static_cast<void>(dsMul);
-
     using namespace matchit;
     Id<int> i;
     Id<Expr> e, l, r;
     return match(ex)(
         // clang-format off
-        pattern | as<int>(i)                       = expr(i),
+        pattern | as<int>(i)                          = expr(i),
         pattern | as<Neg>(dsNeg(some(e)))             = [&]{ return -eval(*e); },
         pattern | as<Add>(dsAdd(some(l), some(r)))    = [&]{ return eval(*l) + eval(*r); },
         // Optimize multiplication by 0.
         pattern | as<Mul>(dsMul(some(as<int>(0)), _)) = expr(0),
         pattern | as<Mul>(dsMul(_, some(as<int>(0)))) = expr(0),
-        pattern | as<Mul>(dsMul(some(l), some(r)))    = [&]{ return eval(*l) * eval(*r); }
+        pattern | as<Mul>(dsMul(some(l), some(r)))    = [&]{ return eval(*l) * eval(*r); },
+        pattern | _                                   = expr(-1)
         // clang-format on
     );
 }
