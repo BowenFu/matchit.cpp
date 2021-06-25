@@ -1,1 +1,3 @@
-awk 1 develop/matchit/*.h > include/matchit.h
+#!/bin/sh
+
+awk 1 develop/header.txt develop/matchit/*.h develop/footer.txt > include/matchit.h

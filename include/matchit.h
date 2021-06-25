@@ -1,3 +1,11 @@
+/*
+ *  Copyright (c) 2021 Bowen Fu
+ *  Distributed Under The Apache-2.0 License
+ */
+
+#ifndef MATCHIT_H
+#define MATCHIT_H
+
 #ifndef MATCHIT_CORE_H
 #define MATCHIT_CORE_H
 
@@ -681,6 +689,11 @@ namespace matchit
             {
                 return PatternHelper<decayArrayT<Pattern>>{p};
             }
+            template <typename T>
+            constexpr auto operator()(T const *p) const
+            {
+                return PatternHelper<T const*>{p};
+            }
             template <typename First, typename... Patterns>
             constexpr auto operator()(First const &f, Patterns const &...ps) const
             {
@@ -694,7 +707,7 @@ namespace matchit
             }
 
             template <typename... Patterns>
-            constexpr auto operator|(Patterns&&... p) const
+            constexpr auto operator|(Patterns const&... p) const
             {
                 return operator()(p...);
             }
@@ -1887,19 +1900,21 @@ namespace matchit
         class AsPointerBase
         {
         public:
-            template <typename B>
-            constexpr auto operator()(B const &b) const
-            {
-                return dynamic_cast<T const *>(std::addressof(b));
-            }
-            template <typename... Types>
-            constexpr auto operator()(std::variant<Types...> const &v) const
+            template <template <class...> class Variant, typename... Ts>
+            constexpr auto operator()(Variant<Ts...> const &v) const
+            -> decltype(std::get_if<T>(std::addressof(v)))
             {
                 return std::get_if<T>(std::addressof(v));
             }
             constexpr auto operator()(std::any const &a) const
             {
                 return std::any_cast<T>(std::addressof(a));
+            }
+            template <typename B>
+            constexpr auto operator()(B const &b) const
+            -> decltype(dynamic_cast<T const *>(std::addressof(b)))
+            {
+                return dynamic_cast<T const *>(std::addressof(b));
             }
         };
 
@@ -1949,3 +1964,5 @@ namespace matchit
 } // namespace matchit
 
 #endif // MATCHIT_UTILITY_H
+
+#endif // MATCHIT_H

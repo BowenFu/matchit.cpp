@@ -265,6 +265,7 @@ TEST(Match, test9)
             pattern | none    = expr(false));
     };
     EXPECT_EQ(optional(std::make_unique<int32_t>(2)), true);
+    EXPECT_EQ(optional(std::make_shared<int32_t>(2)), true);
     EXPECT_EQ(optional(std::unique_ptr<int32_t>{}), false);
     EXPECT_EQ(optional(std::make_optional<int32_t>(2)), true);
     EXPECT_EQ(optional(std::optional<int32_t>{}), false);
