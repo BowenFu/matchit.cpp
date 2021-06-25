@@ -217,7 +217,7 @@ Op parseOp(Parser& parser) {
         pattern | '-' = expr(Op::Sub),
         pattern | '*' = expr(Op::Mul),
         pattern | '/' = expr(Op::Div),
-        pattern | token => [&]{
+        pattern | token = [&]{
             std::cerr << "Unexpected: " << *token;
             std::terminate();
         }
@@ -661,8 +661,8 @@ inspect (p) {
 In `match(it)`:
 
 ```C++
-Id<xxx> x;
-Id<yyy> y;
+Id<X> x;
+Id<Y> y;
 match(p) ( 
     pattern | ds(x, y) | when([&]{test(*x, *y)}) = [&]{ std::cout << *x << ',' << *y << " passed"; }
 //                    ˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆˆ pattern guard
@@ -730,8 +730,8 @@ char* String::data() {
   Id<char*> l;
   Id<std::decay_t<decltype(remote)>> r;
   return match(*this) ( 
-    pattern | ds<Local>(l = expr(l),
-    pattern | as<Remote>(r = [&]{ return (*r).ptr; }
+    pattern | ds<Local>(l) = expr(l),
+    pattern | as<Remote>(r) = [&]{ return (*r).ptr; }
   );
 }
 ```
@@ -823,7 +823,7 @@ In `match(it)`:
 int fib(int n) {
   Id<int> x;
   return match (n) ( 
-    pattern | (x < 0)  = expr(0),
+    pattern | (_ < 0)  = expr(0),
     pattern | or_(1,2) = expr(n), //1|2
     pattern | x        = [&] { return fib(*x - 1) + fib(*x - 2); }
   );
