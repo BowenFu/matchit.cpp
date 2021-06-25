@@ -167,7 +167,7 @@ constexpr auto x = 20;
 Id<int32_t> a;
 match(10, x)(
     // the x is always matched by _
-    pattern | a, _ = []{ assert(*a == 10;); }
+    pattern | (a, _) = []{ assert(*a == 10;); }
 );
 // ignore a function/closure param
 constexpr auto real_part = [](float a, float) { return a; };
@@ -429,7 +429,7 @@ Tips: feel free to use variables in `match(it)`. You can write codes like
 ```C++
 // using variables:
 std::cout << match(0xfacade)( 
-    pattern | min(a, b <= _ && _ <= max(a, b))  = expr("fits in the range"),
+    pattern | (min(a, b) <= _ && _ <= max(a, b))  = expr("fits in the range"),
     pattern | _                                 = expr("out of the range")
 ) << std::endl;
 ```
