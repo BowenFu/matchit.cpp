@@ -40,6 +40,7 @@ Matching-Tuples
 Matching-Variants
 Matching-Polymorphic-Types
 Evaluating-Expression-Trees
+Terminate
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
