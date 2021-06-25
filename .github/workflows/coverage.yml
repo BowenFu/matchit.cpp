@@ -46,7 +46,7 @@ jobs:
 
     - name: Compute Coverage
       working-directory: ${{github.workspace}}/build
-      run: gcovr -r ../include/matchit -x coverage.xml .
+      run: gcovr -r ../include/matchit.h -x coverage.xml .
 
     - name: Upload Coverage
       working-directory: ${{github.workspace}}/build
