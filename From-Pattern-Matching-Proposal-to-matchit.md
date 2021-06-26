@@ -161,7 +161,8 @@ int eval(const Expr& expr) {
   return inspect (expr) {
     <int> i => i;
     <Neg> [(*?) e] => -eval(e);
-    <Add> [(*?) l, (*?) r] => eval(l) + eval(r); // Optimize multiplication by 0.
+    <Add> [(*?) l, (*?) r] => eval(l) + eval(r);
+    // Optimize multiplication by 0.
     <Mul> [(*?) <int> 0, __] => 0;
     <Mul> [__, (*?) <int> 0] => 0;
     <Mul> [(*?) l, (*?) r] => eval(l) * eval(r);
@@ -836,7 +837,8 @@ struct any_of : std::tuple<Ts...> {
 
 int fib(int n) {
   return inspect (n) {
-    x if (x < 0) => 0; any_of{1,2}=>n; //1|2
+    x if (x < 0) => 0;
+    any_of{1,2} => n; //1|2
     x => fib(x - 1) + fib(x - 2);
   };
 }
