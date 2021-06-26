@@ -308,3 +308,18 @@ TEST(Id, IdAtUnique)
       { return ii.move(); });
   EXPECT_EQ(*result, 121);
 }
+
+TEST(Id, invalidValue)
+{
+  Id<int> x;
+  EXPECT_THROW(*x, std::logic_error);
+}
+
+TEST(Id, invalidMove)
+{
+  Id<std::string> x;
+  EXPECT_THROW(x.move(), std::logic_error);
+  std::string str = "12345";
+  x.matchValue(str);
+  EXPECT_THROW(x.move(), std::logic_error);
+}

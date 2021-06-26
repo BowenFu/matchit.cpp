@@ -13,9 +13,6 @@ namespace matchit
 {
     namespace impl
     {
-        template <typename... Ts>
-        class Debug;
-
         template <typename I, typename S = I>
         class Subrange
         {

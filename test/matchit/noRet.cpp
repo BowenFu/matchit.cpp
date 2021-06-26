@@ -16,3 +16,11 @@ TEST(MatchStatement, test)
 
   EXPECT_STREQ(output.c_str(), "match all!");
 }
+
+TEST(MatchExpreesion, Nomatch)
+{
+  EXPECT_THROW(
+      match(4)(
+          pattern | 1 = expr(true)),
+      std::logic_error);
+}

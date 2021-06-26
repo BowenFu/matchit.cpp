@@ -156,7 +156,6 @@ namespace matchit
         BIN_OP_FOR_NULLARY(>)
         BIN_OP_FOR_NULLARY(||)
         BIN_OP_FOR_NULLARY(&&)
-        BIN_OP_FOR_NULLARY(<<)
 
 #undef BIN_OP_FOR_NULLARY
 

@@ -63,9 +63,6 @@ TEST(Ds, vecOoo)
   EXPECT_TRUE(matched(std::vector<int32_t>{123, 456}, ds(123, ooo, 456)));
 }
 
-template <typename T>
-class Debug;
-
 TEST(Ds, listOoo)
 {
   EXPECT_TRUE(matched(std::list<int32_t>{123, 456}, ds(ooo)));

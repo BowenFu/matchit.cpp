@@ -19,8 +19,9 @@
 [godbolt]: https://godbolt.org/z/8YMr8Kz8j
 
 ## Features
+
 - Easy to get started.
-    - [![godbolt][badge.godbolt]][godbolt]
+  - [![godbolt][badge.godbolt]][godbolt]
 
 - Single header library.
 - Macro-free APIs.
@@ -33,26 +34,15 @@
 - Support destructing tuple-like and range-like containers.
 - Partial support for constant expression.
 
-## Related Work
+## Installation
 
-`match(it)`'s syntax / pattern designs have been heavily influenced by these related work
+Simply download the header file `matchit.h` and put it in your include directory for dependencies.
 
-- [mpark/patterns](https://github.com/mpark/patterns)
-- [Racket Pattern Matching](https://docs.racket-lang.org/reference/match.html)
-- [Rust Patterns](https://doc.rust-lang.org/stable/reference/patterns.html)
-- [jbandela/simple_match](https://github.com/jbandela/simple_match/)
-- [solodon4/Mach7](https://github.com/solodon4/Mach7)
-- [C++ Pattern Matching Proposal](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1371r3.pdf)
+That's it.
 
 ## Syntax Design
 
 For syntax design details please refer to [design](./DESIGN.md).
-
-## Contact
-
-If you have questions regarding the library, I would like to invite you to [open an issue at GitHub](https://github.com/bowenfu/matchit.cpp/issues/new/choose).
-
----------
 
 ## From Rust to match(it)
 
@@ -544,3 +534,18 @@ int32_t main()
 There is additional **Customziation Point**.
 
 Users can specialize `PatternTraits` if they want to add a brand new pattern.
+
+## Contact
+
+If you have questions regarding the library, I would like to invite you to [open an issue at GitHub](https://github.com/bowenfu/matchit.cpp/issues/new/choose).
+
+## Related Work
+
+`match(it)`'s syntax / pattern designs have been heavily influenced by these related work
+
+- [mpark/patterns](https://github.com/mpark/patterns)
+- [Racket Pattern Matching](https://docs.racket-lang.org/reference/match.html)
+- [Rust Patterns](https://doc.rust-lang.org/stable/reference/patterns.html)
+- [jbandela/simple_match](https://github.com/jbandela/simple_match/)
+- [solodon4/Mach7](https://github.com/solodon4/Mach7)
+- [C++ Pattern Matching Proposal](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1371r3.pdf)
