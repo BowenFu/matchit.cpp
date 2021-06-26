@@ -42,7 +42,7 @@ That's it.
 
 ## Syntax Design
 
-For syntax design details please refer to [design](./DESIGN.md).
+For syntax design details please refer to [design](./REFERENCE.md).
 
 ## From Rust to match(it)
 
@@ -59,6 +59,8 @@ There you will see the pros and cons of the library over the proposal.
 ## Quick start.
 
 Let's start a journey on the library!
+
+(For complete samples, please refer to [samples directory](./sample).)
 
 ### Hello World!
 

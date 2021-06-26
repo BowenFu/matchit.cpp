@@ -2,7 +2,9 @@
 
 ![match(it).cpp](./matchit.cpp.svg)
 
-## P1371R3
+## In this page, we will give equivalent sample codes for samples from the [C++ Pattern Matching Proposal](https://wg21.link/P1371). 
+
+For complete samples, please refer to [samples directory](./sample).
 
 ### Matching Integrals
 
