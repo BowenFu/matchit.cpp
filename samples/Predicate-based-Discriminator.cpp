@@ -1,13 +1,23 @@
 #include "matchit.h"
 #include <iostream>
 
-struct String {
-  enum Storage { Local, Remote };
+struct String
+{
+  enum Storage
+  {
+    Local,
+    Remote
+  };
 
   size_t size;
 
-  struct Rm { char *ptr; int unused_allocated_space; };
-  union {
+  struct Rm
+  {
+    char *ptr;
+    int unused_allocated_space;
+  };
+  union
+  {
     char local[32];
     Rm remote;
   };
@@ -22,42 +32,48 @@ struct String {
   char *data();
 };
 
-bool operator==(String::Rm const& lhs, String::Rm const& rhs)
+bool operator==(String::Rm const &lhs, String::Rm const &rhs)
 {
-    return lhs.ptr == rhs.ptr && lhs.unused_allocated_space == rhs.unused_allocated_space;
+  return lhs.ptr == rhs.ptr &&
+         lhs.unused_allocated_space == rhs.unused_allocated_space;
 }
 
 // Opt into Variant-Like protocol.
 template <String::Storage S>
 auto String::get_if()
 {
-  if constexpr (S == Local) return index() == Local ? &local : nullptr;
-  else if constexpr (S == Remote) return index() == Remote ? &remote : nullptr;
+  if constexpr (S == Local)
+    return index() == Local ? &local : nullptr;
+  else if constexpr (S == Remote)
+    return index() == Remote ? &remote : nullptr;
 }
 
 template <String::Storage S, typename Pat>
-auto asEnum(Pat&& pat)
+auto asEnum(Pat &&pat)
 {
   using namespace matchit;
-  return app([](auto&& x) { return x.template get_if<S>(); }, some(pat));
+  return app([](auto &&x)
+             { return x.template get_if<S>(); },
+             some(pat));
 }
 
-char* String::data() {
+char *String::data()
+{
   using namespace matchit;
-  Id<char*> l;
+  Id<char *> l;
   Id<std::decay_t<decltype(remote)>> r;
-  return match(*this) ( 
-    pattern | asEnum<Local>(l) = expr(l),
-    pattern | asEnum<Remote>(r) = [&]{ return (*r).ptr; }
-  );
+  return match(*this)(
+      pattern | asEnum<Local>(l) = expr(l),
+      pattern | asEnum<Remote>(r) = [&]
+      { return (*r).ptr; });
 }
 
 int32_t main()
 {
-    std::string rm = "long string.";
-    String x{};
-    x.size = 100;
-    x.remote = String::Rm{rm.data(), 100};
-    std::cout << x.data() << std::endl;
-    return 0;
+  std::string rm = "long string.";
+  String x{};
+  x.size = 100;
+  x.remote = String::Rm{rm.data(), 100};
+  std::cout << x.data() << std::endl;
+  return 0;
 }

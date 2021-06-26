@@ -1,9 +1,9 @@
-#include <iostream>
 #include "matchit.h"
+#include <iostream>
 
 struct Shape
 {
-    virtual ~Shape() = default;
+  virtual ~Shape() = default;
 };
 struct Circle : Shape
 {
@@ -14,15 +14,14 @@ struct Square : Shape
 
 constexpr auto getClassName(Shape const &s)
 {
-    using namespace matchit;
-    return match(s)(
-        pattern | as<Circle>(_) = expr("Circle"),
-        pattern | as<Square>(_) = expr("Square"));
+  using namespace matchit;
+  return match(s)(pattern | as<Circle>(_) = expr("Circle"),
+                  pattern | as<Square>(_) = expr("Square"));
 }
 
 int32_t main()
 {
-    Circle c{};
-    std::cout << getClassName(c) << std::endl;
-    return 0;
+  Circle c{};
+  std::cout << getClassName(c) << std::endl;
+  return 0;
 }

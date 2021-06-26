@@ -1,7 +1,7 @@
+#include "matchit.h"
 #include <gtest/gtest.h>
 #include <list>
 #include <utility>
-#include "matchit.h"
 
 using namespace matchit;
 
@@ -90,7 +90,8 @@ TEST(Ds, vecOooBinder1)
   auto const vec = std::vector<int32_t>{123, 456};
   Id<SubrangeT<decltype(vec)>> subrange;
   auto matched = match(vec)(
-      pattern | subrange.at(ooo) = [&]
+      pattern | subrange.at(ooo) =
+          [&]
       {
         auto const expected = {123, 456};
         expectRange(*subrange, expected);
@@ -104,14 +105,17 @@ TEST(Ds, vecOooBinder2)
 {
   Id<SubrangeT<std::vector<int32_t>>> subrange;
   match(std::vector<int32_t>{123, 456})(
-      pattern | subrange.at(ooo) = [&]
+      pattern | subrange.at(ooo) =
+          [&]
       {
         auto const expected = {123, 456};
         expectRange(*subrange, expected);
       },
-      pattern | _ = []
+      pattern | _ =
+          []
       {
-        // make sure the above pattern is matched, otherwise the test case fails.
+        // make sure the above pattern is matched, otherwise the test case
+        // fails.
         ADD_FAILURE();
       });
 }
@@ -137,18 +141,19 @@ TEST(Ds, vecOooBinder4)
 
 TEST(Ds, FailDueToTwoFewValues)
 {
-  EXPECT_FALSE(matched(std::vector<int32_t>{123, 456, 789}, ds(123, ooo, 456, 456, 789)));
+  EXPECT_FALSE(matched(std::vector<int32_t>{123, 456, 789},
+                       ds(123, ooo, 456, 456, 789)));
 }
 
 TEST(Ds, listOooBinder4)
 {
   Id<SubrangeT<std::list<int32_t>>> subrange;
-  match(std::list<int32_t>{123, 456, 789})(
-      pattern | ds(123, subrange.at(ooo)) = [&]
-      {
-        auto const expected = {456, 789};
-        expectRange(*subrange, expected);
-      });
+  match(std::list<int32_t>{123, 456, 789})(pattern |
+                                               ds(123, subrange.at(ooo)) = [&]
+                                           {
+                                             auto const expected = {456, 789};
+                                             expectRange(*subrange, expected);
+                                           });
 }
 
 TEST(Ds, arrayOooBinder1)
@@ -156,7 +161,8 @@ TEST(Ds, arrayOooBinder1)
   auto const array = std::array<int32_t, 2>{123, 456};
   Id<SubrangeT<decltype(array)>> subrange;
   auto matched = match(array)(
-      pattern | subrange.at(ooo) = [&]
+      pattern | subrange.at(ooo) =
+          [&]
       {
         auto const expected = {123, 456};
         expectRange(*subrange, expected);
@@ -169,12 +175,11 @@ TEST(Ds, arrayOooBinder1)
 TEST(Ds, arrayOooBinder2)
 {
   Id<SubrangeT<std::array<int32_t, 2>>> subrange;
-  match(std::array<int32_t, 2>{123, 456})(
-      pattern | subrange.at(ooo) = [&]
-      {
-        auto const expected = {123, 456};
-        expectRange(*subrange, expected);
-      });
+  match(std::array<int32_t, 2>{123, 456})(pattern | subrange.at(ooo) = [&]
+                                          {
+                                            auto const expected = {123, 456};
+                                            expectRange(*subrange, expected);
+                                          });
 }
 
 TEST(Ds, arrayOooBinder3)
@@ -201,7 +206,8 @@ TEST(Ds, arrayOooBinder5)
 {
   Id<SubrangeT<std::array<int32_t, 2>>> subrange;
   Id<int32_t> e;
-  match(std::make_tuple(std::array<int32_t, 3>{123, 456, 789}, std::array<int32_t, 3>{456, 789, 123}))(
+  match(std::make_tuple(std::array<int32_t, 3>{123, 456, 789},
+                        std::array<int32_t, 3>{456, 789, 123}))(
       // move head to end
       pattern | ds(ds(e, subrange.at(ooo)), ds(subrange.at(ooo), e)) = [&]
       {
@@ -229,15 +235,15 @@ TEST(Ds, arrayOooBinder6)
 template <typename Range>
 constexpr bool recursiveSymmetric(Range const &range)
 {
-    Id<int32_t> i;
-    Id<SubrangeT<Range const>> subrange;
-    return match(range)(
-        // clang-format off
+  Id<int32_t> i;
+  Id<SubrangeT<Range const>> subrange;
+  return match(range)(
+      // clang-format off
         pattern | ds(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
         pattern | ds(i, subrange.at(ooo), _) = expr(false),
         pattern | _                          = expr(true)
-        // clang-format on
-    );
+      // clang-format on
+  );
 }
 
 TEST(Ds, subrangeOooBinder)
@@ -251,21 +257,23 @@ TEST(Ds, subrangeOooBinder)
   EXPECT_TRUE(recursiveSymmetric(std::list<int32_t>{5, 0, 3, 0, 5}));
   EXPECT_FALSE(recursiveSymmetric(std::list<int32_t>{5, 0, 3, 7, 10}));
 
-  EXPECT_TRUE(recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 0, 5}));
-  EXPECT_FALSE(recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 7, 10}));
+  EXPECT_TRUE(
+      recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 0, 5}));
+  EXPECT_FALSE(
+      recursiveSymmetric(std::initializer_list<int32_t>{5, 0, 3, 7, 10}));
 }
 
 TEST(Ds, setOooBinder)
 {
   Id<SubrangeT<std::set<int32_t>>> subrange;
   Id<int32_t> e;
-  match(std::set<int32_t>{123, 456, 789})(
-      pattern | ds(e, subrange.at(ooo)) = [&]
-      {
-        EXPECT_EQ(*e, 123);
-        auto const expected = {456, 789};
-        expectRange(*subrange, expected);
-      });
+  match(std::set<int32_t>{123, 456, 789})(pattern |
+                                              ds(e, subrange.at(ooo)) = [&]
+                                          {
+                                            EXPECT_EQ(*e, 123);
+                                            auto const expected = {456, 789};
+                                            expectRange(*subrange, expected);
+                                          });
 }
 
 TEST(Ds, mapId)
@@ -285,20 +293,19 @@ TEST(Ds, mapOoo)
   Id<std::pair<int32_t, char const *>> e;
   match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
       pattern | ds(e, ooo) = [&]
-      {
-        EXPECT_EQ(*e, std::make_pair(123, "a"));
-      });
+      { EXPECT_EQ(*e, std::make_pair(123, "a")); });
 }
 
 TEST(Ds, mapOooAtBinder)
 {
   Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
   Id<std::pair<int32_t, char const *>> e;
-  match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
-      pattern | ds(e, subrange.at(ooo)) = [&]
-      {
-        EXPECT_EQ(*e, std::make_pair(123, "a"));
-        auto const expected = {std::make_pair(456, "b"), std::make_pair(789, "c")};
-        expectRange(*subrange, expected);
-      });
+  match(std::map<int32_t, char const *>{
+      {123, "a"}, {456, "b"}, {789, "c"}})(pattern |
+                                               ds(e, subrange.at(ooo)) = [&]
+                                           {
+                                             EXPECT_EQ(*e, std::make_pair(123, "a"));
+                                             auto const expected = {std::make_pair(456, "b"), std::make_pair(789, "c")};
+                                             expectRange(*subrange, expected);
+                                           });
 }
