@@ -224,6 +224,7 @@ Op parseOp(Parser& parser) {
         pattern | token = [&]{
             std::cerr << "Unexpected: " << *token;
             std::terminate();
+            return Op::Add;
         }
     );
 }
@@ -993,23 +994,35 @@ In `match(it)`:
 ```C++
 template <typename T>
 void Node<T>::balance() {
-  Id<std::shared_ptr<Node<T>>> a, b, c;
+    using namespace matchit;
+
+    constexpr auto dsN = [](auto&&color, auto&& lhs, auto&& value, auto&& rhs)
+    {
+        return and_(
+            app(&Node<T>::color, color),
+            app(&Node<T>::lhs, lhs),
+            app(&Node<T>::value, value),
+            app(&Node<T>::rhs, rhs)
+        );
+    };
+
+  Id<std::shared_ptr<Node<T>>> a, b, c, d;
   Id<T> x, y, z;
+  Id<Node> self;
   *this = match (*this) ( 
-    // left-left case
-    pattern | ds(Black, some(ds(Red, some(ds(Red, a, x, b )), y, c )), z, d )
+    pattern | dsN(Black, some(dsN(Red, some(dsN(Red, a, x, b )), y, c )), z, d) // left-left case
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },
-    pattern | ds(Black, some(ds(Red, a, x, some(ds(Red, b, y, c )))), z, d ) // left-right case
+    pattern | dsN(Black, some(dsN(Red, a, x, some(dsN(Red, b, y, c )))), z, d ) // left-right case
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },
-    pattern | ds(Black, a, x, some(ds(Red, some(ds(Red, b, y, c ))), z, d )) // right-left case
+    pattern | dsN(Black, a, x, some(dsN(Red, some(dsN(Red, b, y, c )), z, d))) // right-left case
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },
-    pattern | ds(Black, a, x, some(ds(Red, b, y, some(ds(Red, c, z, d))))) // right-right case
+    pattern | dsN(Black, a, x, some(dsN(Red, b, y, some(dsN(Red, c, z, d))))) // right-right case
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },

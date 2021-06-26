@@ -273,7 +273,6 @@ TEST(Ds, setOooBinder)
 
 TEST(Ds, mapId)
 {
-  Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
   Id<std::pair<int32_t, char const *>> e, f, g;
   match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
       pattern | ds(e, f, g) = [&]
@@ -286,27 +285,11 @@ TEST(Ds, mapId)
 
 TEST(Ds, mapOoo)
 {
-  Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
-  Id<std::pair<int32_t, char const *>> e, f, g;
-  match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
-      pattern | ds(e, f, g) = [&]
-      {
-        EXPECT_EQ(*e, std::make_pair(123, "a"));
-        EXPECT_EQ(*f, std::make_pair(456, "b"));
-        EXPECT_EQ(*g, std::make_pair(789, "c"));
-      });
-}
-
-TEST(Ds, mapOooBinder)
-{
-  Id<SubrangeT<std::map<int32_t, char const *>>> subrange;
   Id<std::pair<int32_t, char const *>> e;
   match(std::map<int32_t, char const *>{{123, "a"}, {456, "b"}, {789, "c"}})(
-      pattern | ds(e, subrange.at(ooo)) = [&]
+      pattern | ds(e, ooo) = [&]
       {
         EXPECT_EQ(*e, std::make_pair(123, "a"));
-        auto const expected = {std::make_pair(456, "b"), std::make_pair(789, "c")};
-        expectRange(*subrange, expected);
       });
 }
 

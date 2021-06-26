@@ -135,38 +135,13 @@ public:
     }
 };
 
-bool operator==(One const &, One const &)
-{
-    return true;
-}
-
-bool operator==(Two const &, Two const &)
-{
-    return true;
-}
-
 template <Kind k>
 constexpr auto kind = app(&Num::kind, k);
 
 template <typename T>
-class NumAsPointer
-{
-public:
-    auto operator()(Num const &num) const
-    {
-        return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
-    }
-};
-
-template <>
-class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One>
-{
-};
-
-template <>
-class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
-{
-};
+auto get_if(Num const* num) {
+  return static_cast<T const *>(num->kind() == T::k ? num : nullptr);
+}
 
 TEST(Match, test4)
 {

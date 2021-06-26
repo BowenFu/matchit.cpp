@@ -20,8 +20,7 @@ int32_t main()
     using namespace matchit;
     Id<std::string> color;
     match(favorite_color)(
-        pattern | some(color) = [&]
-        { return "Using your favorite color, " + *color + ", as the background"; },
+        pattern | some(color) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
         pattern | _ | when(expr(is_tuesday)) = expr("Tuesday is green day!"),
         pattern | _ = [&]
         {
