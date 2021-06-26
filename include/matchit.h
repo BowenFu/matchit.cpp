@@ -1956,10 +1956,18 @@ namespace matchit
                 { return false; });
         }
 
+        constexpr auto dsVia = [](auto&&... members)
+        {
+            return [members](auto&&... pats)
+            {
+                return and_(app(members, pats)...);
+            };
+        };
+
         template <typename T>
         constexpr auto asDsVia = [](auto&&... members)
         {
-            return [&](auto&&... pats)
+            return [members](auto&&... pats)
             {
                 return as<T>(and_(app(members, pats)...));
             };
