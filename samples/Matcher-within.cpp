@@ -1,7 +1,7 @@
 #include "matchit.h"
 #include <iostream>
 
-constexpr auto within = [](auto&& first, auto&& last)
+constexpr auto within = [](auto const& first, auto const& last)
 {
     using matchit::_;
     return first <= _ && _ <= last;
