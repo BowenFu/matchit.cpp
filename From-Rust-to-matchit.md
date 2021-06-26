@@ -81,10 +81,7 @@ struct Person {
 };
 
 auto const value = Person{"John", 23};
-auto const name_age = [](auto name_pat, auto age_pat)
-{
-    return and_(app(&Person::name, name_pat), app(&Person::age, age_pat));
-};
+auto const name_age = dsVia(&Person::name, name_pat, &Person::age, age_pat);
 Id<std::string> person_name;
 match(value)(
     pattern | name_age(person_name, 18 <= _ && _ <= 150) = []{}

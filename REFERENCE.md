@@ -18,14 +18,16 @@ The keyword `match` is widely used for pattern matching. We cannot wrap patterns
 The operator `=` between the pattern and handler can be any binary operators. It's `=>` in Rust, which is not existent inside C++. Other promising candidates can be `>=`, `<=`, `>>=`. We chose between `=` and `>>=` and `=` won due to its simplicity.
 `pattern` keyword makes it easy to identify a `pattern - handler` pair. It is similar to `case` keyword for switch statements.
 
-## Handler
+### Handler
 
 Handlers should always be nullary functions. This is different from `mpark/patterns` and `jbandela/simple_match`.
 `expr` can be called to return simple functions returning a single value.
 `expr(value)` syntax is inspired by `Boost/Lambda` library.
 `pattern | xxx = expr(zzz)` or `pattern | xxx = [&]{zzzzzz}` syntaxes can be aligned and it is easy to find out the pattern parts and handler parts.
 
-## Expression Pattern
+## Pattern Primitives
+
+### Expression Pattern
 
 Since identifiers do not have special meanings inside `match(it)`, they can be used inside patterns normally.
 You can even use a function call as Expression Pattern, the result of the function call will be matched against the value.
@@ -39,12 +41,12 @@ match(map.find(key))(
 
 This is different from most other related work.
 
-## Wildcard Pattern
+### Wildcard Pattern
 
 This pattern is common in lots of related work. We adopt the same symbol `_` in `match(it)`.
 Refer to the above code snippets.
 
-## Predicate Pattern
+### Predicate Pattern
 
 This inspired by Racket Pattern Matching. It has a pattern `(? expr pat ...)`, which will check if `(expr value)` is true.
 Predicate Pattern corresponds to `(? expr)`.
@@ -66,7 +68,68 @@ match(value)(
 
 The short syntax is inspired by `jbandela/simple_match`.
 
-## Or Pattern
+### Identifier Pattern
+
+Identifier Pattern exists in most related works. But how to implement it in a library is an open question.
+There is no way for us to use identifiers in match context now since it is not valid C++ syntax. (This also makes it possible for us to use variables / function calls as expression patterns.)
+In `mpark/patterns` and `jbandela/simple_match` the bound values to identifiers will be forward to handlers as parameters. That is to say, identifiers are more like positioned parameters.
+The design is not very natural.
+We choose to make identifiers as binders that can be accessed inside handlers to align with other native pattern matching designs.
+This means that handlers in `match(it)` are always nullary, but can be unary or binary or consisting of more arguments in the other two library.
+
+```C++
+Id<double> s;
+match(value)(
+    pattern | app(_ * _, s) = expr(s),
+    pattern | _             = expr(0));
+```
+
+You have to define / declare the identifiers first then bind them inside patterns and access them in handlers.
+`expr(s)` is a short for `[&]{ return *s; }`, i.e., a function returning the value bound to the identifier.
+
+Identifier Pattern supports binding non-constructable (via reference), non-copyable (via reference or moving) types.
+
+Identifier Pattern requires `operator==` for the binding types.
+
+### Match Guard
+
+Match Guard exists in most related works. The current syntax is borrowed from `mpark/patterns`.
+Match Guard can be used to exert extra restrictions on a pattern. The syntax is
+
+```C++
+pattern | PATTERN | when(PREDICATE) = HANDLER
+```
+
+A simple sample can be
+
+```C++
+bool flag = true;
+return match(v)(
+    pattern | 0 | when(expr(flag)) = expr(true),
+    pattern | _                    = expr(false));
+```
+
+### Ooo Pattern
+
+Ooo Pattern can match arbitrary number of items. 
+Similar patterns exist in most related works.
+The current one is mostly influenced by `..` pattern in Rust. (Also inspired by Racket's `...`).
+It can only be used inside Destructure Patterns and at most one Ooo pattern can appear inside one Destructure Pattern.
+Refer to [Pattern Cominators / Destructure Pattern](#destructure-pattern).
+
+```C++
+match(tuple)
+(
+    pattern | ds(2, ooo, 2)  = expr(4),
+    pattern | ds(2, ooo   )  = expr(3),
+    pattern | ds(ooo, 2   )  = expr(2),
+    pattern | ds(ooo      )  = expr(1)
+)
+```
+
+## Pattern Combinators
+
+### Or Pattern
 
 Or Pattern is borrowed from Racket Pattern Matching.
 The Racket syntax is `(or pat ...)`, and the corresponding C++ syntax is `or_(pat, ...)`. Note that `or` is a C++ keyword, we use `or_` instead.
@@ -88,7 +151,7 @@ match(n)(
 
 In Rust and some other related work, there exists a similar `anyof` pattern. But only literal patterns can be used as subpatterns.
 
-## And Pattern
+### And Pattern
 
 And Pattern is borrowed from Racket Pattern Matching as well.
 The Racket syntax is `(and pat ...)`, and the corresponding C++ syntax is `and_(pat, ...)`. Note that `and` is a C++ keyword, we use `and_` instead.
@@ -111,13 +174,13 @@ match(value)(
 
 But `&&` can only be used between Predicate patterns, while `and_` can be used for all kinds of patterns (except Ooo Pattern).
 
-## Not Pattern
+### Not Pattern
 
 Not Pattern is borrowed from Racket Pattern Matching as well.
 The Racket syntax is `(not pat ...)`, and the corresponding C++ syntax is `not_(pat)`. Note that `not` is a C++ keyword, we use `not_` instead.
 `(not pat ...)` means `none of`, in `match(it)` it can be written as `not_(or_(pat, ...))`.
 
-## App Pattern
+### App Pattern
 
 App Pattern is borrowed from Racket Pattern Matching as well.
 The Racket syntax is `(app expr pats ...)`, and the corresponding C++ syntax is `app(expr, pat)`.
@@ -130,46 +193,7 @@ match(value)(
     pattern | _                    = expr(false))
 ```
 
-## Identifier Pattern
-
-Identifier Pattern exists in most related works. But how to implement it in a library is an open question.
-There is no way for us to use identifiers in match context now since it is not valid C++ syntax. (This also makes it possible for us to use variables / function calls as expression patterns.)
-In `mpark/patterns` and `jbandela/simple_match` the bound values to identifiers will be forward to handlers as parameters. That is to say, identifiers are more like positioned parameters.
-The design is not very natural.
-We choose to make identifiers as binders that can be accessed inside handlers to align with other native pattern matching designs.
-This means that handlers in `match(it)` are always nullary, but can be unary or binary or consisting of more arguments in the other two library.
-
-```C++
-Id<double> s;
-match(value)(
-    pattern | app(_ * _, s.at(_ > 1000)) = expr(s),
-    pattern | _                          = expr(0));
-```
-
-You have to define / declare the identifiers first then bind them inside patterns and access them in handlers.
-`expr(s)` is a short for `[&]{ return *s; }`, i.e., a function returning the value bound to the identifier.
-
-Identifier Pattern supports binding non-constructable (via reference), non-copyable (via reference or moving) types.
-
-## Match Guard
-
-Match Guard exists in most related works. The current syntax is borrowed from `mpark/patterns`.
-Match Guard can be used to exert extra restrictions on a pattern. The syntax is
-
-```C++
-pattern | PATTERN | when(PREDICATE) = HANDLER
-```
-
-A simple sample can be
-
-```C++
-Id<int32_t> i, j;
-return match(arr)(
-    pattern | ds(i, j) | when(i + j == s) = expr(true),
-    pattern | _                           = expr(false));
-```
-
-## Destructure Pattern
+### Destructure Pattern
 
 The syntax is borrowed from `mpark/patterns`.
 
@@ -209,14 +233,11 @@ The second option looks like
 
 ```C++
 // Another option to destructure your struct / class.
-constexpr auto dsByMember(DummyStruct const&v)
+constexpr auto dsViaMember(DummyStruct const&v)
 {
     using namespace matchit;
     // compose patterns for destructuring struct DummyStruct.
-    constexpr auto dsA = [](auto && x, auto && y)
-    {
-        return and_(app(&DummyStruct::size, x), app(&DummyStruct::name, y));
-    };
+    const auto dsA = dsVia(&DummyStruct::size, &DummyStruct::name);
     Id<char const*> name;
     return match(v)(
         pattern | dsA(2, name) = expr(name),
@@ -224,28 +245,24 @@ constexpr auto dsByMember(DummyStruct const&v)
     );
 };
 
-static_assert(dsByMember(DummyStruct{1, "123"}) == std::string_view{"not matched"});
-static_assert(dsByMember(DummyStruct{2, "123"}) == std::string_view{"123"});
+static_assert(dsViaMember(DummyStruct{1, "123"}) == std::string_view{"not matched"});
+static_assert(dsViaMember(DummyStruct{2, "123"}) == std::string_view{"123"});
 ```
 
-## Ooo Pattern
+### At Pattern
 
-Ooo Pattern can match arbitrary number of items. 
-Similar patterns exist in most related works.
-The current one is mostly influenced by `..` pattern in Rust. (Also inspired by Racket's `...`).
-It can only be used inside ds patterns and at most one Ooo pattern can appear inside a ds pattern.
+At Pattern is similar to the `@` pattern in Rust. It can have one subpattern. The identifier will only be bound when the subpattern gets matched.
 
 ```C++
-match(tuple)
-(
-    pattern | ds(2, ooo, 2)  = expr(4),
-    pattern | ds(2, ooo   )  = expr(3),
-    pattern | ds(ooo, 2   )  = expr(2),
-    pattern | ds(ooo      )  = expr(1)
-)
+Id<double> s;
+match(value)(
+    pattern | app(_ * _, s.at(_ > 1000)) = expr(s),
+    pattern | _                          = expr(0));
 ```
 
-We support binding a subrange to the ooo pattern now when destructuring a `std::array` or other containers / ranges.
+### At Pattern for Ooo Pattern
+
+We support binding a subrange to the ooo pattern when destructuring a `std::array` or other containers / ranges.
 
 ```C++
 Id<int32_t> i;
@@ -257,9 +274,9 @@ return match(range)(
 );
 ```
 
-## Patterns Can Be Composed.
+## Predefined Composed Patterns
 
-## Some / None Pattern
+### Some / None Pattern
 
 Some and None Patterns are composed patterns. The syntaxes are borrowed from `mpark/patterns`.
 Their usage can be
@@ -270,7 +287,7 @@ match(t)(
     pattern | none     = expr(0));
 ```
 
-## As Pattern
+### As Pattern
 
 As Pattern is also a composed pattern. The syntax is borrowed from `mpark/patterns`.
 It can be used to handle sum type, including class hierarchies, std::variant, and std::any. A simple sample can be
@@ -282,9 +299,9 @@ match(v)(
 );
 ```
 
-As Pattern can be customized for users' classes to override the dynamic cast as the default down casting.
+As Pattern can be customized for users' classes to override the dynamic cast as the default down casting via defining a `get_if` function for their structs / classes.
 Refer to `samples/CustomAsPointer.cpp`.
 
 ## Customized Pattern
 
-Users can define their Customized Pattern.
+Users can define their Customized Pattern Primitives or Combinators via specializing `PatternTraits`.

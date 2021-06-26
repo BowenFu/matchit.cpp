@@ -28,13 +28,8 @@ void sample2()
     };
 
     constexpr auto color = RGBA{0.4f, 0.1f, 0.9f, 0.5f};
-    constexpr auto dsRGBA = [](auto r, auto g, auto b, auto a)
-    {
-        return and_(app(&RGBA::r, r),
-                    app(&RGBA::g, g),
-                    app(&RGBA::b, b),
-                    app(&RGBA::a, a));
-    };
+
+    constexpr auto dsRGBA = dsVia(&RGBA::r, &RGBA::g, &RGBA::b, &RGBA::a);
 
     Id<float> red, green, blue;
     match(color)(
