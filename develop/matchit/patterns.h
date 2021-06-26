@@ -28,13 +28,12 @@ namespace matchit
             {
             }
 
-            constexpr Subrange(Subrange const& other)
-                : mBegin{other.begin()}
-                , mEnd{other.end()}
+            constexpr Subrange(Subrange const &other)
+                : mBegin{other.begin()}, mEnd{other.end()}
             {
             }
 
-            Subrange& operator=(Subrange const& other)
+            Subrange &operator=(Subrange const &other)
             {
                 mBegin = other.begin();
                 mEnd = other.end();
@@ -74,7 +73,7 @@ namespace matchit
         class IterUnderlyingType<std::array<ElemT, size>>
         {
         public:
-            using beginT = decltype(&*std::begin(std::declval<std::array<ElemT, size>&>()));
+            using beginT = decltype(&*std::begin(std::declval<std::array<ElemT, size> &>()));
             using endT = beginT;
         };
 
@@ -83,7 +82,7 @@ namespace matchit
         class IterUnderlyingType<std::array<ElemT, size> const>
         {
         public:
-            using beginT = decltype(&*std::begin(std::declval<std::array<ElemT, size> const&>()));
+            using beginT = decltype(&*std::begin(std::declval<std::array<ElemT, size> const &>()));
             using endT = beginT;
         };
 
@@ -98,9 +97,9 @@ namespace matchit
         }
 
         template <typename K1, typename V1, typename K2, typename V2>
-        auto operator==(std::pair<K1, V1> const& t, std::pair<K2, V2> const& u)
+        auto operator==(std::pair<K1, V1> const &t, std::pair<K2, V2> const &u)
         {
-        return t.first == u.first && t.second == u.second;
+            return t.first == u.first && t.second == u.second;
         }
 
         template <typename T, typename... Ts>
@@ -219,9 +218,9 @@ namespace matchit
         template <class T>
         using decayArrayT = typename decayArray<T>::type;
 
-        static_assert(std::is_same_v<decayArrayT<int32_t[]>, int32_t*>);
-        static_assert(std::is_same_v<decayArrayT<int32_t const[]>, int32_t const*>);
-        static_assert(std::is_same_v<decayArrayT<int32_t const&>, int32_t const&>);
+        static_assert(std::is_same_v<decayArrayT<int32_t[]>, int32_t *>);
+        static_assert(std::is_same_v<decayArrayT<int32_t const[]>, int32_t const *>);
+        static_assert(std::is_same_v<decayArrayT<int32_t const &>, int32_t const &>);
 
         template <typename Pattern>
         class PatternTraits;
@@ -337,7 +336,7 @@ namespace matchit
         };
 
         template <typename Pred>
-        constexpr auto when(Pred const& pred)
+        constexpr auto when(Pred const &pred)
         {
             return When<Pred>{pred};
         }
@@ -378,7 +377,7 @@ namespace matchit
         {
         public:
             template <typename Pattern>
-            constexpr auto operator|(Pattern const& p) const
+            constexpr auto operator|(Pattern const &p) const
             {
                 return PatternHelper<Pattern>{p};
             }
@@ -386,7 +385,7 @@ namespace matchit
             template <typename T>
             constexpr auto operator|(T const *p) const
             {
-                return PatternHelper<T const*>{p};
+                return PatternHelper<T const *>{p};
             }
 
             template <typename Pattern>
@@ -795,8 +794,7 @@ namespace matchit
                             [](Type const *p) -> Type const & {
                                 return *p;
                             },
-                            [](std::monostate const &) -> Type const &
-                            {
+                            [](std::monostate const &) -> Type const & {
                                 throw std::logic_error("invalid state!");
                             }),
                         mVariant);
@@ -809,12 +807,10 @@ namespace matchit
                             [](Type &v) -> Type & {
                                 return v;
                             },
-                            [](Type const *) -> Type &
-                            {
+                            [](Type const *) -> Type & {
                                 throw std::logic_error("Cannot get mutableValue for pointer type!");
                             },
-                            [](std::monostate &) -> Type &
-                            {
+                            [](std::monostate &) -> Type & {
                                 throw std::logic_error("Invalid state!");
                             }),
                         mVariant);
@@ -870,13 +866,13 @@ namespace matchit
 
             // non-const to inform users not to mark Id as const.
             template <typename Pattern>
-            constexpr auto at(Pattern&& pattern)
+            constexpr auto at(Pattern &&pattern)
             {
                 return and_(pattern, *this);
             }
 
             // non-const to inform users not to mark Id as const.
-            constexpr auto at(Ooo const&)
+            constexpr auto at(Ooo const &)
             {
                 return OooBinder<Type>{*this};
             }
@@ -1278,8 +1274,8 @@ namespace matchit
                 // <0, ...int32_t> to workaround compile failure for std::tuple<>.
                 using ElemT = std::tuple_element_t<0, std::tuple<std::remove_reference_t<Values>..., int32_t>>;
                 constexpr static int64_t diff = static_cast<int64_t>(sizeof...(Values) - sizeof...(Patterns));
-                constexpr static size_t clippedDiff = static_cast<size_t>(diff> 0 ? diff : 0);
-                using OooResultTuple = typename std::conditional<isBinder, std::tuple<SubrangeT<std::array<ElemT, clippedDiff>>>, std::tuple<> > ::type;
+                constexpr static size_t clippedDiff = static_cast<size_t>(diff > 0 ? diff : 0);
+                using OooResultTuple = typename std::conditional<isBinder, std::tuple<SubrangeT<std::array<ElemT, clippedDiff>>>, std::tuple<>>::type;
                 using FirstHalfTuple = typename PairPV<Ps0, Vs0>::type;
                 using Ps1 = SubTypesT<idxOoo + 1, sizeof...(Patterns), std::tuple<Patterns...>>;
                 constexpr static auto vs1Start = static_cast<size_t>(static_cast<int64_t>(idxOoo) + 1 + diff);
@@ -1426,11 +1422,11 @@ namespace matchit
                       std::tuple<matchit::impl::Subrange<const int32_t *, const int32_t *>>>);
 
         static_assert(std::is_same_v<
-                      typename PatternTraits<Ds<OooBinder<Subrange<int32_t *, int32_t *>>, matchit::impl::Id<int32_t> > >::AppResultTuple<const std::array<int32_t, 3>>,
+                      typename PatternTraits<Ds<OooBinder<Subrange<int32_t *, int32_t *>>, matchit::impl::Id<int32_t>>>::AppResultTuple<const std::array<int32_t, 3>>,
                       std::tuple<matchit::impl::Subrange<const int32_t *, const int32_t *>>>);
 
         static_assert(std::is_same_v<
-                      typename PatternTraits<Ds<OooBinder<Subrange<int32_t *, int32_t *>>, matchit::impl::Id<int32_t> > >::AppResultTuple<std::array<int32_t, 3>>,
+                      typename PatternTraits<Ds<OooBinder<Subrange<int32_t *, int32_t *>>, matchit::impl::Id<int32_t>>>::AppResultTuple<std::array<int32_t, 3>>,
                       std::tuple<matchit::impl::Subrange<int32_t *, int32_t *>>>);
 
         template <typename Pattern, typename Pred>
