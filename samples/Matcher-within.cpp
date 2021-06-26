@@ -3,8 +3,7 @@
 
 constexpr auto within = [](auto const& first, auto const& last)
 {
-    using matchit::_;
-    return first <= _ && _ <= last;
+    return matchit::meet([&] (auto&& v) { return first <= v && v <= last; });
 };
 
 int main()
