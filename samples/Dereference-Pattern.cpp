@@ -1,5 +1,6 @@
 #include "matchit.h"
 #include <iostream>
+#include <memory>
 
 struct Node {
     int value;
