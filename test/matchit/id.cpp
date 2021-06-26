@@ -98,7 +98,7 @@ TEST(Id, resetAfterFailure4)
   Id<int32_t> x;
   auto const matched =
       match(std::make_tuple(10, 20))(
-          pattern(
+          pattern |
               or_(
                   // first / 5 == second / 2 + 1
                   ds(
@@ -107,7 +107,7 @@ TEST(Id, resetAfterFailure4)
                   // first / 2 == second / 5 + 1
                   ds(
                       app(_ / 2, x),
-                      app(_ / 5 + 1, x)))) = [&]
+                      app(_ / 5 + 1, x))) = [&]
           {
             EXPECT_EQ(*x, 5);
             return true;
@@ -180,10 +180,10 @@ TEST(Id, AppToId2)
 {
   Id<std::unique_ptr<int32_t>> ii;
   auto const result = match(11)(
-      pattern(app(
+      pattern | app(
           [](auto &&x)
           { return std::make_unique<int32_t>(x); },
-          ii)) = [&]
+          ii) = [&]
       { return **ii; });
   EXPECT_EQ(result, 11);
 }
@@ -201,10 +201,10 @@ TEST(Id, AppToId4)
 {
   Id<std::shared_ptr<int32_t>> ii;
   auto const result = match(11)(
-      pattern(app(
+      pattern | app(
           [](auto &&x)
           { return std::make_shared<int32_t>(x); },
-          ii)) = [&]
+          ii) = [&]
       { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
@@ -261,10 +261,10 @@ TEST(Id, AppToId6)
 {
   Id<std::unique_ptr<int32_t>> ii;
   auto const result = match(11)(
-      pattern(app(
+      pattern | app(
           [](auto &&x)
           { return std::make_unique<int32_t>(x); },
-          ii)) = [&]
+          ii) = [&]
       { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
@@ -282,10 +282,10 @@ TEST(Id, AppToId8)
 {
   Id<std::optional<int32_t>> ii;
   auto const result = match(11)(
-      pattern(app(
+      pattern | app(
           [](auto &&x)
           { return std::make_optional(x); },
-          ii)) = [&]
+          ii) = [&]
       { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }

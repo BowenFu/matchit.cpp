@@ -378,31 +378,21 @@ namespace matchit
         {
         public:
             template <typename Pattern>
-            constexpr auto operator()(Pattern const &p) const
+            constexpr auto operator|(Pattern const& p) const
             {
-                return PatternHelper<decayArrayT<Pattern>>{p};
+                return PatternHelper<Pattern>{p};
             }
+
             template <typename T>
-            constexpr auto operator()(T const *p) const
+            constexpr auto operator|(T const *p) const
             {
                 return PatternHelper<T const*>{p};
             }
-            template <typename First, typename... Patterns>
-            constexpr auto operator()(First const &f, Patterns const &...ps) const
-            {
-                return PatternHelper<Ds<First, Patterns...>>{ds(f, ps...)};
-            }
 
             template <typename Pattern>
-            constexpr auto operator()(OooBinder<Pattern> const &p) const
+            constexpr auto operator|(OooBinder<Pattern> const &p) const
             {
-                return operator()(ds(p));
-            }
-
-            template <typename... Patterns>
-            constexpr auto operator|(Patterns const&... p) const
-            {
-                return operator()(p...);
+                return operator|(ds(p));
             }
         };
 
