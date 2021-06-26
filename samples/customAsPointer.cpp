@@ -46,26 +46,10 @@ template <Kind k>
 constexpr auto kind = matchit::app(&Num::kind, k);
 
 template <typename T>
-class NumAsPointer
-{
-public:
-    constexpr auto operator()(Num const &num) const
-    {
-        // print to make sure the customization point does work.
-        // std::cout << "custom as pointer." << std::endl;
-        return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
+auto get_if(Num const* num) {
+  std::cout << "get_if" << std::endl;
+  return static_cast<T const*>(num->kind() == T::k ? num : nullptr);
     }
-};
-
-template <>
-class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One>
-{
-};
-
-template <>
-class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two>
-{
-};
 
 constexpr int32_t staticCastAs(Num const &input)
 {

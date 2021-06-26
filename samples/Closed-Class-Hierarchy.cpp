@@ -25,15 +25,8 @@ bool operator==(Rectangle const& lhs, Rectangle const& rhs)
   return lhs.width == rhs.width && lhs.height == rhs.height;
 }
 
-namespace std {
-template <>
-struct variant_size<Shape> : std::integral_constant<std::size_t, 2> {};
-} // namespace std
-
-Shape::Kind index(const Shape& shape) { return shape.kind; }
-
 template <typename T>
-auto get_if(const Shape* shape) {
+auto get_if(Shape const* shape) {
   return static_cast<T const*>(shape->kind == T::k ? shape : nullptr);
 }
 

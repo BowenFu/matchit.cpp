@@ -23,14 +23,30 @@ namespace matchit
 
         constexpr auto none = app(cast<bool>, false);
 
+        template <typename Value, typename Variant, typename = std::void_t<>>
+        struct ViaGetIf : std::false_type
+        {
+        };
+
         using std::get_if;
+
+        template <typename T, typename Variant>
+        struct ViaGetIf<T, Variant, std::void_t<decltype(get_if<T>(std::declval<Variant const*>()))>>
+            : std::true_type
+        {
+        };
+
+        template <typename T, typename Variant>
+        constexpr auto viaGetIfV = ViaGetIf<T, Variant>::value;
+
+        static_assert(viaGetIfV<int, std::variant<int, bool>>);
+
         template <typename T>
-        class AsPointerBase
+        class AsPointer
         {
         public:
-            template <typename Variant>
+            template <typename Variant, std::enable_if_t<viaGetIfV<T, Variant>>* = nullptr>
             constexpr auto operator()(Variant const &v) const
-            -> decltype(get_if<T>(std::addressof(v)))
             {
                 return get_if<T>(std::addressof(v));
             }
@@ -38,7 +54,7 @@ namespace matchit
             {
                 return std::any_cast<T>(std::addressof(a));
             }
-            template <typename B>
+            template <typename B, std::enable_if_t<!viaGetIfV<T, B>>* = nullptr>
             constexpr auto operator()(B const &b) const
             -> decltype(dynamic_cast<T const *>(std::addressof(b)))
             {
@@ -47,27 +63,8 @@ namespace matchit
         };
 
         template <typename T>
-        class CustomAsPointer
-        {
-        };
-
-        template <typename T, typename = std::void_t<>>
-        class AsPointer : public AsPointerBase<T>
-        {
-        public:
-            using AsPointerBase<T>::operator();
-        };
-
-        template <typename T>
-        class AsPointer<T, std::void_t<decltype(&CustomAsPointer<T>::operator())>> : public AsPointerBase<T>, public CustomAsPointer<T>
-        {
-        public:
-            using AsPointerBase<T>::operator();
-            using CustomAsPointer<T>::operator();
-        };
-
-        template <typename T>
         constexpr AsPointer<T> asPointer;
+
         template <typename T>
         constexpr auto as = [](auto const pat)
         {

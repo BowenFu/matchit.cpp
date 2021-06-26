@@ -485,7 +485,7 @@ constexpr auto as = [](auto const pat) {
 ```
 
 For classes, `dynamic_cast` is used by default for As pattern, but we can change the behavior through the **Customization Point**.
-Users can customize the down casting via specializing `CustomAsPointer`:
+Users can customize the down casting via defining a `get_if` function for their classes, similar to `std::get_if` for `std::variant`:
 
 ```C++
 #include <iostream>
@@ -521,22 +521,10 @@ template <Kind k>
 constexpr auto kind = app(&Num::kind, k);
 
 template <typename T>
-class NumAsPointer
-{
-public:
-    auto operator()(Num const& num) const
-    {
-        // print to make sure the customization point does work.
-        std::cout << "custom as pointer." << std::endl;
-        return num.kind() == T::k ? static_cast<T const *>(std::addressof(num)) : nullptr;
-    }
-};
+auto get_if(Num const* num) {
+  return static_cast<T const *>(num->kind() == T::k ? num : nullptr);
+}
 
-template <>
-class matchit::impl::CustomAsPointer<One> : public NumAsPointer<One> {};
-
-template <>
-class matchit::impl::CustomAsPointer<Two> : public NumAsPointer<Two> {};
 
 int32_t staticCastAs(Num const& input)
 {
