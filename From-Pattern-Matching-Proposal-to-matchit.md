@@ -728,18 +728,37 @@ char* String::data() {
 }
 ```
 
-In `match(it)`:
+In `match(it)`: We need `get_if` instead of `get`.
 
 ```C++
+// Opt into Variant-Like protocol.
+template <String::Storage S>
+auto String::get_if()
+{
+  if constexpr (S == Local) return index() == Local ? &local : nullptr;
+  else if constexpr (S == Remote) return index() == Remote ? &remote : nullptr;
+}
+
+template <String::Storage S>
+const auto asEnum = [](auto&& pat)
+{
+  using namespace matchit;
+  return app([](auto&& x) { return x.template get_if<S>(); }, some(pat));
+};
+
 char* String::data() {
+  using namespace matchit;
   Id<char*> l;
   Id<std::decay_t<decltype(remote)>> r;
   return match(*this) ( 
-    pattern | ds<Local>(l) = expr(l),
-    pattern | as<Remote>(r) = [&]{ return (*r).ptr; }
+    pattern | asEnum<Local>(l) = expr(l),
+    pattern | asEnum<Remote>(r) = [&]{ return (*r).ptr; }
   );
 }
+
 ```
+
+Alternatively, we can specialize `CustomAsPointer` and use `as` directly.
 
 ### “Closed” Class Hierarchy
 

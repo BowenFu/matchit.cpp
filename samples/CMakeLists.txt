@@ -44,6 +44,8 @@ Terminate
 Structured-Binding-Pattern
 Dereference-Pattern
 Extractor-Pattern
+Predicate-based-Discriminator
+Closed-Class-Hierarchy
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
