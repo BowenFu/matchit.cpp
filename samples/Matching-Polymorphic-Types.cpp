@@ -56,7 +56,7 @@ int32_t main()
 {
     auto c = Circle{};
     c.radius = 5;
-    std::cout << get_area((c)) << std::endl;
+    std::cout << get_area(c) << std::endl;
 
     return 0;
 }

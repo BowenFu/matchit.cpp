@@ -41,6 +41,9 @@ Matching-Variants
 Matching-Polymorphic-Types
 Evaluating-Expression-Trees
 Terminate
+Structured-Binding-Pattern
+Dereference-Pattern
+Extractor-Pattern
 )
 
 foreach(sample ${MATCHIT_SAMPLES})

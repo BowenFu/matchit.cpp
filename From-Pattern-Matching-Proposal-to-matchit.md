@@ -169,18 +169,27 @@ int eval(const Expr& expr) {
 In `match(it)`:
 
 ```C++
-int eval(const Expr& expr){
-  Id<Expr> e, l, r;
-  return match (expr) ( 
-    pattern | as<int>(i)                       = i,
-    pattern | as<Neg>(ds(some(e)))             = [&]{ return -eval(*e); },
-    pattern | as<Add>(ds(some(l), some(r)))    = [&]{ return eval(*l) + eval(*r); },
-    // Optimize multiplication by 0.
-    pattern | as<Mul>(ds(some(as<int>(0), _))) = expr(0),
-    pattern | as<Mul>(ds(_, some(as<int>(0)))) = expr(0),
-    pattern | as<Mul>(ds(some(l), some(r)))    = [&]{ return eval(*l) * eval(*r); }
-  );
+const auto asNegDs = asDsVia<Neg>(&Neg::expr);
+const auto asAddDs = asDsVia<Add>(&Add::lhs, &Add::rhs);
+const auto asMulDs = asDsVia<Mul>(&Mul::lhs, &Mul::rhs);
+
+int eval(const Expr &ex)
+{
+    using namespace matchit;
+    Id<int> i;
+    Id<Expr> e, l, r;
+    return match(ex)(
+        pattern | as<int>(i)                   = expr(i),
+        pattern | asNegDs(some(e))             = [&]{ return -eval(*e); },
+        pattern | asAddDs(some(l), some(r))    = [&]{ return eval(*l) + eval(*r); },
+        // Optimize multiplication by 0.
+        pattern | asMulDs(some(as<int>(0)), _) = expr(0),
+        pattern | asMulDs(_, some(as<int>(0))) = expr(0),
+        pattern | asMulDs(some(l), some(r))    = [&]{ return eval(*l) * eval(*r); },
+        pattern | _                            = expr(-1)
+    );
 }
+
 ```
 
 ### Terminate from Inspect
@@ -402,17 +411,18 @@ In `match(it)`:
 ```C++
 struct Player { std::string name; int hitpoints; int coins; };
 void get_hint(const Player& p){
+    using P = Player;
     Id<std::string> n;
     match (p) ( 
-        pattern | app(&Player::hitpoints, 1) =
+        pattern | app(&P::hitpoints, 1) =
             [&]{ std::cout << "You're almost destroyed. Give up!\n"; },
-        pattern | and_(app(&Player::hitpoints, 10), app(&Player::coins, 10)) =
+        pattern | and_(app(&P::hitpoints, 10), app(&P::coins, 10)) =
             [&]{ std::cout << "I need the hints from you!\n"; },
-        pattern | app(&Player::coins, 10) =
+        pattern | app(&P::coins, 10) =
             [&]{ std::cout << "Get more hitpoints!\n"; },
-        pattern | app(&Player::hitpoints, 10) =
+        pattern | app(&P::hitpoints, 10) =
             [&]{ std::cout << "Get more ammo!\n"; },
-        pattern | app(&Player::name, n) =
+        pattern | app(&P::name, n) =
             [&]{
                 if (*n != "The Bruce Dickenson") {
                     std::cout << "Get more hitpoints and ammo!\n";
