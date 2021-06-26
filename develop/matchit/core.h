@@ -53,9 +53,6 @@ namespace matchit
             return MatchHelper<Value, true>{std::forward<Value>(value)};
         }
 
-        template <typename... Values>
-        class Debug;
-
         template <typename First, typename... Values>
         constexpr auto match(First &&first, Values &&...values)
         {
