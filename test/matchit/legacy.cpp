@@ -135,16 +135,6 @@ public:
     }
 };
 
-bool operator==(One const &, One const &)
-{
-    return true;
-}
-
-bool operator==(Two const &, Two const &)
-{
-    return true;
-}
-
 template <Kind k>
 constexpr auto kind = app(&Num::kind, k);
 
