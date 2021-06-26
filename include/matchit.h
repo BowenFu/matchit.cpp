@@ -1962,6 +1962,7 @@ namespace matchit
     using impl::matched;
     using impl::none;
     using impl::some;
+    using impl::dsVia;
     using impl::asDsVia;
 } // namespace matchit
 

@@ -297,10 +297,7 @@ constexpr auto dsByMember(DummyStruct const&v)
 {
     using namespace matchit;
     // compose patterns for destructuring struct DummyStruct.
-    constexpr auto dsA = [](auto && x, auto && y)
-    {
-        return and_(app(&DummyStruct::size, x), app(&DummyStruct::name, y));
-    };
+    constexpr auto dsA = dsVia(&DummyStruct::size, &DummyStruct::name);
     Id<char const*> name;
     return match(v)(
         pattern | dsA(2, name) = expr(name),

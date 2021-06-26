@@ -27,24 +27,6 @@ bool operator==(String::Rm const& lhs, String::Rm const& rhs)
     return lhs.ptr == rhs.ptr && lhs.unused_allocated_space == rhs.unused_allocated_space;
 }
 
-
-namespace std {
-  // Opt into Variant-Like protocol.
-
-  template <>
-  struct variant_size<String> : std::integral_constant<std::size_t, 2> {};
-
-  template <>
-  struct variant_alternative<String::Local, String> {
-    using type = decltype(String::local);
-  };
-
-  template <>
-  struct variant_alternative<String::Remote, String> {
-    using type = decltype(String::remote);
-  };
-}
-
 // Opt into Variant-Like protocol.
 template <String::Storage S>
 auto String::get_if()

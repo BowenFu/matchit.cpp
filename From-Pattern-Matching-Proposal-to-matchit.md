@@ -699,7 +699,11 @@ struct String {
 
   char *data();
 };
+```
 
+In `P1371R3`:
+
+```C++
 namespace std {
   // Opt into Variant-Like protocol.
 
@@ -716,11 +720,6 @@ namespace std {
     using type = decltype(String::remote);
   };
 }
-```
-
-In `P1371R3`:
-
-```C++
 char* String::data() {
   return inspect (*this) {
     <Local> l => l;
@@ -756,7 +755,6 @@ char* String::data() {
     pattern | asEnum<Remote>(r) = [&]{ return (*r).ptr; }
   );
 }
-
 ```
 
 Alternatively, we can specialize `CustomAsPointer` and use `as` directly.

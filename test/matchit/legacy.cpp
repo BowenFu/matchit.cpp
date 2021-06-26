@@ -90,12 +90,9 @@ TEST(Match, test3)
     {
         Id<int32_t> i;
         // compose patterns for destructuring struct A.
-        auto const dsA = [](Id<int32_t> &x)
-        {
-            return and_(app(&A::a, x), app(&A::b, 1));
-        };
+        auto const dsA = dsVia(&A::a, &A::b);
         return match(input)(
-            pattern | dsA(i) = expr(i),
+            pattern | dsA(i, 1) = expr(i),
             pattern | _ = expr(-1));
     };
     EXPECT_EQ(matchFunc(A{3, 1}), 3);
