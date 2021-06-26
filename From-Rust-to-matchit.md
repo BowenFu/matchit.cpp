@@ -6,6 +6,8 @@
 
 Here we will give equivalent code sinppets using `match(it)` for most samples given by [Rust Reference Patterns Section](https://doc.rust-lang.org/stable/reference/patterns.html). 
 
+For complete samples, please refer to [samples directory](./sample).
+
 ### Literal patterns
 
 In Rust:
@@ -623,6 +625,8 @@ match(v)(
 ## Rust Book
 
 We will also add some equivalent samples from [Rust Book](https://doc.rust-lang.org/book/ch18-01-all-the-places-for-patterns.html).
+
+For complete samples, please refer to [samples directory](./sample).
 
 ### Conditional if let Expressions
 

@@ -39,7 +39,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
     if(BUILD_TESTING)
         add_subdirectory(test)
-        add_subdirectory(samples)
+        add_subdirectory(sample)
     endif()
 endif()
 
