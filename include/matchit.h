@@ -1896,15 +1896,16 @@ namespace matchit
 
         constexpr auto none = app(cast<bool>, false);
 
+        using std::get_if;
         template <typename T>
         class AsPointerBase
         {
         public:
-            template <template <class...> class Variant, typename... Ts>
-            constexpr auto operator()(Variant<Ts...> const &v) const
-            -> decltype(std::get_if<T>(std::addressof(v)))
+            template <typename Variant>
+            constexpr auto operator()(Variant const &v) const
+            -> decltype(get_if<T>(std::addressof(v)))
             {
-                return std::get_if<T>(std::addressof(v));
+                return get_if<T>(std::addressof(v));
             }
             constexpr auto operator()(std::any const &a) const
             {
