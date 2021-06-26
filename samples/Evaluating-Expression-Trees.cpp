@@ -2,17 +2,13 @@
 #include <iostream>
 #include <tuple>
 #include <memory>
+using namespace matchit;
 
 struct Expr;
 struct Neg { std::shared_ptr<Expr> expr; };
 struct Add { std::shared_ptr<Expr> lhs, rhs; };
 struct Mul { std::shared_ptr<Expr> lhs, rhs; };
 struct Expr : std::variant<int, Neg, Add, Mul> { using variant::variant; };
-
-bool operator==(Expr const& l, Expr const& r)
-{
-    return static_cast<std::variant<int, Neg, Add, Mul> const&>(l) == static_cast<std::variant<int, Neg, Add, Mul> const&>(r);
-}
 
 namespace std {
 template <>
@@ -21,38 +17,30 @@ template <std::size_t I>
 struct variant_alternative<I, Expr> : variant_alternative<I, Expr::variant> {};
 }
 
-constexpr auto dsNeg = [](auto&& expr)
+bool operator==(Expr const& l, Expr const& r)
 {
-    return app(&Neg::expr, expr);
-};
+    return static_cast<std::variant<int, Neg, Add, Mul> const&>(l) == static_cast<std::variant<int, Neg, Add, Mul> const&>(r);
+}
 
-constexpr auto dsAdd = [](auto &&lhs, auto &&rhs)
-{
-    return and_(app(&Add::lhs, lhs),
-               app(&Add::rhs, rhs));
-};
-
-constexpr auto dsMul = [](auto &&lhs, auto &&rhs)
-{
-    return and_(app(&Mul::lhs, lhs),
-               app(&Mul::rhs, rhs));
-};
+const auto asNegDs = asDsVia<Neg>(&Neg::expr);
+const auto asAddDs = asDsVia<Add>(&Add::lhs, &Add::rhs);
+const auto asMulDs = asDsVia<Mul>(&Mul::lhs, &Mul::rhs);
 
 int eval(const Expr &ex)
 {
-    using namespace matchit;
     Id<int> i;
     Id<Expr> e, l, r;
     return match(ex)(
         // clang-format off
-        pattern | as<int>(i)                          = expr(i),
-        pattern | as<Neg>(dsNeg(some(e)))             = [&]{ return -eval(*e); },
-        pattern | as<Add>(dsAdd(some(l), some(r)))    = [&]{ return eval(*l) + eval(*r); },
+        // FIXME: Expr{5} won't match the following line.
+        pattern | as<int>(i)                   = expr(i),
+        pattern | asNegDs(some(e))             = [&]{ return -eval(*e); },
+        pattern | asAddDs(some(l), some(r))    = [&]{ return eval(*l) + eval(*r); },
         // Optimize multiplication by 0.
-        pattern | as<Mul>(dsMul(some(as<int>(0)), _)) = expr(0),
-        pattern | as<Mul>(dsMul(_, some(as<int>(0)))) = expr(0),
-        pattern | as<Mul>(dsMul(some(l), some(r)))    = [&]{ return eval(*l) * eval(*r); },
-        pattern | _                                   = expr(-1)
+        pattern | asMulDs(some(as<int>(0)), _) = expr(0),
+        pattern | asMulDs(_, some(as<int>(0))) = expr(0),
+        pattern | asMulDs(some(l), some(r))    = [&]{ return eval(*l) * eval(*r); },
+        pattern | _                            = expr(-1)
         // clang-format on
     );
 }

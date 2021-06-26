@@ -1956,11 +1956,29 @@ namespace matchit
                 { return false; });
         }
 
+        constexpr auto dsVia = [](auto&&... members)
+        {
+            return [members...](auto&&... pats)
+            {
+                return and_(app(members, pats)...);
+            };
+        };
+
+        template <typename T>
+        constexpr auto asDsVia = [](auto&&... members)
+        {
+            return [members...](auto&&... pats)
+            {
+                return as<T>(and_(app(members, pats)...));
+            };
+        };
+
     } // namespace impl
     using impl::as;
     using impl::matched;
     using impl::none;
     using impl::some;
+    using impl::asDsVia;
 } // namespace matchit
 
 #endif // MATCHIT_UTILITY_H
