@@ -1,6 +1,6 @@
+#include "matchit.h"
 #include <gtest/gtest.h>
 #include <optional>
-#include "matchit.h"
 using namespace matchit;
 
 TEST(Id, matchValue)
@@ -24,36 +24,32 @@ TEST(Id, resetId)
 TEST(Id, resetAfterFailure)
 {
   Id<int32_t> x;
-  match(10)(
-      pattern | x = [&]
-      { EXPECT_EQ(*x, 10); });
-  auto const matched = match(10)(
-      pattern | not_(x) = expr(true),
-      pattern | _ = expr(false));
+  match(10)(pattern | x = [&]
+            { EXPECT_EQ(*x, 10); });
+  auto const matched =
+      match(10)(pattern | not_(x) = expr(true), pattern | _ = expr(false));
   EXPECT_FALSE(matched);
 }
 
 TEST(Id, resetAfterFailure2)
 {
   Id<int32_t> x;
-  match(10)(
-      pattern | x = [&]
-      { EXPECT_EQ(*x, 10); });
-  auto const matched = match(10)(
-      pattern | and_(x, not_(x)) = expr(true),
-      pattern | _ = expr(false));
+  match(10)(pattern | x = [&]
+            { EXPECT_EQ(*x, 10); });
+  auto const matched = match(10)(pattern | and_(x, not_(x)) = expr(true),
+                                 pattern | _ = expr(false));
   EXPECT_FALSE(matched);
 }
 
 TEST(Id, resetAfterFailure3)
 {
   Id<int32_t> x;
-  auto result = match(10)(
-      pattern | and_(x, app(_ / 2, x)) = expr(true),
-      pattern | _ = expr(false));
+  auto result = match(10)(pattern | and_(x, app(_ / 2, x)) = expr(true),
+                          pattern | _ = expr(false));
   EXPECT_FALSE(result);
   result = match(10)(
-      pattern | and_(x, app(_ / 2, not_(x))) = [&]
+      pattern | and_(x, app(_ / 2, not_(x))) =
+          [&]
       {
         EXPECT_EQ(*x, 10);
         return true;
@@ -66,7 +62,8 @@ TEST(Id, resetAfterFailure33)
 {
   Id<int32_t> x;
   auto result = match(10)(
-      pattern | or_(and_(not_(x), not_(x)), app(_ / 2, x)) = [&]
+      pattern | or_(and_(not_(x), not_(x)), app(_ / 2, x)) =
+          [&]
       {
         EXPECT_EQ(*x, 5);
         return true;
@@ -75,7 +72,8 @@ TEST(Id, resetAfterFailure33)
   EXPECT_TRUE(result);
 
   result = match(10)(
-      pattern | or_(and_(x, not_(x)), app(_ / 2, x)) = [&]
+      pattern | or_(and_(x, not_(x)), app(_ / 2, x)) =
+          [&]
       {
         EXPECT_EQ(*x, 5);
         return true;
@@ -84,7 +82,8 @@ TEST(Id, resetAfterFailure33)
   EXPECT_TRUE(result);
 
   result = match(10)(
-      pattern | or_(and_(not_(x), x), app(_ / 2, x)) = [&]
+      pattern | or_(and_(not_(x), x), app(_ / 2, x)) =
+          [&]
       {
         EXPECT_EQ(*x, 5);
         return true;
@@ -96,23 +95,18 @@ TEST(Id, resetAfterFailure33)
 TEST(Id, resetAfterFailure4)
 {
   Id<int32_t> x;
-  auto const matched =
-      match(std::make_tuple(10, 20))(
-          pattern |
-              or_(
-                  // first / 5 == second / 2 + 1
-                  ds(
-                      app(_ / 5, x),
-                      app(_ / 2 + 1, x)),
-                  // first / 2 == second / 5 + 1
-                  ds(
-                      app(_ / 2, x),
-                      app(_ / 5 + 1, x))) = [&]
-          {
-            EXPECT_EQ(*x, 5);
-            return true;
-          },
-          pattern | _ = expr(false));
+  auto const matched = match(std::make_tuple(10, 20))(
+      pattern | or_(
+                    // first / 5 == second / 2 + 1
+                    ds(app(_ / 5, x), app(_ / 2 + 1, x)),
+                    // first / 2 == second / 5 + 1
+                    ds(app(_ / 2, x), app(_ / 5 + 1, x))) =
+          [&]
+      {
+        EXPECT_EQ(*x, 5);
+        return true;
+      },
+      pattern | _ = expr(false));
   EXPECT_TRUE(matched);
 }
 
@@ -120,7 +114,8 @@ TEST(Id, resetAfterFailure5)
 {
   Id<int32_t> x;
   auto result = match(10)(
-      pattern | and_(and_(or_(x)), and_(10)) = [&]
+      pattern | and_(and_(or_(x)), and_(10)) =
+          [&]
       {
         EXPECT_EQ(*x, 10);
         return true;
@@ -129,7 +124,8 @@ TEST(Id, resetAfterFailure5)
   EXPECT_TRUE(result);
 
   result = match(10)(
-      pattern | and_(and_(or_(x)), and_(1)) = [&]
+      pattern | and_(and_(or_(x)), and_(1)) =
+          [&]
       {
         EXPECT_EQ(*x, 10);
         return true;
@@ -141,12 +137,8 @@ TEST(Id, resetAfterFailure5)
 TEST(Id, matchMultipleTimes1)
 {
   Id<int32_t> z;
-  match(10)(
-      pattern | and_(z, z) =
-          [&]
-      {
-        EXPECT_EQ(*z, 10);
-      });
+  match(10)(pattern | and_(z, z) = [&]
+            { EXPECT_EQ(*z, 10); });
 }
 
 TEST(Id, matchMultipleTimes2)
@@ -171,8 +163,7 @@ TEST(Id, matchMultipleTimes3)
 TEST(Id, AppToId)
 {
   Id<int32_t> ii;
-  auto const result = match(11)(
-      pattern | app(_ * _, ii) = expr(ii));
+  auto const result = match(11)(pattern | app(_ * _, ii) = expr(ii));
   EXPECT_EQ(result, 121);
 }
 
@@ -180,10 +171,9 @@ TEST(Id, AppToId2)
 {
   Id<std::unique_ptr<int32_t>> ii;
   auto const result = match(11)(
-      pattern | app(
-          [](auto &&x)
-          { return std::make_unique<int32_t>(x); },
-          ii) = [&]
+      pattern | app([](auto &&x)
+                    { return std::make_unique<int32_t>(x); },
+                    ii) = [&]
       { return **ii; });
   EXPECT_EQ(result, 11);
 }
@@ -201,10 +191,9 @@ TEST(Id, AppToId4)
 {
   Id<std::shared_ptr<int32_t>> ii;
   auto const result = match(11)(
-      pattern | app(
-          [](auto &&x)
-          { return std::make_shared<int32_t>(x); },
-          ii) = [&]
+      pattern | app([](auto &&x)
+                    { return std::make_shared<int32_t>(x); },
+                    ii) = [&]
       { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
@@ -251,8 +240,8 @@ TEST(Id, AppToId5PlusProNegative)
   {
     Id<std::unique_ptr<int32_t>> ii, jj;
     match(std::make_unique<int32_t>(11))(
-      pattern | and_(ii, jj) = [&]
-      { return jj.move(); });
+        pattern | and_(ii, jj) = [&]
+        { return jj.move(); });
   };
   EXPECT_THROW(invalidMove(), std::logic_error);
 }
@@ -261,10 +250,9 @@ TEST(Id, AppToId6)
 {
   Id<std::unique_ptr<int32_t>> ii;
   auto const result = match(11)(
-      pattern | app(
-          [](auto &&x)
-          { return std::make_unique<int32_t>(x); },
-          ii) = [&]
+      pattern | app([](auto &&x)
+                    { return std::make_unique<int32_t>(x); },
+                    ii) = [&]
       { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
@@ -272,29 +260,27 @@ TEST(Id, AppToId6)
 TEST(Id, AppToId7)
 {
   Id<std::optional<int32_t>> ii;
-  auto const result = match(std::make_optional(11))(
-      pattern | ii = [&]
-      { return ii.move(); });
+  auto const result =
+      match(std::make_optional(11))(pattern | ii = [&]
+                                    { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, AppToId8)
 {
   Id<std::optional<int32_t>> ii;
-  auto const result = match(11)(
-      pattern | app(
-          [](auto &&x)
-          { return std::make_optional(x); },
-          ii) = [&]
-      { return ii.move(); });
+  auto const result =
+      match(11)(pattern | app([](auto &&x)
+                              { return std::make_optional(x); },
+                              ii) = [&]
+                { return ii.move(); });
   EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, IdAtInt)
 {
   Id<int32_t> ii;
-  auto const result = match(11)(
-      pattern | app(_ * _, ii.at(121)) = expr(ii));
+  auto const result = match(11)(pattern | app(_ * _, ii.at(121)) = expr(ii));
   EXPECT_EQ(result, 121);
 }
 
@@ -303,8 +289,8 @@ TEST(Id, IdAtUnique)
   Id<std::unique_ptr<int32_t>> ii;
   auto const result = match(11)(
       pattern | app([](auto &&x)
-                  { return std::make_unique<int32_t>(x * x); },
-                  ii.at(some(_))) = [&]
+                    { return std::make_unique<int32_t>(x * x); },
+                    ii.at(some(_))) = [&]
       { return ii.move(); });
   EXPECT_EQ(*result, 121);
 }

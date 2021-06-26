@@ -1,5 +1,1 @@
-IndentWidth: 4
-
-AllowShortLambdasOnASingleLine: All
-AllowShortFunctionsOnASingleLine: All
-AlwaysBreakAfterReturnType: None
+BasedOnStyle: Microsoft

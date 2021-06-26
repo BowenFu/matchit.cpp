@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "matchit.h"
+#include <gtest/gtest.h>
 
 using namespace matchit;
 
@@ -19,8 +19,5 @@ TEST(MatchStatement, test)
 
 TEST(MatchExpreesion, Nomatch)
 {
-  EXPECT_THROW(
-      match(4)(
-          pattern | 1 = expr(true)),
-      std::logic_error);
+  EXPECT_THROW(match(4)(pattern | 1 = expr(true)), std::logic_error);
 }

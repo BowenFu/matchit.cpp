@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "matchit.h"
+#include <gtest/gtest.h>
 using namespace matchit;
 
 class Base
@@ -12,18 +12,19 @@ public:
 class Derived : public Base
 {
 public:
-  int32_t index() const override
-  {
-    return 1;
-  }
+  int32_t index() const override { return 1; }
 };
 
 constexpr auto deref = [](auto &&x) -> decltype(*x)
-{
-  return *x;
-};
-static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard>>::template AppResultTuple<Base *>, std::tuple<>>);
-static_assert(std::is_same_v<impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard>>::template AppResult<Base *>, Base &>);
+{ return *x; };
+static_assert(std::is_same_v<
+              impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard>>::
+                  template AppResultTuple<Base *>,
+              std::tuple<>>);
+static_assert(std::is_same_v<
+              impl::PatternTraits<impl::App<decltype(deref), impl::Wildcard>>::
+                  template AppResult<Base *>,
+              Base &>);
 
 TEST(App, someAs)
 {

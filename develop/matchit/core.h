@@ -1,9 +1,9 @@
 #ifndef MATCHIT_CORE_H
 #define MATCHIT_CORE_H
 
-#include <tuple>
-#include <cstdint>
 #include <algorithm>
+#include <cstdint>
+#include <tuple>
 
 namespace matchit
 {
@@ -36,10 +36,7 @@ namespace matchit
 
         public:
             template <typename V>
-            constexpr explicit MatchHelper(V &&value)
-                : mValue{std::forward<V>(value)}
-            {
-            }
+            constexpr explicit MatchHelper(V &&value) : mValue{std::forward<V>(value)} {}
             template <typename... PatternPair>
             constexpr auto operator()(PatternPair const &...patterns)
             {
@@ -56,8 +53,10 @@ namespace matchit
         template <typename First, typename... Values>
         constexpr auto match(First &&first, Values &&...values)
         {
-            auto result = std::forward_as_tuple(std::forward<First>(first), std::forward<Values>(values)...);
-            return MatchHelper<decltype(result), false>{std::forward<decltype(result)>(result)};
+            auto result = std::forward_as_tuple(std::forward<First>(first),
+                                                std::forward<Values>(values)...);
+            return MatchHelper<decltype(result), false>{
+                std::forward<decltype(result)>(result)};
         }
     } // namespace impl
 
