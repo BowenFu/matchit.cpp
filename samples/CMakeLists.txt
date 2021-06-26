@@ -1,4 +1,5 @@
 set(MATCHIT_SAMPLES
+Red-black-Tree-Rebalancing
 checkAndlogLarge
 clip
 contains
@@ -46,6 +47,7 @@ Dereference-Pattern
 Extractor-Pattern
 Predicate-based-Discriminator
 Closed-Class-Hierarchy
+Matcher-within
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
