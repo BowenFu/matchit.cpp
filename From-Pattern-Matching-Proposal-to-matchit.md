@@ -880,9 +880,11 @@ inspect (n) {
 In `match(it)`:
 
 ```C++
-auto within = [](auto first, auto last)
+constexpr auto within = [](auto const &first, auto const &last)
 {
-    return first <= _ && _ <= last;
+    // the following one has memory issue since it creates temporary unarys and capture them via reference when constructing new unarys.
+    // return first <= _ && _ <= last;
+    return meet([&] (auto&& v) { return first <= v && v <= last; });
 };
 
 match (n) ( 
