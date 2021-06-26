@@ -42,7 +42,7 @@ That's it.
 
 ## Syntax Design
 
-For syntax design details please refer to [design](./REFERENCE.md).
+For syntax design details please refer to [REFERENCE](./REFERENCE.md).
 
 ## From Rust to match(it)
 
