@@ -53,12 +53,12 @@ auto String::get_if()
   else if constexpr (S == Remote) return index() == Remote ? &remote : nullptr;
 }
 
-template <String::Storage S>
-const auto asEnum = [](auto&& pat)
+template <String::Storage S, typename Pat>
+auto asEnum(Pat&& pat)
 {
   using namespace matchit;
   return app([](auto&& x) { return x.template get_if<S>(); }, some(pat));
-};
+}
 
 char* String::data() {
   using namespace matchit;
