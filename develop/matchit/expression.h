@@ -220,6 +220,7 @@ namespace matchit
         BIN_OP_FOR_UNARY(>)
         BIN_OP_FOR_UNARY(||)
         BIN_OP_FOR_UNARY(&&)
+        BIN_OP_FOR_UNARY(^)
 
 #undef BIN_OP_FOR_UNARY
 
