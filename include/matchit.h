@@ -172,7 +172,7 @@ namespace matchit
         };
 
         template <typename T, typename... Args>
-        constexpr decltype(auto) eval(T const &t, Args const &...args)
+        constexpr decltype(auto) evaluate_(T const &t, Args const &...args)
         {
             return EvalTraits<T>::evalImpl(t, args...);
         }
@@ -199,7 +199,7 @@ namespace matchit
     template <typename T, std::enable_if_t<isNullaryOrIdV<T>, bool> = true> \
     constexpr auto operator op(T const &t)                                  \
     {                                                                       \
-        return nullary([&] { return op eval(t); });                         \
+        return nullary([&] { return op evaluate_(t); });                         \
     }
 
 #define BIN_OP_FOR_NULLARY(op)                                                 \
@@ -208,7 +208,7 @@ namespace matchit
                   true>                                                        \
     constexpr auto operator op(T const &t, U const &u)                         \
     {                                                                          \
-        return nullary([&] { return eval(t) op eval(u); });                    \
+        return nullary([&] { return evaluate_(t) op evaluate_(u); });                    \
     }
 
         // ADL will find these operators.
@@ -230,6 +230,7 @@ namespace matchit
         BIN_OP_FOR_NULLARY(>)
         BIN_OP_FOR_NULLARY(||)
         BIN_OP_FOR_NULLARY(&&)
+        BIN_OP_FOR_NULLARY(^)
 
 #undef BIN_OP_FOR_NULLARY
 
@@ -263,7 +264,7 @@ namespace matchit
     template <typename T, std::enable_if_t<isUnaryOrWildcardV<T>, bool> = true> \
     constexpr auto operator op(T const &t)                                      \
     {                                                                           \
-        return unary([&](auto &&arg) constexpr { return op eval(t, arg); });    \
+        return unary([&](auto &&arg) constexpr { return op evaluate_(t, arg); });    \
     }
 
 #define BIN_OP_FOR_UNARY(op)                                                   \
@@ -273,7 +274,7 @@ namespace matchit
     constexpr auto operator op(T const &t, U const &u)                         \
     {                                                                          \
         return unary([&](auto &&arg) constexpr {                               \
-            return eval(t, arg) op eval(u, arg);                               \
+            return evaluate_(t, arg) op evaluate_(u, arg);                               \
         });                                                                    \
     }
 
