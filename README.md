@@ -36,9 +36,35 @@
 
 ## Installation
 
+### Download `matchit.h`
+
 Simply download the header file `matchit.h` and put it in your include directory for dependencies.
 
 That's it.
+
+### Manage with cmake
+
+Include the code snippet in your CMakeLists.txt:
+
+```CMake
+include(FetchContent)
+
+FetchContent_Declare(
+    matchit
+    GIT_REPOSITORY https://github.com/BowenFu/matchit.cpp.git
+    GIT_TAG main)
+
+FetchContent_GetProperties(matchit)
+if(NOT matchit_POPULATED)
+    FetchContent_Populate(matchit)
+    add_subdirectory(${matchit_SOURCE_DIR} ${matchit_BINARY_DIR}
+                    EXCLUDE_FROM_ALL)
+endif()
+
+message(STATUS "Matchit header are present at ${matchit_SOURCE_DIR}")
+```
+
+And add `${matchit_SOURCE_DIR}/include` to your include path.
 
 ## Syntax Design
 
@@ -536,6 +562,20 @@ int32_t main()
 There is additional **Customziation Point**.
 
 Users can specialize `PatternTraits` if they want to add a brand new pattern.
+
+## Real world use case
+
+[`mathiu`](https://github.com/BowenFu/mathiu.cpp) is a simple computer algebra system built upon `match(it)`.
+
+A simple sample of `mathiu`:
+
+```C++
+auto const x = symbol("x");
+auto const e = x ^ fraction(2, 3);
+auto const d = diff(e, x);
+// prints (* 2/3 (^ x -1/3))
+std::cout << toString(d) << std::endl;
+```
 
 ## Contact
 
