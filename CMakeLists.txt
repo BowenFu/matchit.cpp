@@ -42,5 +42,3 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         add_subdirectory(sample)
     endif()
 endif()
-
-unset(CMAKE_CXX_STANDARD CACHE)
