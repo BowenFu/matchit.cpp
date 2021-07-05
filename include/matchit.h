@@ -1070,7 +1070,13 @@ namespace matchit
         class IdTraits
         {
         public:
-            constexpr static auto equal(Type const& lhs, Type const& rhs)
+            constexpr static auto
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+                __attribute__((no_sanitize_address))
+#endif
+#endif
+                equal(Type const &lhs, Type const &rhs)
             {
                 return lhs == rhs;
             }
@@ -1187,11 +1193,6 @@ namespace matchit
 
             template <typename Value>
             constexpr auto
-#if defined(__has_feature)
-#if __has_feature(address_sanitizer)
-                __attribute__((no_sanitize_address))
-#endif
-#endif
                 matchValue(Value &&v) const
             {
                 if (hasValue())
