@@ -1067,6 +1067,22 @@ namespace matchit
         class Ooo;
 
         template <typename Type>
+        class IdTraits
+        {
+        public:
+            constexpr static auto
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+                __attribute__((no_sanitize_address))
+#endif
+#endif
+                equal(Type const &lhs, Type const &rhs)
+            {
+                return lhs == rhs;
+            }
+        };
+
+        template <typename Type>
         class Id
         {
         private:
@@ -1128,18 +1144,18 @@ namespace matchit
                     }
                 }
             };
-            class IdTrait
+            class IdUtil
             {
             public:
                 template <typename Value>
-                constexpr static auto matchValueImpl(ValueVariant<Type> &v, Value &&value,
+                constexpr static auto bindValue(ValueVariant<Type> &v, Value &&value,
                                                      std::false_type /* StorePointer */)
                 {
                     // for constexpr
                     v = ValueVariant<Type>{std::forward<Value>(value)};
                 }
                 template <typename Value>
-                constexpr static auto matchValueImpl(ValueVariant<Type> &v, Value &&value,
+                constexpr static auto bindValue(ValueVariant<Type> &v, Value &&value,
                                                      std::true_type /* StorePointer */)
                 {
                     v = ValueVariant<Type>{&value};
@@ -1177,19 +1193,14 @@ namespace matchit
 
             template <typename Value>
             constexpr auto
-#if defined(__has_feature)
-#if __has_feature(address_sanitizer)
-                __attribute__((no_sanitize_address))
-#endif
-#endif
                 matchValue(Value &&v) const
             {
                 if (hasValue())
                 {
-                    return internalValue() == v;
+                    return IdTraits<Type>::equal(internalValue(), v);
                 }
-                IdTrait::matchValueImpl(block().variant(), std::forward<Value>(v),
-                                        StorePointer<Type, Value>{});
+                IdUtil::bindValue(block().variant(), std::forward<Value>(v),
+                                   StorePointer<Type, Value>{});
                 return true;
             }
             constexpr void reset(int32_t depth) const { return block().reset(depth); }
