@@ -1070,8 +1070,7 @@ namespace matchit
         class IdTraits
         {
         public:
-            template <typename T, typename U>
-            constexpr static auto equal(T const& lhs, U const& rhs)
+            constexpr static auto equal(Type const& lhs, Type const& rhs)
             {
                 return lhs == rhs;
             }
