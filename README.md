@@ -36,13 +36,13 @@
 
 ## Installation
 
-### Download `matchit.h`
+### Option 1. Download `matchit.h`
 
 Simply download the header file `matchit.h` and put it in your include directory for dependencies.
 
 That's it.
 
-### Manage with cmake
+### Option 2. Manage with cmake
 
 Include the code snippet in your CMakeLists.txt:
 
