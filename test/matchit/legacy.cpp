@@ -255,6 +255,17 @@ TEST(Match, test10)
   EXPECT_EQ(dynCast(std::unique_ptr<Shape>()), "None");
 }
 
+TEST(Match, test10_)
+{
+  auto const dToBCast = [](auto const &i)
+  {
+    return match(i)(pattern | some(as<Shape>(_)) = expr("Shape"),
+                    pattern | none = expr("None"));
+  };
+
+  EXPECT_EQ(dToBCast(std::make_unique<Circle>()), "Shape");
+}
+
 TEST(Match, test11)
 {
   auto const getIf = [](auto const &i)
