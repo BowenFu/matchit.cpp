@@ -1991,6 +1991,13 @@ namespace matchit
         return std::any_cast<T>(std::addressof(a));
       }
 
+      template <typename D, typename std::enable_if<!viaGetIfV<T, D> && std::is_base_of_v<T, D>>::type * = nullptr>
+      constexpr auto operator()(D const &d) const
+          -> decltype(static_cast<T const *>(std::addressof(d)))
+      {
+        return static_cast<T const *>(std::addressof(d));
+      }
+
       template <typename B, typename std::enable_if<!viaGetIfV<T, B> && std::is_base_of_v<B, T>>::type * = nullptr>
       constexpr auto operator()(B const &b) const
           -> decltype(dynamic_cast<T const *>(std::addressof(b)))
