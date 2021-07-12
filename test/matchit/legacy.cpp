@@ -250,9 +250,9 @@ TEST(Match, test10)
                     pattern | none = expr("None"));
   };
 
-  EXPECT_EQ(dynCast(std::make_unique<Square>()), "Square");
-  EXPECT_EQ(dynCast(std::make_unique<Circle>()), "Circle");
-  EXPECT_EQ(dynCast(std::unique_ptr<Circle>()), "None");
+  EXPECT_EQ(dynCast(std::unique_ptr<Shape>(new Square{})), "Square");
+  EXPECT_EQ(dynCast(std::unique_ptr<Shape>(new Circle{})), "Circle");
+  EXPECT_EQ(dynCast(std::unique_ptr<Shape>()), "None");
 }
 
 TEST(Match, test11)

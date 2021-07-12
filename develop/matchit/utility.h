@@ -46,16 +46,20 @@ namespace matchit
     {
     public:
       template <typename Variant,
-                std::enable_if_t<viaGetIfV<T, Variant>> * = nullptr>
+                typename std::enable_if<viaGetIfV<T, Variant>>::type * = nullptr>
       constexpr auto operator()(Variant const &v) const
       {
         return get_if<T>(std::addressof(v));
       }
-      constexpr auto operator()(std::any const &a) const
+
+      // template to disable implicit cast to std::any
+      template <typename A, typename std::enable_if<std::is_same<A, std::any>::value>::type * = nullptr>
+      constexpr auto operator()(A const &a) const
       {
         return std::any_cast<T>(std::addressof(a));
       }
-      template <typename B, std::enable_if_t<!viaGetIfV<T, B>> * = nullptr>
+
+      template <typename B, typename std::enable_if<!viaGetIfV<T, B> && std::is_base_of_v<B, T>>::type * = nullptr>
       constexpr auto operator()(B const &b) const
           -> decltype(dynamic_cast<T const *>(std::addressof(b)))
       {
