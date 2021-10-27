@@ -48,6 +48,7 @@ Extractor-Pattern
 Predicate-based-Discriminator
 Closed-Class-Hierarchy
 Matcher-within
+visit
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
