@@ -616,8 +616,8 @@ namespace matchit
             constexpr auto execute() const { return mHandler(); }
 
         private:
-            Pattern const &mPattern;
-            Func const &mHandler;
+            Pattern const mPattern;
+            Func const mHandler;
         };
 
         template <typename Pattern, typename Pred>
