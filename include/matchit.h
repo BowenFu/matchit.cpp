@@ -617,7 +617,7 @@ namespace matchit
 
         private:
             Pattern const mPattern;
-            Func const mHandler;
+            std::conditional_t<std::is_function_v<Func>, Func const&, Func const> mHandler;
         };
 
         template <typename Pattern, typename Pred>
