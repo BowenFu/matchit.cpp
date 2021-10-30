@@ -214,6 +214,22 @@ namespace matchit
         static_assert(std::is_same_v<decayArrayT<int32_t const[]>, int32_t const *>);
         static_assert(std::is_same_v<decayArrayT<int32_t const &>, int32_t const &>);
 
+        template <typename T>
+        struct AddConstToPointer
+        {
+            using type = std::conditional_t<
+                !std::is_pointer_v<T>, T,
+                std::add_pointer_t<std::add_const_t<std::remove_pointer_t<T>>>>;
+        };
+        template <typename T>
+        using AddConstToPointerT = typename AddConstToPointer<T>::type;
+
+        static_assert(std::is_same_v<AddConstToPointerT<void *>, void const *>);
+        static_assert(std::is_same_v<AddConstToPointerT<int32_t>, int32_t>);
+
+        template <typename Pattern>
+        using InternalPatternT = std::remove_reference_t<AddConstToPointerT<decayArrayT<Pattern>>>;
+
         template <typename Pattern>
         class PatternTraits;
 
@@ -310,7 +326,7 @@ namespace matchit
 
         private:
             Pattern const mPattern;
-            Func const mHandler;
+            std::conditional_t<std::is_function_v<Func>, Func const &, Func const> mHandler;
         };
 
         template <typename Pattern, typename Pred>
@@ -439,7 +455,7 @@ namespace matchit
             constexpr auto const &patterns() const { return mPatterns; }
 
         private:
-            std::tuple<Patterns...> mPatterns;
+            std::tuple<InternalPatternT<Patterns>...> mPatterns;
         };
 
         template <typename... Patterns>
@@ -530,7 +546,7 @@ namespace matchit
 
         private:
             Unary const mUnary;
-            Pattern const mPattern;
+            InternalPatternT<Pattern> const mPattern;
         };
 
         template <typename Unary, typename Pattern>
@@ -602,7 +618,7 @@ namespace matchit
             constexpr auto const &patterns() const { return mPatterns; }
 
         private:
-            std::tuple<Patterns...> mPatterns;
+            std::tuple<InternalPatternT<Patterns>...> mPatterns;
         };
 
         template <typename... Patterns>
@@ -681,7 +697,7 @@ namespace matchit
             auto const &pattern() const { return mPattern; }
 
         private:
-            Pattern mPattern;
+            InternalPatternT<Pattern> mPattern;
         };
 
         template <typename Pattern>
@@ -944,22 +960,7 @@ namespace matchit
             constexpr explicit Ds(Patterns const &...patterns) : mPatterns{patterns...} {}
             constexpr auto const &patterns() const { return mPatterns; }
 
-        private:
-            template <typename T>
-            struct AddConstToPointer
-            {
-                using type = std::conditional_t<
-                    !std::is_pointer_v<T>, T,
-                    std::add_pointer_t<std::add_const_t<std::remove_pointer_t<T>>>>;
-            };
-            template <typename T>
-            using AddConstToPointerT = typename AddConstToPointer<T>::type;
-
-            static_assert(std::is_same_v<AddConstToPointerT<void *>, void const *>);
-            static_assert(std::is_same_v<AddConstToPointerT<int32_t>, int32_t>);
-
-        public:
-            using Type = std::tuple<AddConstToPointerT<decayArrayT<Patterns>>...>;
+            using Type = std::tuple<InternalPatternT<Patterns>...>;
 
         private:
             Type mPatterns;

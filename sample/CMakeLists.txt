@@ -49,6 +49,7 @@ Predicate-based-Discriminator
 Closed-Class-Hierarchy
 Matcher-within
 visit
+graph
 )
 
 foreach(sample ${MATCHIT_SAMPLES})

@@ -91,17 +91,19 @@ namespace matchit
           { return false; });
     }
 
-    constexpr auto dsVia = [](auto &&...members)
+    constexpr auto dsVia = [](auto ...members)
     {
-      return [members...](auto &&...pats)
+      return [members...](auto ...pats)
       { return and_(app(members, pats)...); };
     };
 
     template <typename T>
-    constexpr auto asDsVia = [](auto &&...members)
+    constexpr auto asDsVia = [](auto ...members)
     {
-      return [members...](auto &&...pats)
+      return [members...](auto ...pats)
       {
+        // FIXME, why the following line will cause segfault in at-Bindings.cpp
+        // return as<T>(dsVia(members...)(pats...));
         return as<T>(and_(app(members, pats)...));
       };
     };
