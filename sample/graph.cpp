@@ -11,13 +11,15 @@ struct Node
   std::vector<Node *> parents;
 };
 
-//   A
-//   |
-//   B
-//   | \
-//   |  C
-//   | /
-//   D
+/*
+  A
+  |
+  B
+  | \
+  |  C
+  | /
+  D
+*/
 
 bool matchGraph()
 {
