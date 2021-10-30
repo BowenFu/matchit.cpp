@@ -30,9 +30,10 @@ bool matchGraph()
   auto D = std::make_unique<StrNode>(StrNode{"D", {B.get(), C.get()}});
 
   using namespace matchit;
-  constexpr auto someDsN = [](auto... pats)
+  // FIXME, moving dsN into someDsN will cause segfault.
+  constexpr auto dsN = dsVia(&StrNode::value, &StrNode::parents);
+  constexpr auto someDsN = [dsN](auto... pats)
   {
-    constexpr auto dsN = dsVia(&StrNode::value, &StrNode::parents);
     return some(dsN(pats...));
   };
   Id<StrNode *> b;
