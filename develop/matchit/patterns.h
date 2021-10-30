@@ -228,7 +228,7 @@ namespace matchit
         static_assert(std::is_same_v<AddConstToPointerT<int32_t>, int32_t>);
 
         template <typename Pattern>
-        using EscapeArrayT = AddConstToPointerT<decayArrayT<Pattern>>;
+        using InternalPatternT = std::remove_reference_t<AddConstToPointerT<decayArrayT<Pattern>>>;
 
         template <typename Pattern>
         class PatternTraits;
@@ -455,7 +455,7 @@ namespace matchit
             constexpr auto const &patterns() const { return mPatterns; }
 
         private:
-            std::tuple<EscapeArrayT<Patterns>...> mPatterns;
+            std::tuple<InternalPatternT<Patterns>...> mPatterns;
         };
 
         template <typename... Patterns>
@@ -546,7 +546,7 @@ namespace matchit
 
         private:
             Unary const mUnary;
-            EscapeArrayT<Pattern> const mPattern;
+            InternalPatternT<Pattern> const mPattern;
         };
 
         template <typename Unary, typename Pattern>
@@ -618,7 +618,7 @@ namespace matchit
             constexpr auto const &patterns() const { return mPatterns; }
 
         private:
-            std::tuple<EscapeArrayT<Patterns>...> mPatterns;
+            std::tuple<InternalPatternT<Patterns>...> mPatterns;
         };
 
         template <typename... Patterns>
@@ -697,7 +697,7 @@ namespace matchit
             auto const &pattern() const { return mPattern; }
 
         private:
-            EscapeArrayT<Pattern> mPattern;
+            InternalPatternT<Pattern> mPattern;
         };
 
         template <typename Pattern>
@@ -960,7 +960,7 @@ namespace matchit
             constexpr explicit Ds(Patterns const &...patterns) : mPatterns{patterns...} {}
             constexpr auto const &patterns() const { return mPatterns; }
 
-            using Type = std::tuple<EscapeArrayT<Patterns>...>;
+            using Type = std::tuple<InternalPatternT<Patterns>...>;
 
         private:
             Type mPatterns;
