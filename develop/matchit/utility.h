@@ -93,16 +93,16 @@ namespace matchit
 
     constexpr auto dsVia = [](auto &&...members)
     {
-      return [members...](auto &&...pats)
+      return [members...](auto ...pats)
       { return and_(app(members, pats)...); };
     };
 
     template <typename T>
     constexpr auto asDsVia = [](auto &&...members)
     {
-      return [members...](auto &&...pats)
+      return [members...](auto ...pats)
       {
-        return as<T>(and_(app(members, pats)...));
+        return as<T>(dsVia(members...)(pats...));
       };
     };
 
