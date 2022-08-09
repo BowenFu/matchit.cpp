@@ -591,3 +591,7 @@ If you have questions regarding the library, I would like to invite you to [open
 - [jbandela/simple_match](https://github.com/jbandela/simple_match/)
 - [solodon4/Mach7](https://github.com/solodon4/Mach7)
 - [C++ Pattern Matching Proposal](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1371r3.pdf)
+
+## Other Work
+
+If you are interested in `match(it)`, you may also be interested in `[hspp](https://github.com/BowenFu/hspp)` which brings Haskell style programming to C++.
