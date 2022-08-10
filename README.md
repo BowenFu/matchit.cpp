@@ -594,4 +594,4 @@ If you have questions regarding the library, I would like to invite you to [open
 
 ## Other Work
 
-If you are interested in `match(it)`, you may also be interested in `[hspp](https://github.com/BowenFu/hspp)` which brings Haskell style programming to C++.
+If you are interested in `match(it)`, you may also be interested in [hspp](https://github.com/BowenFu/hspp) which brings Haskell style programming to C++.
