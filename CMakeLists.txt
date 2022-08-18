@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.15...3.19)
 
 project(
-    "match(it)"
+    "matchit"
     VERSION 1.0.0
     LANGUAGES CXX
     DESCRIPTION
-    "A lightweight single-header pattern-matching library for C++17 with macro-free APIs."
+    "match(it): A lightweight single-header pattern-matching library for C++17 with macro-free APIs."
     HOMEPAGE_URL  "https://github.com/BowenFu/matchit.cpp")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -54,30 +54,36 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif()
 endif()
 
-install(TARGETS matchit
-        EXPORT matchit_Targets
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(
+    TARGETS matchit
+    EXPORT matchitTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+        DESTINATION include)
+
+install(
+    EXPORT matchitTargets
+    FILE matchitTargets.cmake
+    NAMESPACE matchit::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/matchit)
+
+configure_file(${PROJECT_SOURCE_DIR}/cmake/matchitConfig.cmake.in
+                matchitConfig.cmake @ONLY)
 
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file("matchitConfigVersion.cmake"
-                                 VERSION ${PROJECT_VERSION}
-                                 COMPATIBILITY SameMajorVersion)
+write_basic_package_version_file(
+    matchitConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY SameMajorVersion)
 
-configure_package_config_file(
-  "${PROJECT_SOURCE_DIR}/cmake/matchitConfig.cmake.in"
-  "${PROJECT_BINARY_DIR}/matchitConfig.cmake"
-  INSTALL_DESTINATION
-  ${CMAKE_INSTALL_DATAROOTDIR}/matchit/cmake)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matchitConfig.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/matchitConfigVersion.cmake
+         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/matchit)
 
-install(EXPORT matchit_Targets
-        FILE matchitTargets.cmake
-        NAMESPACE matchit::
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/matchit/cmake)
-
-install(FILES "${PROJECT_BINARY_DIR}/matchitConfig.cmake"
-              "${PROJECT_BINARY_DIR}/matchitConfigVersion.cmake"
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/matchit/cmake)
-
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/matchit DESTINATION include)
+install(
+    FILES ${PROJECT_SOURCE_DIR}/LICENSE
+    DESTINATION ${CMAKE_INSTALL_DOCDIR})
