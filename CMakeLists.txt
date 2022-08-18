@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.15...3.19)
+
 project(
-    Matchit
+    "matchit"
     VERSION 1.0.0
-    LANGUAGES CXX)
+    LANGUAGES CXX
+    DESCRIPTION
+    "match(it): A lightweight single-header pattern-matching library for C++17 with macro-free APIs."
+    HOMEPAGE_URL  "https://github.com/BowenFu/matchit.cpp")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -29,10 +33,17 @@ if (CMAKE_BUILD_TYPE STREQUAL "MSAN")
     add_link_options("-L${PROJECT_SOURCE_DIR}/libcxx_msan/lib;-lc++abi")
 endif() #CMAKE_BUILD_TYPE STREQUAL "MSAN"
 
+include(GNUInstallDirs)
+
 # Target.
 add_library(matchit INTERFACE)
-target_include_directories(matchit INTERFACE
-  ${PROJECT_SOURCE_DIR}/include)
+
+target_include_directories(
+  matchit
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
+target_compile_features(matchit INTERFACE cxx_std_17)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(Sanitizers)
@@ -42,3 +53,37 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         add_subdirectory(sample)
     endif()
 endif()
+
+
+install(
+    TARGETS matchit
+    EXPORT matchitTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+        DESTINATION include)
+
+install(
+    EXPORT matchitTargets
+    FILE matchitTargets.cmake
+    NAMESPACE matchit::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/matchit)
+
+configure_file(${PROJECT_SOURCE_DIR}/cmake/matchitConfig.cmake.in
+                matchitConfig.cmake @ONLY)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    matchitConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matchitConfig.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/matchitConfigVersion.cmake
+         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/matchit)
+
+install(
+    FILES ${PROJECT_SOURCE_DIR}/LICENSE
+    DESTINATION ${CMAKE_INSTALL_DOCDIR})
