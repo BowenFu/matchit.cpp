@@ -72,7 +72,7 @@ message(STATUS "Matchit header are present at ${matchit_SOURCE_DIR}")
 
 And add `${matchit_SOURCE_DIR}/include` to your include path.
 
-### Option 2.1 Manage with cmake find_package
+### Option 3. Manage with cmake find_package
 
 Clone the repo via
 ```
