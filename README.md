@@ -38,11 +38,17 @@
 
 ### Option 1. Download `matchit.h`
 
-Simply download the header file `matchit.h` and put it in your include directory for dependencies.
+Simply download the header file [`matchit.h`](https://raw.githubusercontent.com/BowenFu/matchit.cpp/main/include/matchit.h) and put it in your include directory for dependencies.
 
 That's it.
 
-### Option 2. Manage with cmake
+You can download via this bash command
+
+```bash
+wget https://raw.githubusercontent.com/BowenFu/matchit.cpp/main/include/matchit.h
+```
+
+### Option 2. Manage with cmake FetchContent
 
 Include the code snippet in your CMakeLists.txt:
 
@@ -65,6 +71,24 @@ message(STATUS "Matchit header are present at ${matchit_SOURCE_DIR}")
 ```
 
 And add `${matchit_SOURCE_DIR}/include` to your include path.
+
+### Option 2.1 Manage with cmake find_package
+
+Clone the repo via
+```
+git clone --depth 1 https://github.com/BowenFu/matchit.cpp
+```
+
+Install the library via
+```
+cd matchit.cpp
+cmake -B ./build
+cd build
+make install
+```
+
+Then use find_package in your CMakeLists.txt.
+
 
 ## Syntax Design
 
