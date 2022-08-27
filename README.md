@@ -622,7 +622,7 @@ auto badPattern()
 
 Good practice is to define the `Id` close to its usage in pattern matching.
 ```c++
-auto badPattern()
+auto goodPattern()
 {
     Id<int> x;
     auto somePattern = composeSomePattern(x);
