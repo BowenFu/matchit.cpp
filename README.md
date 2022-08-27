@@ -89,6 +89,14 @@ make install
 
 Then use find_package in your CMakeLists.txt.
 
+### Option 4. Manage with vcpkg
+
+(Thanks to @[daljit97](https://github.com/daljit97) for adding the support.)
+
+```
+vcpkg install matchit
+```
+
 
 ## Syntax Design
 
@@ -459,7 +467,7 @@ Some and none patterns are not atomic patterns in `match(it)`, they are composed
 template <typename T>
 constexpr auto cast = [](auto && input) {
     return static_cast<T>(input);
-}; 
+};
 
 constexpr auto deref = [](auto &&x) { return *x; };
 
@@ -587,6 +595,44 @@ There is additional **Customziation Point**.
 
 Users can specialize `PatternTraits` if they want to add a brand new pattern.
 
+### Hello Black Hole!
+
+One thing to note is that `Id` is not a plain type. Any copies of it are just references to it.
+So do not try to return it from where it is defined.
+
+A bad case would be
+
+```c++
+auto badId()
+{
+    Id<int> x;
+    return x;
+}
+```
+
+Returning a composed pattern including a local `Id` is also incorrect.
+
+```c++
+auto badPattern()
+{
+    Id<int> x;
+    return composeSomePattern(x);
+}
+```
+
+Good practice is to define the `Id` close to its usage in pattern matching.
+```c++
+auto badPattern()
+{
+    Id<int> x;
+    auto somePattern = composeSomePattern(x);
+    return match(...)
+    (
+        pattern | somePattern = ...
+    );
+}
+```
+
 ## Real world use case
 
 [`mathiu`](https://github.com/BowenFu/mathiu.cpp) is a simple computer algebra system built upon `match(it)`.
@@ -603,7 +649,9 @@ std::cout << toString(d) << std::endl;
 
 ## Contact
 
-If you have questions regarding the library, I would like to invite you to [open an issue at GitHub](https://github.com/bowenfu/matchit.cpp/issues/new/choose).
+If you have any questions or ideas regarding the library, I would like to invite you to [open an issue at GitHub](https://github.com/bowenfu/matchit.cpp/issues/new/choose).
+
+Discussions / issues / PRs are welcome.
 
 ## Related Work
 
