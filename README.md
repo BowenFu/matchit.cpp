@@ -91,7 +91,7 @@ Then use find_package in your CMakeLists.txt.
 
 ### Option 4. Manage with vcpkg
 
-(Thanks @daljit97 for adding the support.)
+(Thanks to @[daljit97](https://github.com/daljit97) for adding the support.)
 
 ```
 vcpkg install matchit
@@ -467,7 +467,7 @@ Some and none patterns are not atomic patterns in `match(it)`, they are composed
 template <typename T>
 constexpr auto cast = [](auto && input) {
     return static_cast<T>(input);
-}; 
+};
 
 constexpr auto deref = [](auto &&x) { return *x; };
 
