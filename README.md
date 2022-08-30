@@ -102,7 +102,7 @@ vcpkg install matchit
 To make your debugging easier, try to write your lambda function body in separate lines so that you can set break points in it.
 
 ```c++
-[&]
+pattern | xyz = [&]
 {
     // Separate lines for function body <- set break points here
 }
