@@ -97,6 +97,28 @@ Then use find_package in your CMakeLists.txt.
 vcpkg install matchit
 ```
 
+## Tips for Debugging
+
+To make your debugging easier, try to write your lambda function body in separate lines so that you can set break points in it.
+
+```c++
+[&]
+{
+    // Separate lines for function body <- set break points here
+}
+```
+
+is much more debugging-friendly compared to
+
+```c++
+pattern | xyz = [&] { /* some codes here */ }, // <- Set break points here, you will debug into the library.
+```
+
+Do not debug into this library unless you really decide to root cause / fix some bugs in this library, just like you won't debug into STL variant or ranges.
+
+Please try to create a minimal sample to reproduce the issues you've met. You can root cause the issue more quickly in that way.
+
+You can also create an issue in this repo and attach the minimal sample codes and I'll try to response as soon as possible (sometimes please expect one or two days delay).
 
 ## Syntax Design
 
