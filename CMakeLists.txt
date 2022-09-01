@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15...3.19)
 
 project(
     "matchit"
-    VERSION 1.0.0
+    VERSION 1.0.1
     LANGUAGES CXX
     DESCRIPTION
     "match(it): A lightweight single-header pattern-matching library for C++17 with macro-free APIs."

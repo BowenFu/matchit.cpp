@@ -669,11 +669,22 @@ auto const d = diff(e, x);
 std::cout << toString(d) << std::endl;
 ```
 
+## Support this library
+
+Please star the repo, share the repo, or sponsor one dollar to let me know this library matters.
+
+## Projects using this library
+
+[opennask](https://github.com/HobbyOSs/opennask) : An 80x86 assembler like MASM/NASM for the tiny OS.
+
+
+If you are aware of other projects using this library, please let me know by submitting an issue or an PR.
+
 ## Contact
 
-If you have any questions or ideas regarding the library, I would like to invite you to [open an issue at GitHub](https://github.com/bowenfu/matchit.cpp/issues/new/choose).
+If you have any questions or ideas regarding the library, please [open an issue](https://github.com/bowenfu/matchit.cpp/issues/new/choose).
 
-Discussions / issues / PRs are welcome.
+Discussions / issues / PRs are all welcome.
 
 ## Related Work
 
