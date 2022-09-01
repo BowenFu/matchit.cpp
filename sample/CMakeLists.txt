@@ -50,6 +50,7 @@ Closed-Class-Hierarchy
 Matcher-within
 visit
 graph
+mutation
 )
 
 foreach(sample ${MATCHIT_SAMPLES})
