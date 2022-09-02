@@ -9,9 +9,9 @@
 #include <type_traits>
 #include <variant>
 
-#if !defined(NO_SCALAR_REFERENCE_USED_IN_PATTERNS)
-#define NO_SCALAR_REFERENCE_USED_IN_PATTERNS 0
-#endif // !defined(NO_SCALAR_REFERENCE_USED_IN_PATTERNS)
+#if !defined(NO_SCALAR_REFERENCES_USED_IN_PATTERNS)
+#define NO_SCALAR_REFERENCES_USED_IN_PATTERNS 0
+#endif // !defined(NO_SCALAR_REFERENCES_USED_IN_PATTERNS)
 
 namespace matchit
 {
@@ -574,9 +574,9 @@ namespace matchit
             template <typename Value>
             using AppResultCurTuple =
                 std::conditional_t<std::is_lvalue_reference_v<AppResult<Value>>
-#if NO_SCALAR_REFERENCE_USED_IN_PATTERNS
+#if NO_SCALAR_REFERENCES_USED_IN_PATTERNS
                                     || std::is_scalar_v<AppResult<Value>>
-#endif // NO_SCALAR_REFERENCE_USED_IN_PATTERNS
+#endif // NO_SCALAR_REFERENCES_USED_IN_PATTERNS
                                     ,
                                    std::tuple<>,
                                    std::tuple<std::decay_t<AppResult<Value>>>>;
