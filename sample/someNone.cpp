@@ -1,3 +1,5 @@
+#define NO_SCALAR_REFERENCE_USED_IN_PATTERNS 1
+
 #include "matchit.h"
 #include <iostream>
 #include <optional>
