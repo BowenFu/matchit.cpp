@@ -31,3 +31,14 @@ TEST(App, someAs)
   auto const x = std::unique_ptr<Base>{new Derived};
   EXPECT_TRUE(matched(x, some(as<Derived>(_))));
 }
+
+TEST(App, scalarPtr)
+{
+  auto const x = std::make_unique<int>(10);
+  Id<int*> xPtr;
+  match(x)
+  (
+    pattern | some(as<int>(asPtr<int>(xPtr))) = [&] { *(*xPtr) = 20 ; }
+  );
+  EXPECT_EQ(*x, 20);
+}

@@ -92,7 +92,20 @@ namespace matchit
       {
         return dynamic_cast<T*>(std::addressof(b));
       }
+
+      constexpr auto operator()(T const& b) const
+      {
+        return std::addressof(b);
+      }
+
+      constexpr auto operator()(T& b) const
+      {
+        return std::addressof(b);
+      }
     };
+
+    static_assert(std::is_invocable_v<AsPointer<int>, int>);
+    static_assert(std::is_invocable_v<AsPointer<std::tuple<int>>, std::tuple<int>>);
 
     template <typename T>
     constexpr AsPointer<T> asPointer;
