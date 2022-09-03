@@ -122,8 +122,8 @@ namespace matchit
         template <typename Tuple>
         class Unique;
 
-        template <typename Tuple>
-        using UniqueT = typename Unique<Tuple>::type;
+        template <typename... Ts>
+        using UniqueT = typename Unique<std::tuple<Ts...>>::type;
 
         template <>
         class Unique<std::tuple<>>
@@ -136,14 +136,14 @@ namespace matchit
         class Unique<std::tuple<T, Ts...>>
         {
         public:
-            using type = PrependUniqueT<T, UniqueT<std::tuple<Ts...>>>;
+            using type = PrependUniqueT<T, UniqueT<Ts...>>;
         };
 
         static_assert(
-            std::is_same_v<std::tuple<int32_t>, UniqueT<std::tuple<int32_t, int32_t>>>);
+            std::is_same_v<std::tuple<int32_t>, UniqueT<int32_t, int32_t>>);
         static_assert(
             std::is_same_v<std::tuple<std::tuple<>, int32_t>,
-                           UniqueT<std::tuple<int32_t, std::tuple<>, int32_t>>>);
+                           UniqueT<int32_t, std::tuple<>, int32_t>>);
 
         using std::get;
 
@@ -268,9 +268,12 @@ namespace matchit
         };
 
         template <typename... Ts>
+        using UniqVariant = typename Variant<UniqueT<Ts...>>::type;
+
+        template <typename... Ts>
         class Context
         {
-            using ElementT = typename Variant<UniqueT<std::tuple<Ts...>>>::type;
+            using ElementT = UniqVariant<Ts...>;
             using ContainerT = std::array<ElementT, sizeof...(Ts)>;
             ContainerT mMemHolder;
             size_t mSize = 0;
@@ -745,22 +748,23 @@ namespace matchit
 
         template <typename Type>
         using ValueVariant =
-            std::conditional_t<std::is_abstract_v<Type>,
-                               std::variant<std::monostate, Type const *>,
-                               std::variant<std::monostate, Type, Type const *>>;
+                std::conditional_t<std::is_abstract_v<Type>,
+                                UniqVariant<Type*, Type const *>,
+                                UniqVariant<Type, Type*, Type const *>>;
 
         template <typename Type, typename Value>
         struct StorePointer<Type, Value,
                             std::void_t<decltype(std::declval<ValueVariant<Type> &>() =
                                                      &std::declval<Value>())>>
-            : std::conjunction<std::is_lvalue_reference<Value>,
-                               std::negation<std::is_scalar<Value>>>
+            : std::is_reference<Value> // need to double check this condition. to loosen it.
         {
         };
 
+        static_assert(!StorePointer<char, char>::value);
+        // static_assert(StorePointer<std::tuple<char, int>, std::tuple<char, int>>::value);
         static_assert(StorePointer<char, char &>::value);
-        static_assert(StorePointer<const char, char &>::value);
         static_assert(StorePointer<const char, const char &>::value);
+        static_assert(StorePointer<const char, char &>::value);
         static_assert(StorePointer<std::tuple<int32_t &, int32_t &> const,
                                    std::tuple<int32_t &, int32_t &> const &>::value);
 
@@ -824,6 +828,7 @@ namespace matchit
                     return std::visit(
                         overload([](Type const &v) -> Type const & { return v; },
                                  [](Type const *p) -> Type const & { return *p; },
+                                 [](Type *p) -> Type const & { return *p; },
                                  [](std::monostate const &) -> Type const & {
                                      throw std::logic_error("invalid state!");
                                  }),
@@ -833,14 +838,58 @@ namespace matchit
                 constexpr decltype(auto) mutableValue()
                 {
                     return std::visit(
-                        overload([](Type &v) -> Type & { return v; },
-                                 [](Type const *) -> Type & {
-                                     throw std::logic_error(
-                                         "Cannot get mutableValue for pointer type!");
-                                 },
-                                 [](std::monostate &) -> Type & {
-                                     throw std::logic_error("Invalid state!");
-                                 }),
+                        overload(
+                            [](Type &) -> Type &
+                            {
+                                throw std::logic_error(
+                                    "Cannot get mutableValue for value type!");
+                            },
+                            [](Type * v) -> Type &
+                            {
+                                if (v == nullptr)
+                                {
+                                    throw std::logic_error(
+                                        "Trying to dereference a nullptr!");
+                                }
+                                return *v;
+                            },
+                            [](Type const *) -> Type &
+                            {
+                                throw std::logic_error(
+                                    "Cannot get mutableValue for pointer type!");
+                            },
+                            [](std::monostate &) -> Type &
+                            {
+                                throw std::logic_error("Invalid state!");
+                            }),
+                        mVariant);
+                }
+                constexpr decltype(auto) movableValue()
+                {
+                    return std::visit(
+                        overload(
+                            [](Type &v) -> Type &&
+                            {
+                                return std::move(v);
+                            },
+                            [](Type * v) -> Type &&
+                            {
+                                if (v == nullptr)
+                                {
+                                    throw std::logic_error(
+                                        "Trying to dereference a nullptr!");
+                                }
+                                return std::move(*v);
+                            },
+                            [](Type const *) -> Type &&
+                            {
+                                throw std::logic_error(
+                                    "Cannot get movableValue from const pointer type!");
+                            },
+                            [](std::monostate &) -> Type &&
+                            {
+                                throw std::logic_error("Invalid state!");
+                            }),
                         mVariant);
                 }
                 constexpr void reset(int32_t depth)
@@ -924,9 +973,10 @@ namespace matchit
             constexpr bool hasValue() const { return block().hasValue(); }
             // non-const to inform users not to mark Id as const.
             constexpr Type const &value() { return block().value(); }
+            constexpr Type & mutableValue() { return block().mutableValue(); }
             // non-const to inform users not to mark Id as const.
             constexpr Type const &operator*() { return value(); }
-            constexpr Type &&move() { return std::move(block().mutableValue()); }
+            constexpr Type &&move() { return std::move(block().movableValue()); }
         };
 
         template <typename Type>
