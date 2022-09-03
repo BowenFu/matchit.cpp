@@ -52,8 +52,8 @@ void sample()
             // clang-format on
             << std::endl;
 
-  constexpr uint64_t n_items = 20'832'425U;
-  constexpr uint64_t bytes_per_item = 12U;
+  constexpr auto n_items = 20'832'425U;
+  constexpr auto bytes_per_item = 12U;
 
   Id<uint64_t> size;
   match(n_items * bytes_per_item)(

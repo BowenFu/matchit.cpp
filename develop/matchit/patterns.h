@@ -122,8 +122,8 @@ namespace matchit
         template <typename Tuple>
         class Unique;
 
-        template <typename Tuple>
-        using UniqueT = typename Unique<Tuple>::type;
+        template <typename... Ts>
+        using UniqueT = typename Unique<std::tuple<Ts...>>::type;
 
         template <>
         class Unique<std::tuple<>>
@@ -136,14 +136,14 @@ namespace matchit
         class Unique<std::tuple<T, Ts...>>
         {
         public:
-            using type = PrependUniqueT<T, UniqueT<std::tuple<Ts...>>>;
+            using type = PrependUniqueT<T, UniqueT<Ts...>>;
         };
 
         static_assert(
-            std::is_same_v<std::tuple<int32_t>, UniqueT<std::tuple<int32_t, int32_t>>>);
+            std::is_same_v<std::tuple<int32_t>, UniqueT<int32_t, int32_t>>);
         static_assert(
             std::is_same_v<std::tuple<std::tuple<>, int32_t>,
-                           UniqueT<std::tuple<int32_t, std::tuple<>, int32_t>>>);
+                           UniqueT<int32_t, std::tuple<>, int32_t>>);
 
         using std::get;
 
@@ -268,9 +268,12 @@ namespace matchit
         };
 
         template <typename... Ts>
+        using UniqVariant = typename Variant<UniqueT<Ts...>>::type;
+
+        template <typename... Ts>
         class Context
         {
-            using ElementT = typename Variant<UniqueT<std::tuple<Ts...>>>::type;
+            using ElementT = UniqVariant<Ts...>;
             using ContainerT = std::array<ElementT, sizeof...(Ts)>;
             ContainerT mMemHolder;
             size_t mSize = 0;
@@ -745,13 +748,9 @@ namespace matchit
 
         template <typename Type>
         using ValueVariant =
-            std::conditional_t<std::is_const_v<Type>,
                 std::conditional_t<std::is_abstract_v<Type>,
-                                std::variant<std::monostate, Type*>,
-                                std::variant<std::monostate, Type, Type*>>,
-                std::conditional_t<std::is_abstract_v<Type>,
-                                std::variant<std::monostate, Type*, Type const *>,
-                                std::variant<std::monostate, Type, Type*, Type const *>>>;
+                                UniqVariant<Type*, Type const *>,
+                                UniqVariant<Type, Type*, Type const *>>;
 
         template <typename Type, typename Value>
         struct StorePointer<Type, Value,
