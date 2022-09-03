@@ -234,16 +234,13 @@ TEST(Id, AppToId5PlusPro)
   EXPECT_EQ(*result, 11);
 }
 
-TEST(Id, AppToId5PlusProNegative)
+TEST(Id, AppToId5PlusPro2)
 {
-  auto const invalidMove = []
-  {
-    Id<std::unique_ptr<int32_t>> ii, jj;
-    match(std::make_unique<int32_t>(11))(
-        pattern | and_(ii, jj) = [&]
-        { return jj.move(); });
-  };
-  EXPECT_THROW(invalidMove(), std::logic_error);
+  Id<std::unique_ptr<int32_t>> ii, jj;
+  auto const result = match(std::make_unique<int32_t>(11))(
+      pattern | and_(ii, jj) = [&]
+      { return jj.move(); });
+  EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, AppToId6)
@@ -301,11 +298,12 @@ TEST(Id, invalidValue)
   EXPECT_THROW(*x, std::logic_error);
 }
 
-TEST(Id, invalidMove)
+TEST(Id, move)
 {
   Id<std::string> x;
   EXPECT_THROW(x.move(), std::logic_error);
   std::string str = "12345";
   x.matchValue(str);
-  EXPECT_THROW(x.move(), std::logic_error);
+  auto y = x.move();
+  EXPECT_TRUE((*x).empty());
 }

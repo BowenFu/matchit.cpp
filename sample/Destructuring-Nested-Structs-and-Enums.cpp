@@ -26,7 +26,6 @@ int32_t main()
   using namespace matchit;
   Id<int32_t> r, g, b;
   Id<int32_t> h, s, v;
-  Id<std::string> text;
   match(msg)(
       pattern | as<ChangeColor>(as<Rgb>(ds(r, g, b))) =
           [&]

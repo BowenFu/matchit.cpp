@@ -25,6 +25,7 @@ constexpr std::array<int32_t, 2> quoRem(int32_t dividend, int32_t divisor)
   );
 }
 
+// todo: make Id variants for Id<T> Id<T&> Id<T const&> Id<T&&>
 constexpr auto qrResult1 = quoRem(12, 6);
 static_assert(qrResult1[0] == 2);
 static_assert(qrResult1[1] == 0);
