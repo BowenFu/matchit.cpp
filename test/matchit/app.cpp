@@ -35,10 +35,10 @@ TEST(App, someAs)
 TEST(App, scalarMut)
 {
   auto const x = std::make_unique<int>(10);
-  Id<int> ii;
+  Id<int&> ii;
   match(x)
   (
-    pattern | some(as<int>(as<int>(ii))) = [&] { ii.getMut() = 20 ; }
+    pattern | some(as<int>(as<int>(ii))) = [&] { *ii = 20 ; }
   );
   EXPECT_EQ(*x, 20);
 }

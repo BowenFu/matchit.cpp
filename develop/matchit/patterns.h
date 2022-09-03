@@ -748,9 +748,15 @@ namespace matchit
 
         template <typename Type>
         using ValueVariant =
-                std::conditional_t<std::is_abstract_v<Type>,
-                                UniqVariant<Type*, Type const *>,
-                                UniqVariant<Type, Type*, Type const *>>;
+                std::conditional_t<std::is_lvalue_reference_v<Type>,
+                            UniqVariant<std::remove_reference_t<Type>*>,
+                            std::conditional_t<std::is_rvalue_reference_v<Type>,
+                                        UniqVariant<std::remove_reference_t<Type>, std::remove_reference_t<Type> *>,
+                                        std::conditional_t<std::is_abstract_v<std::remove_reference_t<Type>>,
+                                                UniqVariant<std::remove_reference_t<Type>*, std::remove_reference_t<Type> const *>,
+                                                UniqVariant<std::remove_reference_t<Type>, std::remove_reference_t<Type>*, std::remove_reference_t<Type> const *>
+                                                >
+                                            >>;
 
         template <typename Type, typename Value>
         struct StorePointer<Type, Value,
@@ -803,136 +809,174 @@ namespace matchit
         };
 
         template <typename Type>
+        class IdBlockBase
+        {
+            int32_t mDepth;
+        protected:
+            ValueVariant<Type> mVariant;
+
+        public:
+            constexpr IdBlockBase()
+            : mDepth{}
+            , mVariant{}
+            {}
+             
+            constexpr auto &variant() { return mVariant; }
+            constexpr void reset(int32_t depth)
+            {
+                if (mDepth - depth >= 0)
+                {
+                    mVariant = {};
+                    mDepth = depth;
+                }
+            }
+            constexpr void confirm(int32_t depth)
+            {
+                if (mDepth > depth || mDepth == 0)
+                {
+                    assert(depth == mDepth - 1 || depth == mDepth || mDepth == 0);
+                    mDepth = depth;
+                }
+            }
+        };
+
+        constexpr IdBlockBase<int> dummy;
+
+        template <typename Type>
+        class IdBlock : public IdBlockBase<Type>
+        {
+        public:
+            constexpr auto hasValue() const
+            {
+                return std::visit(overload([](Type const &)
+                                            { return true; },
+                                            [](Type const *)
+                                            { return true; },
+                                            // [](Type *)
+                                            // { return true; },
+                                            [](std::monostate const &)
+                                            { return false; }),
+                                    IdBlockBase<Type>::mVariant);
+            }
+            constexpr decltype(auto) get() const
+            {
+                return std::visit(
+                    overload([](Type const &v) -> Type const & { return v; },
+                                [](Type const *p) -> Type const & { return *p; },
+                                [](Type *p) -> Type const & { return *p; },
+                                [](std::monostate const &) -> Type const & {
+                                    throw std::logic_error("invalid state!");
+                                }),
+                    IdBlockBase<Type>::mVariant);
+            }
+        };
+
+        template <typename Type>
+        class IdBlock<Type const&> : public IdBlock<Type>
+        {};
+
+        template <typename Type>
+        class IdBlock<Type&> : public IdBlockBase<Type&>
+        {
+        public:
+            constexpr auto hasValue() const
+            {
+                return std::visit(overload([](Type *)
+                                           { return true; },
+                                           [](std::monostate const &)
+                                           { return false; }),
+                                    IdBlockBase<Type&>::mVariant);
+            }
+
+            constexpr decltype(auto) get()
+            {
+                return std::visit(
+                    overload(
+                        [](Type * v) -> Type &
+                        {
+                            if (v == nullptr)
+                            {
+                                throw std::logic_error(
+                                    "Trying to dereference a nullptr!");
+                            }
+                            return *v;
+                        },
+                        [](std::monostate &) -> Type &
+                        {
+                            throw std::logic_error("Invalid state!");
+                        }),
+                    IdBlockBase<Type&>::mVariant);
+            }
+        };
+
+        template <typename Type>
+        class IdBlock<Type&&> : public IdBlockBase<Type&&>
+        {
+        public:
+            constexpr auto hasValue() const
+            {
+                return std::visit(overload([](Type const &)
+                                            { return true; },
+                                            [](Type *)
+                                            { return true; },
+                                            [](std::monostate const &)
+                                            { return false; }),
+                                    IdBlockBase<Type&&>::mVariant);
+            }
+
+            constexpr decltype(auto) get()
+            {
+                return std::visit(
+                    overload(
+                        [](Type &v) -> Type &&
+                        {
+                            return std::move(v);
+                        },
+                        [](Type * v) -> Type &&
+                        {
+                            if (v == nullptr)
+                            {
+                                throw std::logic_error(
+                                    "Trying to dereference a nullptr!");
+                            }
+                            return std::move(*v);
+                        },
+                        [](std::monostate &) -> Type &&
+                        {
+                            throw std::logic_error("Invalid state!");
+                        }),
+                    IdBlockBase<Type&&>::mVariant);
+            }
+        };
+
+        template <typename Type>
+        class IdUtil
+        {
+        public:
+            template <typename Value>
+            constexpr static auto bindValue(ValueVariant<Type> &v, Value &&value,
+                                                    std::false_type /* StorePointer */)
+            {
+                // for constexpr
+                v = ValueVariant<Type>{std::forward<Value>(value)};
+            }
+            template <typename Value>
+            constexpr static auto bindValue(ValueVariant<Type> &v, Value &&value,
+                                                    std::true_type /* StorePointer */)
+            {
+                v = ValueVariant<Type>{&value};
+            }
+        };
+
+        template <typename Type>
         class Id
         {
         private:
-            class Block
-            {
-            public:
-                ValueVariant<Type> mVariant;
-                int32_t mDepth;
+            using BlockT = IdBlock<Type>;
+            using BlockVT = std::variant<BlockT, BlockT *>;
+            BlockVT mBlock = BlockT{};
 
-                constexpr auto &variant() { return mVariant; }
-                constexpr auto hasValue() const
-                {
-                    return std::visit(overload([](Type const &)
-                                               { return true; },
-                                               [](Type *)
-                                               { return true; },
-                                               [](Type const *)
-                                               { return true; },
-                                               [](std::monostate const &)
-                                               { return false; }),
-                                      mVariant);
-                }
-                constexpr decltype(auto) get() const
-                {
-                    return std::visit(
-                        overload([](Type const &v) -> Type const & { return v; },
-                                 [](Type const *p) -> Type const & { return *p; },
-                                 [](Type *p) -> Type const & { return *p; },
-                                 [](std::monostate const &) -> Type const & {
-                                     throw std::logic_error("invalid state!");
-                                 }),
-                        mVariant);
-                }
-
-                constexpr decltype(auto) getMut()
-                {
-                    return std::visit(
-                        overload(
-                            [](Type &) -> Type &
-                            {
-                                throw std::logic_error(
-                                    "Cannot get getMut for value type!");
-                            },
-                            [](Type * v) -> Type &
-                            {
-                                if (v == nullptr)
-                                {
-                                    throw std::logic_error(
-                                        "Trying to dereference a nullptr!");
-                                }
-                                return *v;
-                            },
-                            [](Type const *) -> Type &
-                            {
-                                throw std::logic_error(
-                                    "Cannot get getMut for pointer type!");
-                            },
-                            [](std::monostate &) -> Type &
-                            {
-                                throw std::logic_error("Invalid state!");
-                            }),
-                        mVariant);
-                }
-                constexpr decltype(auto) getMovable()
-                {
-                    return std::visit(
-                        overload(
-                            [](Type &v) -> Type &&
-                            {
-                                return std::move(v);
-                            },
-                            [](Type * v) -> Type &&
-                            {
-                                if (v == nullptr)
-                                {
-                                    throw std::logic_error(
-                                        "Trying to dereference a nullptr!");
-                                }
-                                return std::move(*v);
-                            },
-                            [](Type const *) -> Type &&
-                            {
-                                throw std::logic_error(
-                                    "Cannot get getMovable from const pointer type!");
-                            },
-                            [](std::monostate &) -> Type &&
-                            {
-                                throw std::logic_error("Invalid state!");
-                            }),
-                        mVariant);
-                }
-                constexpr void reset(int32_t depth)
-                {
-                    if (mDepth - depth >= 0)
-                    {
-                        mVariant = {};
-                        mDepth = depth;
-                    }
-                }
-                constexpr void confirm(int32_t depth)
-                {
-                    if (mDepth > depth || mDepth == 0)
-                    {
-                        assert(depth == mDepth - 1 || depth == mDepth || mDepth == 0);
-                        mDepth = depth;
-                    }
-                }
-            };
-            class IdUtil
-            {
-            public:
-                template <typename Value>
-                constexpr static auto bindValue(ValueVariant<Type> &v, Value &&value,
-                                                     std::false_type /* StorePointer */)
-                {
-                    // for constexpr
-                    v = ValueVariant<Type>{std::forward<Value>(value)};
-                }
-                template <typename Value>
-                constexpr static auto bindValue(ValueVariant<Type> &v, Value &&value,
-                                                     std::true_type /* StorePointer */)
-                {
-                    v = ValueVariant<Type>{&value};
-                }
-            };
-
-            using BlockVT = std::variant<Block, Block *>;
-            BlockVT mBlock = Block{};
-
-            constexpr Type const &internalValue() const { return block().get(); }
+            constexpr decltype(auto) internalValue() const { return block().get(); }
 
         public:
             constexpr Id() = default;
@@ -949,10 +993,10 @@ namespace matchit
             // non-const to inform users not to mark Id as const.
             constexpr auto at(Ooo const &) { return OooBinder<Type>{*this}; }
 
-            constexpr Block &block() const
+            constexpr BlockT &block() const
             {
-                return std::visit(overload([](Block &v) -> Block & { return v; },
-                                           [](Block *p) -> Block & { return *p; }),
+                return std::visit(overload([](BlockT &v) -> BlockT & { return v; },
+                                           [](BlockT *p) -> BlockT & { return *p; }),
                                   // constexpr does not allow mutable, we use const_cast
                                   // instead. Never declare Id as const.
                                   const_cast<BlockVT &>(mBlock));
@@ -964,9 +1008,9 @@ namespace matchit
             {
                 if (hasValue())
                 {
-                    return IdTraits<Type>::equal(internalValue(), v);
+                    return IdTraits<std::decay_t<Type>>::equal(internalValue(), v);
                 }
-                IdUtil::bindValue(block().variant(), std::forward<Value>(v),
+                IdUtil<Type>::bindValue(block().variant(), std::forward<Value>(v),
                                    StorePointer<Type, Value>{});
                 return true;
             }
@@ -974,11 +1018,13 @@ namespace matchit
             constexpr void confirm(int32_t depth) const { return block().confirm(depth); }
             constexpr bool hasValue() const { return block().hasValue(); }
             // non-const to inform users not to mark Id as const.
-            constexpr Type const &get() { return block().get(); }
-            constexpr Type & getMut() { return block().getMut(); }
+            constexpr decltype(auto) get() { return block().get(); }
             // non-const to inform users not to mark Id as const.
-            constexpr Type const &operator*() { return get(); }
-            constexpr Type &&move() { return std::move(block().getMovable()); }
+            constexpr decltype(auto) operator*() { return get(); }
+            // constexpr auto move() -> std::enable_if_t<std::is_rvalue_reference_v<Type>, Type &&>
+            // {
+            //     return std::move(block().getMovable());
+            // }
         };
 
         template <typename Type>
