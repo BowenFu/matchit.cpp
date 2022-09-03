@@ -1124,13 +1124,15 @@ namespace matchit
                 {
                     return std::visit(overload([](Type const &)
                                                { return true; },
+                                               [](Type *)
+                                               { return true; },
                                                [](Type const *)
                                                { return true; },
                                                [](std::monostate const &)
                                                { return false; }),
                                       mVariant);
                 }
-                constexpr decltype(auto) value() const
+                constexpr decltype(auto) get() const
                 {
                     return std::visit(
                         overload([](Type const &v) -> Type const & { return v; },
@@ -1142,14 +1144,14 @@ namespace matchit
                         mVariant);
                 }
 
-                constexpr decltype(auto) mutableValue()
+                constexpr decltype(auto) getMut()
                 {
                     return std::visit(
                         overload(
                             [](Type &) -> Type &
                             {
                                 throw std::logic_error(
-                                    "Cannot get mutableValue for value type!");
+                                    "Cannot get getMut for value type!");
                             },
                             [](Type * v) -> Type &
                             {
@@ -1163,7 +1165,7 @@ namespace matchit
                             [](Type const *) -> Type &
                             {
                                 throw std::logic_error(
-                                    "Cannot get mutableValue for pointer type!");
+                                    "Cannot get getMut for pointer type!");
                             },
                             [](std::monostate &) -> Type &
                             {
@@ -1171,7 +1173,7 @@ namespace matchit
                             }),
                         mVariant);
                 }
-                constexpr decltype(auto) movableValue()
+                constexpr decltype(auto) getMovable()
                 {
                     return std::visit(
                         overload(
@@ -1191,7 +1193,7 @@ namespace matchit
                             [](Type const *) -> Type &&
                             {
                                 throw std::logic_error(
-                                    "Cannot get movableValue from const pointer type!");
+                                    "Cannot get getMovable from const pointer type!");
                             },
                             [](std::monostate &) -> Type &&
                             {
@@ -1237,7 +1239,7 @@ namespace matchit
             using BlockVT = std::variant<Block, Block *>;
             BlockVT mBlock = Block{};
 
-            constexpr Type const &internalValue() const { return block().value(); }
+            constexpr Type const &internalValue() const { return block().get(); }
 
         public:
             constexpr Id() = default;
@@ -1279,11 +1281,11 @@ namespace matchit
             constexpr void confirm(int32_t depth) const { return block().confirm(depth); }
             constexpr bool hasValue() const { return block().hasValue(); }
             // non-const to inform users not to mark Id as const.
-            constexpr Type const &value() { return block().value(); }
-            constexpr Type & mutableValue() { return block().mutableValue(); }
+            constexpr Type const &get() { return block().get(); }
+            constexpr Type & getMut() { return block().getMut(); }
             // non-const to inform users not to mark Id as const.
-            constexpr Type const &operator*() { return value(); }
-            constexpr Type &&move() { return std::move(block().movableValue()); }
+            constexpr Type const &operator*() { return get(); }
+            constexpr Type &&move() { return std::move(block().getMovable()); }
         };
 
         template <typename Type>
@@ -2104,10 +2106,6 @@ namespace matchit
     constexpr auto as = [](auto const pat)
     { return app(asPointer<T>, some(pat)); };
 
-    template <typename T>
-    constexpr auto asPtr = [](auto const pat)
-    { return app(asPointer<T>, and_(pat, _ != nullptr)); };
-
     template <typename Value, typename Pattern>
     constexpr auto matched(Value &&v, Pattern &&p)
     {
@@ -2137,7 +2135,6 @@ namespace matchit
 
   } // namespace impl
   using impl::as;
-  using impl::asPtr;
   using impl::asDsVia;
   using impl::dsVia;
   using impl::matched;

@@ -114,10 +114,6 @@ namespace matchit
     constexpr auto as = [](auto const pat)
     { return app(asPointer<T>, some(pat)); };
 
-    template <typename T>
-    constexpr auto asPtr = [](auto const pat)
-    { return app(asPointer<T>, and_(pat, _ != nullptr)); };
-
     template <typename Value, typename Pattern>
     constexpr auto matched(Value &&v, Pattern &&p)
     {
@@ -147,7 +143,6 @@ namespace matchit
 
   } // namespace impl
   using impl::as;
-  using impl::asPtr;
   using impl::asDsVia;
   using impl::dsVia;
   using impl::matched;

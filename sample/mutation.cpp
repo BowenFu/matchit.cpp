@@ -24,23 +24,33 @@ class Image {
     // other stuff
 };
 
+auto operator==(Circle const&, Circle const&)
+{
+    return true;
+}
+
+auto operator==(Square const&, Square const&)
+{
+    return true;
+}
+
 using Visual = std::variant<Circle, Square, Image>;
 
 using namespace matchit;
 
 void setLineWidth(Visual &visual, float width) {
-    Id<Square*> sq;
-    Id<Circle*> cir;
+    Id<Square> sq;
+    Id<Circle> cir;
     match(visual)
     (
         pattern | as<Image>(_) = []{},
-        pattern | asPtr<Square>(sq) = [&]
+        pattern | as<Square>(sq) = [&]
         {
-            (*sq)->setLineWidth(width);
+            sq.getMut().setLineWidth(width);
         },
-        pattern | asPtr<Circle>(cir) = [&]
+        pattern | as<Circle>(cir) = [&]
         {
-            (*cir)->setLineWidth(width);
+            cir.getMut().setLineWidth(width);
         }
     );
 }
