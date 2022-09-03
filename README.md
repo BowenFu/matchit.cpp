@@ -99,6 +99,15 @@ Then use find_package in your CMakeLists.txt.
 vcpkg install matchit
 ```
 
+### Option 5. Manage with conan
+
+Now the library has been submitted to [Conan Center Index](https://github.com/conan-io/conan-center-index).
+
+You can now install the library via conan.
+
+(Thanks to @[sanblch](https://github.com/sanblch) for adding the support.)
+
+
 ## Tips for Debugging
 
 To make your debugging easier, try to write your lambda function body in separate lines so that you can set break points in it.
