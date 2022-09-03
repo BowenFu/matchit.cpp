@@ -39,18 +39,18 @@ using Visual = std::variant<Circle, Square, Image>;
 using namespace matchit;
 
 void setLineWidth(Visual &visual, float width) {
-    Id<Square> sq;
-    Id<Circle> cir;
+    Id<Square&> sq;
+    Id<Circle&> cir;
     match(visual)
     (
         pattern | as<Image>(_) = []{},
         pattern | as<Square>(sq) = [&]
         {
-            sq.getMut().setLineWidth(width);
+            (*sq).setLineWidth(width);
         },
         pattern | as<Circle>(cir) = [&]
         {
-            cir.getMut().setLineWidth(width);
+            (*cir).setLineWidth(width);
         }
     );
 }

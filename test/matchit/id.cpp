@@ -183,27 +183,27 @@ TEST(Id, AppToId3)
   Id<std::shared_ptr<int32_t>> ii;
   auto const result = match(std::make_shared<int32_t>(11))(
       pattern | ii = [&]
-      { return ii.move(); });
+      { return *ii; });
   EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, AppToId4)
 {
-  Id<std::shared_ptr<int32_t>> ii;
+  Id<std::shared_ptr<int32_t>&&> ii;
   auto const result = match(11)(
       pattern | app([](auto &&x)
                     { return std::make_shared<int32_t>(x); },
                     ii) = [&]
-      { return ii.move(); });
+      { return *ii; });
   EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, AppToId5)
 {
-  Id<std::unique_ptr<int32_t>> ii;
+  Id<std::unique_ptr<int32_t>&&> ii;
   auto const result = match(std::make_unique<int32_t>(11))(
       pattern | ii = [&]
-      { return ii.move(); });
+      { return *ii; });
   EXPECT_EQ(*result, 11);
 }
 
@@ -227,30 +227,30 @@ TEST(Id, AppToId5Plus2)
 
 TEST(Id, AppToId5PlusPro)
 {
-  Id<std::unique_ptr<int32_t>> jj;
+  Id<std::unique_ptr<int32_t>&&> jj;
   auto const result = match(std::make_unique<int32_t>(11))(
       pattern | and_(_, jj) = [&]
-      { return jj.move(); });
+      { return *jj; });
   EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, AppToId5PlusPro2)
 {
-  Id<std::unique_ptr<int32_t>> ii, jj;
+  Id<std::unique_ptr<int32_t>&&> ii, jj;
   auto const result = match(std::make_unique<int32_t>(11))(
       pattern | and_(ii, jj) = [&]
-      { return jj.move(); });
+      { return *jj; });
   EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, AppToId6)
 {
-  Id<std::unique_ptr<int32_t>> ii;
+  Id<std::unique_ptr<int32_t>&&> ii;
   auto const result = match(11)(
       pattern | app([](auto &&x)
                     { return std::make_unique<int32_t>(x); },
                     ii) = [&]
-      { return ii.move(); });
+      { return *ii; });
   EXPECT_EQ(*result, 11);
 }
 
@@ -259,18 +259,18 @@ TEST(Id, AppToId7)
   Id<std::optional<int32_t>> ii;
   auto const result =
       match(std::make_optional(11))(pattern | ii = [&]
-                                    { return ii.move(); });
+                                    { return *ii; });
   EXPECT_EQ(*result, 11);
 }
 
 TEST(Id, AppToId8)
 {
-  Id<std::optional<int32_t>> ii;
+  Id<std::optional<int32_t>&&> ii;
   auto const result =
       match(11)(pattern | app([](auto &&x)
                               { return std::make_optional(x); },
                               ii) = [&]
-                { return ii.move(); });
+                { return *ii; });
   EXPECT_EQ(*result, 11);
 }
 
@@ -283,12 +283,12 @@ TEST(Id, IdAtInt)
 
 TEST(Id, IdAtUnique)
 {
-  Id<std::unique_ptr<int32_t>> ii;
+  Id<std::unique_ptr<int32_t>&&> ii;
   auto const result = match(11)(
       pattern | app([](auto &&x)
                     { return std::make_unique<int32_t>(x * x); },
                     ii.at(some(_))) = [&]
-      { return ii.move(); });
+      { return *ii; });
   EXPECT_EQ(*result, 121);
 }
 
@@ -300,10 +300,10 @@ TEST(Id, invalidValue)
 
 TEST(Id, move)
 {
-  Id<std::string> x;
-  EXPECT_THROW(x.move(), std::logic_error);
+  Id<std::string&&> x;
+  EXPECT_THROW(*x, std::logic_error);
   std::string str = "12345";
   x.matchValue(str);
-  auto y = x.move();
+  auto y = *x;
   EXPECT_TRUE((*x).empty());
 }
