@@ -32,13 +32,13 @@ TEST(App, someAs)
   EXPECT_TRUE(matched(x, some(as<Derived>(_))));
 }
 
-TEST(App, scalarPtr)
+TEST(App, scalarMut)
 {
   auto const x = std::make_unique<int>(10);
-  Id<int*> xPtr;
+  Id<int> ii;
   match(x)
   (
-    pattern | some(as<int>(asPtr<int>(xPtr))) = [&] { *(*xPtr) = 20 ; }
+    pattern | some(as<int>(as<int>(ii))) = [&] { ii.getMut() = 20 ; }
   );
   EXPECT_EQ(*x, 20);
 }
