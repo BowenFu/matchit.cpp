@@ -711,3 +711,7 @@ Discussions / issues / PRs are all welcome.
 ## Other Work
 
 If you are interested in `match(it)`, you may also be interested in [hspp](https://github.com/BowenFu/hspp) which brings Haskell style programming to C++.
+
+## Sponsor(s)
+
+Thanks to @[e-dant](https://github.com/e-dant) for sponsoring this project.
