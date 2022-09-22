@@ -820,7 +820,7 @@ namespace matchit
             : mDepth{}
             , mVariant{}
             {}
-             
+
             constexpr auto &variant() { return mVariant; }
             constexpr void reset(int32_t depth)
             {
@@ -928,20 +928,20 @@ namespace matchit
             {
                 return std::visit(
                     overload(
-                        [](Type &v) -> Type &&
+                        [](Type &v) -> Type &
                         {
-                            return std::move(v);
+                            return v;
                         },
-                        [](Type * v) -> Type &&
+                        [](Type * v) -> Type &
                         {
                             if (v == nullptr)
                             {
                                 throw std::logic_error(
                                     "Trying to dereference a nullptr!");
                             }
-                            return std::move(*v);
+                            return *v;
                         },
-                        [](std::monostate &) -> Type &&
+                        [](std::monostate &) -> Type &
                         {
                             throw std::logic_error("Invalid state!");
                         }),
@@ -1021,10 +1021,6 @@ namespace matchit
             constexpr decltype(auto) get() { return block().get(); }
             // non-const to inform users not to mark Id as const.
             constexpr decltype(auto) operator*() { return get(); }
-            // constexpr auto move() -> std::enable_if_t<std::is_rvalue_reference_v<Type>, Type &&>
-            // {
-            //     return std::move(block().getMovable());
-            // }
         };
 
         template <typename Type>
