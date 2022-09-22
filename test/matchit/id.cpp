@@ -203,7 +203,7 @@ TEST(Id, AppToId5)
   Id<std::unique_ptr<int32_t>&&> ii;
   auto const result = match(std::make_unique<int32_t>(11))(
       pattern | ii = [&]
-      { return *ii; });
+      { return std::move(*ii); });
   EXPECT_EQ(*result, 11);
 }
 
@@ -230,7 +230,7 @@ TEST(Id, AppToId5PlusPro)
   Id<std::unique_ptr<int32_t>&&> jj;
   auto const result = match(std::make_unique<int32_t>(11))(
       pattern | and_(_, jj) = [&]
-      { return *jj; });
+      { return std::move(*jj); });
   EXPECT_EQ(*result, 11);
 }
 
@@ -239,7 +239,7 @@ TEST(Id, AppToId5PlusPro2)
   Id<std::unique_ptr<int32_t>&&> ii, jj;
   auto const result = match(std::make_unique<int32_t>(11))(
       pattern | and_(ii, jj) = [&]
-      { return *jj; });
+      { return std::move(*jj); });
   EXPECT_EQ(*result, 11);
 }
 
@@ -250,7 +250,7 @@ TEST(Id, AppToId6)
       pattern | app([](auto &&x)
                     { return std::make_unique<int32_t>(x); },
                     ii) = [&]
-      { return *ii; });
+      { return std::move(*ii); });
   EXPECT_EQ(*result, 11);
 }
 
@@ -288,7 +288,7 @@ TEST(Id, IdAtUnique)
       pattern | app([](auto &&x)
                     { return std::make_unique<int32_t>(x * x); },
                     ii.at(some(_))) = [&]
-      { return *ii; });
+      { return std::move(*ii); });
   EXPECT_EQ(*result, 121);
 }
 
@@ -304,6 +304,6 @@ TEST(Id, move)
   EXPECT_THROW(*x, std::logic_error);
   std::string str = "12345";
   x.matchValue(str);
-  auto y = *x;
+  auto y = std::move(*x);
   EXPECT_TRUE((*x).empty());
 }

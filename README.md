@@ -680,10 +680,6 @@ auto const d = diff(e, x);
 std::cout << toString(d) << std::endl;
 ```
 
-## Support this library
-
-Please star the repo, share the repo, or sponsor one dollar to let me know this library matters.
-
 ## Projects using this library
 
 [opennask](https://github.com/HobbyOSs/opennask) : An 80x86 assembler like MASM/NASM for the tiny OS.
@@ -712,6 +708,14 @@ Discussions / issues / PRs are all welcome.
 
 If you are interested in `match(it)`, you may also be interested in [hspp](https://github.com/BowenFu/hspp) which brings Haskell style programming to C++.
 
+## Support this library
+
+Please star the repo, share the repo, or sponsor one dollar to let me know this library matters.
+
 ## Sponsor(s)
 
 Thanks to @[e-dant](https://github.com/e-dant) for sponsoring this project.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=bowenfu/matchit.cpp&type=Date)](https://star-history.com/#bowenfu/matchit.cpp&Date)
