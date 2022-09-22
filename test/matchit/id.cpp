@@ -304,6 +304,6 @@ TEST(Id, move)
   EXPECT_THROW(*x, std::logic_error);
   std::string str = "12345";
   x.matchValue(str);
-  auto y = *x;
+  auto y = std::move(*x);
   EXPECT_TRUE((*x).empty());
 }
