@@ -30,16 +30,16 @@ namespace matchit
         }
 
         template <typename T>
-        constexpr auto expr(Nullary<T> const &v)
-        {
-            return v;
-        }
-
-        template <typename T>
         constexpr auto expr(T const &v)
         {
             return nullary([&]
                            { return v; });
+        }
+
+        template <typename T> 
+        constexpr auto toNullary(Nullary<T> const &v)
+        {
+            return v;
         }
 
         template <typename T>

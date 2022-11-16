@@ -26,12 +26,12 @@ constexpr auto eval2(std::tuple<char, T1, T2> const& exp)
     using namespace matchit;
     Id<T1> i;
     Id<T2> j;
-    return match(exp)   // redundant expr()
+    return match(exp)   // unnecessary expr()
     (
-        pattern | ds('+', i, j) | when (expr((i + j) > 0)) = expr(i + j),
-        pattern | ds('-', i, j) | when (expr(true)) = expr(i - j),
-        pattern | ds('*', i, j) | when (expr(i)) = expr(i),
-        pattern | ds('/', i, j) = expr(expr(12345)),
+        pattern | ds('+', i, j) | when((i + j) > 0) = i + j,
+        pattern | ds('-', i, j) | when(expr(true)) = i - j,
+        pattern | ds('*', i, j) | when(expr(i)) = expr(i),
+        pattern | ds('/', i, j) = expr(12345),
         pattern | _ = [] { return -1; }
     );
 }
@@ -45,7 +45,7 @@ TEST(OptExpr, no_expr)
     EXPECT_EQ(eval1(std::tuple{' ', 20, 3}), -1);
 }
 
-TEST(OptExpr, redundant_expr)
+TEST(OptExpr, unnecessary_expr)
 {
     EXPECT_EQ(eval2(std::tuple{'+', 20, 3}), 23);
     EXPECT_EQ(eval2(std::tuple{'-', 20, 3}), 17);

@@ -105,25 +105,29 @@ namespace matchit
         }
 
         template <typename T>
-        constexpr auto expr(Nullary<T> const &v)
-        {
-            return v;
-        }
-
-        template <typename T>
         constexpr auto expr(T const &v)
         {
             return nullary([&]
                            { return v; });
         }
 
+        template <typename T> 
+        constexpr auto toNullary(Nullary<T> const &v)
+        {
+            return v;
+        }
+
         template <typename T>
         constexpr auto toNullary(T &&v)
         {
-            if constexpr ( std::is_invocable_v<std::decay_t<T>> )
+            if constexpr (std::is_invocable_v<std::decay_t<T>>)
+            {
                 return v;
+            }
             else
+            {
                 return expr(v);
+            }
         }
 
         // for constant
