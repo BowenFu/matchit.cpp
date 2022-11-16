@@ -12,9 +12,9 @@ constexpr auto eval1(std::tuple<char, T1, T2> const& exp)
     Id<T2> j;
     return match(exp)   // no expr()
     (
-        pattern | ds('+', i, j) | when ( (i + j) > 0 ) = i + j,
-        pattern | ds('-', i, j) | when ( true ) = i - j,
-        pattern | ds('*', i, j) | when ( i ) = i,
+        pattern | ds('+', i, j) | when((i + j) > 0) = i + j,
+        pattern | ds('-', i, j) | when(true) = i - j,
+        pattern | ds('*', i, j) | when(i) = i,
         pattern | ds('/', i, j) = 12345,
         pattern | _ = [] { return -1; }
     );
