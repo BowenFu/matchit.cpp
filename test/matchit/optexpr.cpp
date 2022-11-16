@@ -28,9 +28,9 @@ constexpr auto eval2(std::tuple<char, T1, T2> const& exp)
     Id<T2> j;
     return match(exp)   // redundant expr()
     (
-        pattern | ds('+', i, j) | when ( expr((i + j) > 0) ) = expr(i + j),
-        pattern | ds('-', i, j) | when ( expr(true) ) = expr(i - j),
-        pattern | ds('*', i, j) | when ( expr(i) ) = expr(i),
+        pattern | ds('+', i, j) | when (expr((i + j) > 0)) = expr(i + j),
+        pattern | ds('-', i, j) | when (expr(true)) = expr(i - j),
+        pattern | ds('*', i, j) | when (expr(i)) = expr(i),
         pattern | ds('/', i, j) = expr(expr(12345)),
         pattern | _ = [] { return -1; }
     );
