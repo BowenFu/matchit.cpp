@@ -45,10 +45,14 @@ namespace matchit
         template <typename T>
         constexpr auto toNullary(T &&v)
         {
-            if constexpr ( std::is_invocable_v<std::decay_t<T>> )
+            if constexpr (std::is_invocable_v<std::decay_t<T>>)
+            {
                 return v;
+            }
             else
+            {
                 return expr(v);
+            }
         }
 
         // for constant
