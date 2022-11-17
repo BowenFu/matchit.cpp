@@ -36,12 +36,6 @@ namespace matchit
                            { return v; });
         }
 
-        template <typename T> 
-        constexpr auto toNullary(Nullary<T> const &v)
-        {
-            return v;
-        }
-
         template <typename T>
         constexpr auto toNullary(T &&v)
         {
