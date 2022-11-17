@@ -347,11 +347,12 @@ namespace matchit
         };
 
         template <typename Pred>
-        constexpr auto when(Pred const &pred)
+        constexpr auto when(Pred &&pred)
         {
-            return When<Pred>{pred};
+            auto p = toNullary(pred);
+            return When<decltype(p)>{p};
         }
-
+        
         template <typename Pattern>
         class PatternHelper
         {
@@ -359,9 +360,10 @@ namespace matchit
             constexpr explicit PatternHelper(Pattern const &pattern)
                 : mPattern{pattern} {}
             template <typename Func>
-            constexpr auto operator=(Func const &func)
+            constexpr auto operator=(Func &&func)
             {
-                return PatternPair<Pattern, Func>{mPattern, func};
+                auto f = toNullary(func);
+                return PatternPair<Pattern, decltype(f)>{mPattern, f};
             }
             template <typename Pred>
             constexpr auto operator|(When<Pred> const &w)
