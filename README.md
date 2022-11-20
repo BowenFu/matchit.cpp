@@ -165,7 +165,7 @@ constexpr int32_t factorial(int32_t n)
     using namespace matchit;
     assert(n >= 0);
     return match(n)(
-        pattern | 0 = expr(1),
+        pattern | 0 = 1,
         pattern | _ = [n] { return n * factorial(n - 1); }
     );
 }
@@ -186,7 +186,7 @@ This is a function call and will return some value returned by handlers. The ret
 When handlers return values, the patterns must be exhaustive. A runtime error will happen if all patterns do not get matched.
 It is not an error if handlers' return types are all void.
 
-`expr` in the above sample is a helper function that can be used to generate a nullary function that returns a value. `expr(1)` is equivalent to `[]{return 1;}`. It can be useful for short functions.
+The handler can also be a value or an Id variable. `1` is equivalent to `[]{return 1;}`.
 
 The wildcard `_` will match any values. It is a common practice to always use it as the last pattern, playing the same role in our library as `default case` does for `switch` statements, to avoid case escaping.
 
@@ -220,8 +220,8 @@ constexpr bool contains(Map const& map, Key const& key)
 {
     using namespace matchit;
     return match(map.find(key))(
-        pattern | map.end() = expr(false),
-        pattern | _         = expr(true)
+        pattern | map.end() = false,
+        pattern | _         = true
     );
 }
 ```
@@ -234,8 +234,9 @@ We can use **Predicate Pattern** to put some restrictions on the value to be mat
 constexpr double relu(double value)
 {
     return match(value)(
-        pattern | (_ >= 0) = expr(value),
-        pattern | _        = expr(0));
+        pattern | (_ >= 0) = value,
+        pattern | _        = 0
+    );
 }
 
 static_assert(relu(5) == 5);
@@ -253,8 +254,8 @@ constexpr bool isValid(int32_t n)
 {
     using namespace matchit;
     return match(n)(
-        pattern | or_(1, 3, 5) = expr(true),
-        pattern | _            = expr(false)
+        pattern | or_(1, 3, 5) = true,
+        pattern | _            = false
     );
 }
 
@@ -280,8 +281,8 @@ constexpr bool isLarge(double value)
 {
     using namespace matchit;
     return match(value)(
-        pattern | app(_ * _, _ > 1000) = expr(true),
-        pattern | _                    = expr(false)
+        pattern | app(_ * _, _ > 1000) = true,
+        pattern | _                    = false
     );
 }
 
@@ -307,7 +308,7 @@ bool checkAndlogLarge(double value)
         pattern | app(_ * _, s.at(_ > 1000)) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
-        pattern | _ = expr(false));
+        pattern | _ = false);
 }
 ```
 
@@ -330,8 +331,8 @@ constexpr bool symmetric(std::array<int32_t, 5> const& arr)
     using namespace matchit;
     Id<int32_t> i, j; 
     return match(arr)(
-        pattern | ds(i, j, _, j, i) = expr(true),
-        pattern | _                 = expr(false)
+        pattern | ds(i, j, _, j, i) = true,
+        pattern | _                 = false
     );
 }
 
@@ -383,8 +384,8 @@ constexpr auto dsByMember(DummyStruct const&v)
     constexpr auto dsA = dsVia(&DummyStruct::size, &DummyStruct::name);
     Id<char const*> name;
     return match(v)(
-        pattern | dsA(2, name) = expr(name),
-        pattern | _ = expr("not matched")
+        pattern | dsA(2, name) = name,
+        pattern | _ = "not matched"
     );
 };
 
@@ -411,8 +412,8 @@ constexpr bool sumIs(std::array<int32_t, 2> const& arr, int32_t s)
     using namespace matchit;
     Id<int32_t> i, j;
     return match(arr)(
-        pattern | ds(i, j) | when(i + j == s) = expr(true),
-        pattern | _                           = expr(false));
+        pattern | ds(i, j) | when(i + j == s) = true,
+        pattern | _                           = false);
 }
 
 static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));
@@ -435,10 +436,10 @@ constexpr int32_t detectTuplePattern(Tuple const& tuple)
     using namespace matchit;
     return match(tuple)
     (
-        pattern | ds(2, ooo, 2)  = expr(4),
-        pattern | ds(2, ooo   )  = expr(3),
-        pattern | ds(ooo, 2   )  = expr(2),
-        pattern | ds(ooo      )  = expr(1)
+        pattern | ds(2, ooo, 2)  = 4,
+        pattern | ds(2, ooo   )  = 3,
+        pattern | ds(ooo, 2   )  = 2,
+        pattern | ds(ooo      )  = 1
     );
 }
 
@@ -457,8 +458,8 @@ constexpr bool recursiveSymmetric(Range const &range)
     Id<SubrangeT<Range const>> subrange;
     return match(range)(
         pattern | ds(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
-        pattern | ds(_, ooo, _)              = expr(false),
-        pattern | _                          = expr(true)
+        pattern | ds(_, ooo, _)              = false,
+        pattern | _                          = true
     );
 ```
 
@@ -485,7 +486,7 @@ constexpr auto square(std::optional<T> const& t)
     Id<T> id;
     return match(t)(
         pattern | some(id) = id * id,
-        pattern | none     = expr(0));
+        pattern | none     = 0);
 }
 constexpr auto x = std::make_optional(5);
 static_assert(square(x) == 25);
@@ -524,8 +525,8 @@ constexpr auto getClassName(T const& v)
 {
     using namespace matchit;
     return match(v)(
-        pattern | as<char const*>(_) = expr("chars"),
-        pattern | as<int32_t>(_)     = expr("int32_t")
+        pattern | as<char const*>(_) = "chars",
+        pattern | as<int32_t>(_)     = "int32_t"
     );
 }
 
@@ -546,8 +547,8 @@ struct Square : Shape {};
 auto getClassName(Shape const &s)
 {
     return match(s)(
-        pattern | as<Circle>(_) = expr("Circle"),
-        pattern | as<Square>(_) = expr("Square")
+        pattern | as<Circle>(_) = "Circle",
+        pattern | as<Square>(_) = "Square"
     );
 }
 ```
@@ -610,9 +611,9 @@ int32_t staticCastAs(Num const& input)
 {
     using namespace matchit;
     return match(input)(
-        pattern | as<One>(_)       = expr(1),
-        pattern | kind<Kind::kTWO> = expr(2),
-        pattern | _                = expr(3));
+        pattern | as<One>(_)       = 1,
+        pattern | kind<Kind::kTWO> = 2,
+        pattern | _                = 3);
 }
 
 int32_t main()
@@ -711,6 +712,15 @@ If you are interested in `match(it)`, you may also be interested in [hspp](https
 ## Support this library
 
 Please star the repo, share the repo, or sponsor one dollar to let me know this library matters.
+
+## Contributor(s)
+
+Thanks to all for contributing code and sending in bugs.
+
+In particular, thanks to the following contributors:
+
+Hugo Etchegoyen (@[hugoetchegoyen](https://github.com/hugoetchegoyen))
+
 
 ## Sponsor(s)
 
