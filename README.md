@@ -308,7 +308,8 @@ bool checkAndlogLarge(double value)
         pattern | app(_ * _, s.at(_ > 1000)) = [&] {
                 std::cout << value << "^2 = " << *s << " > 1000!" << std::endl;
                 return true; },
-        pattern | _ = false);
+        pattern | _ = false
+    );
 }
 ```
 
@@ -393,7 +394,7 @@ static_assert(dsByMember(DummyStruct{1, "123"}) == std::string_view{"not matched
 static_assert(dsByMember(DummyStruct{2, "123"}) == std::string_view{"123"});
 ```
 
-Let's continue the journey. 
+Let's continue the journey.
 Sometimes you have multiple identifiers and you want exert a restriction on the relationship of them. Is that possible?
 Sure! Here comes the **Match Guard**. Its syntax is
 
@@ -413,7 +414,8 @@ constexpr bool sumIs(std::array<int32_t, 2> const& arr, int32_t s)
     Id<int32_t> i, j;
     return match(arr)(
         pattern | ds(i, j) | when(i + j == s) = true,
-        pattern | _                           = false);
+        pattern | _                           = false
+    );
 }
 
 static_assert(sumIs(std::array<int32_t, 2>{5, 6}, 11));
@@ -486,7 +488,8 @@ constexpr auto square(std::optional<T> const& t)
     Id<T> id;
     return match(t)(
         pattern | some(id) = id * id,
-        pattern | none     = 0);
+        pattern | none     = 0
+    );
 }
 constexpr auto x = std::make_optional(5);
 static_assert(square(x) == 25);
@@ -613,7 +616,8 @@ int32_t staticCastAs(Num const& input)
     return match(input)(
         pattern | as<One>(_)       = 1,
         pattern | kind<Kind::kTWO> = 2,
-        pattern | _                = 3);
+        pattern | _                = 3
+    );
 }
 
 int32_t main()
