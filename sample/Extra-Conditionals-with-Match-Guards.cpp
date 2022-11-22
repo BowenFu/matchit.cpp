@@ -56,8 +56,8 @@ void sample3()
 
   std::cout << match(x)(
                    // clang-format off
-            pattern | or_(4, 5, 6) | when(expr(y)) = expr("yes"),
-            pattern | _                            = expr("no")
+            pattern | or_(4, 5, 6) | when(y) = "yes",
+            pattern | _                      = "no"
                    // clang-format on
                    )
             << std::endl;

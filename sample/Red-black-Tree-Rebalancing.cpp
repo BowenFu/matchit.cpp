@@ -78,7 +78,7 @@ void Node<T>::balance()
         return Node{Red, std::make_shared<Node>(Black, *a, *x, *b), *y,
                     std::make_shared<Node>(Black, *c, *z, *d)};
       },
-      pattern | self = expr(self) // do nothing
+      pattern | self = self // do nothing
   );
 }
 
@@ -125,7 +125,7 @@ void Node<T>::balance()
       = [&]
       { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b), *y,
                     std::make_shared<Node>(Black, *c, *z, *d)}; },
-      pattern | self = expr(self) // do nothing
+      pattern | self = self // do nothing
   );
 }
 

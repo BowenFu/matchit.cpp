@@ -9,8 +9,8 @@ constexpr auto getClassName(T const &v)
   using namespace matchit;
   return match(v)(
       // clang-format off
-        pattern | as<char const *>(_) = expr("chars"),
-        pattern | as<int32_t>(_)      = expr("int32_t")
+        pattern | as<char const *>(_) = "chars",
+        pattern | as<int32_t>(_)      = "int32_t"
       // clang-format on
   );
 }

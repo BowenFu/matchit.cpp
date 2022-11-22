@@ -9,11 +9,15 @@ void sample()
 
   int32_t const zero = 0;
 
-  auto const a = match(*int_reference)(pattern | zero = expr("zero"),
-                                       pattern | _ = expr("some"));
+  auto const a = match(*int_reference)(
+    pattern | zero = "zero",
+    pattern | _ = "some"
+  );
 
-  auto const b = match(int_reference)(pattern | &zero = expr("zero"),
-                                      pattern | _ = expr("some"));
+  auto const b = match(int_reference)(
+    pattern | &zero = "zero",
+    pattern | _ = "some"
+  );
 
   static_cast<void>(a);
   static_cast<void>(b);

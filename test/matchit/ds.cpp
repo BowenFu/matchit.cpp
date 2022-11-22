@@ -97,7 +97,8 @@ TEST(Ds, vecOooBinder1)
         expectRange(*subrange, expected);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false
+  );
   EXPECT_TRUE(matched);
 }
 
@@ -168,7 +169,7 @@ TEST(Ds, arrayOooBinder1)
         expectRange(*subrange, expected);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false);
   EXPECT_TRUE(matched);
 }
 
@@ -240,8 +241,8 @@ constexpr bool recursiveSymmetric(Range const &range)
   return match(range)(
       // clang-format off
         pattern | ds(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
-        pattern | ds(i, subrange.at(ooo), _) = expr(false),
-        pattern | _                          = expr(true)
+        pattern | ds(i, subrange.at(ooo), _) = false,
+        pattern | _                          = true
       // clang-format on
   );
 }

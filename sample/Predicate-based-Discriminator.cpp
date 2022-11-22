@@ -63,9 +63,10 @@ char *String::data()
   Id<char *> l;
   Id<std::decay_t<decltype(remote)>> r;
   return match(*this)(
-      pattern | asEnum<Local>(l) = expr(l),
+      pattern | asEnum<Local>(l)  = l,
       pattern | asEnum<Remote>(r) = [&]
-      { return (*r).ptr; });
+      { return (*r).ptr; }
+  );
 }
 
 int32_t main()

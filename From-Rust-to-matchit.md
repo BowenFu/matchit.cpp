@@ -30,10 +30,10 @@ for (auto i = -2; i <= 5; ++i)
 {
     std::cout <<
         match(i)(
-            pattern | -1       = expr("It's minus one"),
-            pattern | 1        = expr("It's a one"),
-            pattern | or_(2,4) = expr("It's either a two or a four"),
-            pattern | _        = expr("Matched none of the arms")
+            pattern | -1       = "It's minus one",
+            pattern | 1        = "It's a one",
+            pattern | or_(2,4) = "It's either a two or a four",
+            pattern | _        = "Matched none of the arms"
         )
         << std::endl;
 }
@@ -364,17 +364,17 @@ In C++ with `match(it)`:
 ```C++
 constexpr auto c = 'f';
 constexpr auto valid_variable = match(c)( 
-    pattern | ('a' <= _ && _ <= 'z') = expr(true),
-    pattern | ('A' <= _ && _ <= 'Z') = expr(true),
-    // pattern | ('α' <= _ && _ <= 'ω') = expr(true),
-    pattern | _                    = expr(false)
+    pattern | ('a' <= _ && _ <= 'z') = true,
+    pattern | ('A' <= _ && _ <= 'Z') = true,
+    // pattern | ('α' <= _ && _ <= 'ω') = true,
+    pattern | _                    = false
 );
 
 constexpr auto ph = 10;
-std::cout << match(ph)( 
-    pattern | (0 <= _ && _ <= 6 ) = expr("acid"),
-    pattern | (7                ) = expr("neutral"),
-    pattern | (8 <= _ && _ <= 14) = expr("base"),
+std::cout << match(ph)(
+    pattern | (0 <= _ && _ <= 6 ) = "acid",
+    pattern | (7                ) = "neutral",
+    pattern | (8 <= _ && _ <= 14) = "base",
     pattern | _                   = [] { assert(false && "unreachable"); }
 ) << std::endl;
 
@@ -390,11 +390,11 @@ constexpr uint8_t MESOSPHERE_MAX = 85;
 
 constexpr auto altitude = 70;
 
-std::cout << match(altitude)( 
-    pattern | (TROPOSPHERE_MIN  <= _ && _ <= TROPOSPHERE_MAX ) = expr("troposphere"),
-    pattern | (STRATOSPHERE_MIN <= _ && _ <= STRATOSPHERE_MAX) = expr("stratosphere"),
-    pattern | (MESOSPHERE_MIN   <= _ && _ <= MESOSPHERE_MAX  ) = expr("mesosphere"),
-    pattern | _                                                = expr("outer space, maybe")
+std::cout << match(altitude)(
+    pattern | (TROPOSPHERE_MIN  <= _ && _ <= TROPOSPHERE_MAX ) = "troposphere",
+    pattern | (STRATOSPHERE_MIN <= _ && _ <= STRATOSPHERE_MAX) = "stratosphere",
+    pattern | (MESOSPHERE_MIN   <= _ && _ <= MESOSPHERE_MAX  ) = "mesosphere",
+    pattern | _                                                = "outer space, maybe"
 ) << std::endl;
 
 namespace binary
@@ -415,11 +415,11 @@ match(n_items * bytes_per_item)
 );
 
 // using qualified paths:
-std::cout << match(static_cast<size_t>(0xfacade))( 
-    pattern | (0U <= _ && _ <= numeric_limits<uint8_t>::max())  = expr("fits in a u8",
-    pattern | (0U <= _ && _ <= numeric_limits<uint16_t>::max()) = expr("fits in a u16",
-    pattern | (0U <= _ && _ <= numeric_limits<uint32_t>::max()) = expr("fits in a u32",
-    pattern | _                                                 = expr("too big")
+std::cout << match(static_cast<size_t>(0xfacade))(
+    pattern | (0U <= _ && _ <= numeric_limits<uint8_t>::max())  = "fits in a u8",
+    pattern | (0U <= _ && _ <= numeric_limits<uint16_t>::max()) = "fits in a u16",
+    pattern | (0U <= _ && _ <= numeric_limits<uint32_t>::max()) = "fits in a u32",
+    pattern | _                                                 = "too big"
 ) << std::endl;
 ```
 
@@ -427,9 +427,9 @@ Tips: feel free to use variables in `match(it)`. You can write codes like
 
 ```C++
 // using variables:
-std::cout << match(0xfacade)( 
-    pattern | (min(a, b) <= _ && _ <= max(a, b))  = expr("fits in the range"),
-    pattern | _                                 = expr("out of the range")
+std::cout << match(0xfacade)(
+    pattern | (min(a, b) <= _ && _ <= max(a, b))  = "fits in the range",
+    pattern | _                                   = "out of the range"
 ) << std::endl;
 ```
 
@@ -455,12 +455,14 @@ int32_t const *int_reference = &value;
 int32_t const zero = 0;
 
 auto const a = match(*int_reference)(
-    pattern | zero = expr("zero"),
-    pattern | _    = expr("some"));
+    pattern | zero = "zero",
+    pattern | _    = "some"
+);
 
 auto const b = match(int_reference)(
-    pattern | &zero = expr("zero"),
-    pattern | _     = expr("some"));
+    pattern | &zero = "zero",
+    pattern | _     = "some"
+);
 
 assert(a == b);
 ```
@@ -589,9 +591,9 @@ In C++ with `match(it)`:
 // Fixed size
 constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
 Id<int32_t> a, b, c;
-match(arr)( 
-    pattern | ds(1, _, _) = expr("starts with one"),
-    pattern | ds(a, b, c) = expr("starts with something else")
+match(arr)(
+    pattern | ds(1, _, _) = "starts with one",
+    pattern | ds(a, b, c) = "starts with something else"
 );
 ```
 
@@ -678,14 +680,15 @@ int32_t main()
     Id<std::string> color;
     match(favorite_color)(
         pattern | some(color) = [&] { return "Using your favorite color, " + *color + ", as the background"; },
-        pattern | _ | when(expr(is_tuesday)) = expr("Tuesday is green day!"),
+        pattern | _ | when(is_tuesday) = "Tuesday is green day!",
         pattern | _ = [&]
         {
             Id<uint8_t> age_;
             return match(age)(
-                pattern | as<uint8_t>(age_) | when(age_ > 30) = expr("Using purple as the background color"),
-                pattern | as<uint8_t>(age_)                 = expr("Using orange as the background color"),
-                pattern | _                                 = expr("Using blue as the background color"));
+                pattern | as<uint8_t>(age_) | when(age_ > 30) = "Using purple as the background color",
+                pattern | as<uint8_t>(age_)                 = "Using orange as the background color",
+                pattern | _                                 = "Using blue as the background color"
+            );
         });
 
     return 0;
@@ -740,7 +743,6 @@ int32_t main()
         {
             return std::optional<int32_t>();
         }
-        
     };
 
     using namespace matchit;
@@ -752,7 +754,8 @@ int32_t main()
                 std::cout << *top << std::endl;
                 return true;
             },
-            pattern | _ = expr(false)))
+            pattern | _ = false)
+        )
     {
     };
 }
@@ -1085,9 +1088,9 @@ int32_t main() {
     auto const y = false;
 
     std::cout <<
-        match(x)( 
-            pattern | or_(4, 5, 6) | when(expr(y)) = expr("yes"),
-            pattern | _                            = expr("no")
+        match(x)(
+            pattern | or_(4, 5, 6) | when(y) = "yes",
+            pattern | _                      = "no"
     ) << std::endl;
 }
 ```

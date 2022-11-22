@@ -8,8 +8,10 @@ void sample1()
   // Fixed size
   constexpr auto arr = std::array<int32_t, 3>{1, 2, 3};
   Id<int32_t> a, b, c;
-  match(arr)(pattern | ds(1, _, _) = expr("starts with one"),
-             pattern | ds(a, b, c) = expr("starts with something else"));
+  match(arr)(
+    pattern | ds(1, _, _) = "starts with one",
+    pattern | ds(a, b, c) = "starts with something else"
+  );
 }
 
 void sample2()
