@@ -10,8 +10,8 @@ constexpr bool recursiveSymmetric(Range const &range)
   return match(range)(
       // clang-format off
         pattern | ds(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
-        pattern | ds(_, ooo, _)              = expr(false),
-        pattern | _                          = expr(true)
+        pattern | ds(_, ooo, _)              = false,
+        pattern | _                          = true
       // clang-format on
   );
 }
@@ -22,8 +22,8 @@ constexpr bool symmetricArray(std::array<int32_t, 5> const &arr)
   Id<int32_t> i, j;
   return match(arr)(
       // clang-format off
-         pattern | ds(i, j, _, j, i) = expr(true),
-         pattern | _                 = expr(false)
+         pattern | ds(i, j, _, j, i) = true,
+         pattern | _                 = false
       // clang-format on
   );
 }

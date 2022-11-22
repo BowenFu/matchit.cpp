@@ -27,7 +27,7 @@ TEST(Id, resetAfterFailure)
   match(10)(pattern | x = [&]
             { EXPECT_EQ(*x, 10); });
   auto const matched =
-      match(10)(pattern | not_(x) = expr(true), pattern | _ = expr(false));
+      match(10)(pattern | not_(x) = true, pattern | _ = false);
   EXPECT_FALSE(matched);
 }
 
@@ -36,16 +36,16 @@ TEST(Id, resetAfterFailure2)
   Id<int32_t> x;
   match(10)(pattern | x = [&]
             { EXPECT_EQ(*x, 10); });
-  auto const matched = match(10)(pattern | and_(x, not_(x)) = expr(true),
-                                 pattern | _ = expr(false));
+  auto const matched = match(10)(pattern | and_(x, not_(x)) = true,
+                                 pattern | _ = false);
   EXPECT_FALSE(matched);
 }
 
 TEST(Id, resetAfterFailure3)
 {
   Id<int32_t> x;
-  auto result = match(10)(pattern | and_(x, app(_ / 2, x)) = expr(true),
-                          pattern | _ = expr(false));
+  auto result = match(10)(pattern | and_(x, app(_ / 2, x)) = true,
+                          pattern | _ = false);
   EXPECT_FALSE(result);
   result = match(10)(
       pattern | and_(x, app(_ / 2, not_(x))) =
@@ -54,7 +54,7 @@ TEST(Id, resetAfterFailure3)
         EXPECT_EQ(*x, 10);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false);
   EXPECT_TRUE(result);
 }
 
@@ -68,7 +68,7 @@ TEST(Id, resetAfterFailure33)
         EXPECT_EQ(*x, 5);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false);
   EXPECT_TRUE(result);
 
   result = match(10)(
@@ -78,7 +78,7 @@ TEST(Id, resetAfterFailure33)
         EXPECT_EQ(*x, 5);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false);
   EXPECT_TRUE(result);
 
   result = match(10)(
@@ -88,7 +88,7 @@ TEST(Id, resetAfterFailure33)
         EXPECT_EQ(*x, 5);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false);
   EXPECT_TRUE(result);
 }
 
@@ -106,7 +106,7 @@ TEST(Id, resetAfterFailure4)
         EXPECT_EQ(*x, 5);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false);
   EXPECT_TRUE(matched);
 }
 
@@ -120,7 +120,7 @@ TEST(Id, resetAfterFailure5)
         EXPECT_EQ(*x, 10);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false);
   EXPECT_TRUE(result);
 
   result = match(10)(
@@ -130,7 +130,7 @@ TEST(Id, resetAfterFailure5)
         EXPECT_EQ(*x, 10);
         return true;
       },
-      pattern | _ = expr(false));
+      pattern | _ = false);
   EXPECT_FALSE(result);
 }
 
@@ -163,7 +163,7 @@ TEST(Id, matchMultipleTimes3)
 TEST(Id, AppToId)
 {
   Id<int32_t> ii;
-  auto const result = match(11)(pattern | app(_ * _, ii) = expr(ii));
+  auto const result = match(11)(pattern | app(_ * _, ii) = ii);
   EXPECT_EQ(result, 121);
 }
 
@@ -277,7 +277,7 @@ TEST(Id, AppToId8)
 TEST(Id, IdAtInt)
 {
   Id<int32_t> ii;
-  auto const result = match(11)(pattern | app(_ * _, ii.at(121)) = expr(ii));
+  auto const result = match(11)(pattern | app(_ * _, ii.at(121)) = ii);
   EXPECT_EQ(result, 121);
 }
 

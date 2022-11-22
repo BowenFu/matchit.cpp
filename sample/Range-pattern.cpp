@@ -14,9 +14,9 @@ void sample()
   constexpr auto c = 'f';
   constexpr auto valid_variable = match(c)(
       // clang-format off
-        pattern | ('a' <= _ && _ <= 'z')    = expr(true),
-        pattern | ('A' <= _ && _ <= 'Z')    = expr(true),
-        pattern | _                       = expr(false)
+        pattern | ('a' <= _ && _ <= 'z')  = true,
+        pattern | ('A' <= _ && _ <= 'Z')  = true,
+        pattern | _                       = false
       // clang-format on
   );
   static_cast<void>(valid_variable);
@@ -24,9 +24,9 @@ void sample()
   constexpr auto ph = 10;
   std::cout << match(ph)(
                    // clang-format off
-                     pattern | (0 <= _ && _ <= 6 ) = expr("acid"),
-                     pattern | (7                ) = expr("neutral"),
-                     pattern | (8 <= _ && _ <= 14) = expr("base"),
+                     pattern | (0 <= _ && _ <= 6 ) = "acid",
+                     pattern | (7                ) = "neutral",
+                     pattern | (8 <= _ && _ <= 14) = "base",
                      pattern | (_                ) = [] { assert(false && "unreachable"); return ""; })
             // clang-format on
             << std::endl;
@@ -45,10 +45,10 @@ void sample()
 
   std::cout << match(altitude)(
                    // clang-format off
-                     pattern | (TROPOSPHERE_MIN  <= _ && _ <= TROPOSPHERE_MAX ) = expr("troposphere"),
-                     pattern | (STRATOSPHERE_MIN <= _ && _ <= STRATOSPHERE_MAX) = expr("stratosphere"),
-                     pattern | (MESOSPHERE_MIN   <= _ && _ <= MESOSPHERE_MAX  ) = expr("mesosphere"),
-                     pattern | (_                                             ) = expr("outer space, maybe"))
+                     pattern | (TROPOSPHERE_MIN  <= _ && _ <= TROPOSPHERE_MAX ) = "troposphere",
+                     pattern | (STRATOSPHERE_MIN <= _ && _ <= STRATOSPHERE_MAX) = "stratosphere",
+                     pattern | (MESOSPHERE_MIN   <= _ && _ <= MESOSPHERE_MAX  ) = "mesosphere",
+                     pattern | (_                                             ) = "outer space, maybe")
             // clang-format on
             << std::endl;
 
@@ -66,10 +66,10 @@ void sample()
   std::cout
       << match(static_cast<uint64_t>(0xfacade))(
              // clang-format off
-                     pattern | (0U <= _ && _ <= std::numeric_limits<uint8_t>::max())  = expr("fits in a u8"),
-                     pattern | (0U <= _ && _ <= std::numeric_limits<uint16_t>::max()) = expr("fits in a u16"),
-                     pattern | (0U <= _ && _ <= std::numeric_limits<uint32_t>::max()) = expr("fits in a u32"),
-                     pattern | _                                                      = expr("too big"))
+                     pattern | (0U <= _ && _ <= std::numeric_limits<uint8_t>::max())  = "fits in a u8",
+                     pattern | (0U <= _ && _ <= std::numeric_limits<uint16_t>::max()) = "fits in a u16",
+                     pattern | (0U <= _ && _ <= std::numeric_limits<uint32_t>::max()) = "fits in a u32",
+                     pattern | _                                                      = "too big")
       // clang-format on
       << std::endl;
 }

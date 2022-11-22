@@ -19,5 +19,5 @@ TEST(MatchStatement, test)
 
 TEST(MatchExpreesion, Nomatch)
 {
-  EXPECT_THROW(match(4)(pattern | 1 = expr(true)), std::logic_error);
+  EXPECT_THROW(match(4)(pattern | 1 = true), std::logic_error);
 }

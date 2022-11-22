@@ -27,12 +27,19 @@ TEST(Match, test1)
   {
     Id<int32_t> ii;
     return match(input)(
-        pattern | 1 = func1, pattern | 2 = func2, pattern | or_(56, 59) = func2,
-        pattern | (_ < 0) = expr(-1), pattern | (_ < 10) = expr(-10),
-        pattern | and_(_<17, _> 15) = expr(16),
-        pattern | app(_ * _, _ > 1000) = expr(1000),
-        pattern | app(_ * _, ii) = expr(ii), pattern | ii = -ii,
-        pattern | _ = expr(111));
+    // clang-format off
+        pattern | 1 = func1,
+        pattern | 2 = func2,
+        pattern | or_(56, 59) = func2,
+        pattern | (_ < 0) = -1,
+        pattern | (_ < 10) = -10,
+        pattern | and_(_<17, _> 15) = 16,
+        pattern | app(_ * _, _ > 1000) = 1000,
+        pattern | app(_ * _, ii) = ii,
+        pattern | ii = -ii,
+        pattern | _ = 111
+    // clang-format on
+    );
   };
   EXPECT_EQ(matchFunc(1), 1);
   EXPECT_EQ(matchFunc(2), 12);
@@ -52,9 +59,9 @@ TEST(Match, test2)
     Id<int32_t> i;
     Id<int32_t> j;
     return match(input)(
-        pattern | ds('/', 1, 1) = expr(1), pattern | ds('/', 0, _) = expr(0),
+        pattern | ds('/', 1, 1) = 1, pattern | ds('/', 0, _) = 0,
         pattern | ds('*', i, j) = i * j, pattern | ds('+', i, j) = i + j,
-        pattern | _ = expr(-1));
+        pattern | _ = -1);
   };
   EXPECT_EQ(matchFunc(std::make_tuple('/', 1, 1)), 1);
   EXPECT_EQ(matchFunc(std::make_tuple('+', 2, 1)), 3);
@@ -81,7 +88,7 @@ TEST(Match, test3)
     Id<int32_t> i;
     // compose patterns for destructuring struct A.
     auto const dsA = dsVia(&A::a, &A::b);
-    return match(input)(pattern | dsA(i, 1) = expr(i), pattern | _ = expr(-1));
+    return match(input)(pattern | dsA(i, 1) = i, pattern | _ = -1);
   };
   EXPECT_EQ(matchFunc(A{3, 1}), 3);
   EXPECT_EQ(matchFunc(A{2, 2}), -1);
@@ -127,9 +134,9 @@ TEST(Match, test4)
 {
   auto const matchFunc = [](Num const &input)
   {
-    return match(input)(pattern | as<One>(_) = expr(1),
-                        pattern | kind<Kind::kTWO> = expr(2),
-                        pattern | _ = expr(3));
+    return match(input)(pattern | as<One>(_) = 1,
+                        pattern | kind<Kind::kTWO> = 2,
+                        pattern | _ = 3);
   };
   matchit::impl::AsPointer<Two>()(std::variant<One, Two>{});
   EXPECT_EQ(matchFunc(One{}), 1);
@@ -141,8 +148,8 @@ TEST(Match, test5)
   auto const matchFunc = [](std::pair<int32_t, int32_t> ij)
   {
     return match(ij.first % 3, ij.second % 5)(
-        pattern | ds(0, 0) = expr(1), pattern | ds(0, _ > 2) = expr(2),
-        pattern | ds(_, _ > 2) = expr(3), pattern | _ = expr(4));
+        pattern | ds(0, 0) = 1, pattern | ds(0, _ > 2) = 2,
+        pattern | ds(_, _ > 2) = 3, pattern | _ = 4);
   };
   EXPECT_EQ(matchFunc(std::make_pair(3, 5)), 1);
   EXPECT_EQ(matchFunc(std::make_pair(3, 4)), 2);
@@ -154,7 +161,7 @@ int32_t fib(int32_t n)
 {
   EXPECT_TRUE(n > 0);
   return match(n)(
-      pattern | 1 = expr(1), pattern | 2 = expr(1),
+      pattern | 1 = 1, pattern | 2 = 1,
       pattern | _ = [n]
       { return fib(n - 1) + fib(n - 2); });
 }
@@ -177,7 +184,7 @@ TEST(Match, test7)
     auto const at = [](auto &&id, auto &&pattern)
     { return and_(pattern, id); };
     return match(ij.first % 3, ij.second % 5)(
-        pattern | ds(0, _ > 2) = expr(2), pattern | ds(1, _ > 2) = expr(3),
+        pattern | ds(0, _ > 2) = 2, pattern | ds(1, _ > 2) = 3,
         pattern | at(id, ds(_, 2)) =
             [&id]
         {
@@ -185,7 +192,7 @@ TEST(Match, test7)
           static_cast<void>(id);
           return 4;
         },
-        pattern | _ = expr(5));
+        pattern | _ = 5);
   };
   EXPECT_EQ(matchFunc(std::make_pair(4, 2)), 4);
 }
@@ -195,8 +202,8 @@ TEST(Match, test8)
   auto const equal = [](std::pair<int32_t, std::pair<int32_t, int32_t>> ijk)
   {
     Id<int32_t> x;
-    return match(ijk)(pattern | ds(x, ds(_, x)) = expr(true),
-                      pattern | _ = expr(false));
+    return match(ijk)(pattern | ds(x, ds(_, x)) = true,
+                      pattern | _ = false);
   };
   EXPECT_TRUE(equal(std::make_pair(2, std::make_pair(1, 2))));
   EXPECT_FALSE(equal(std::make_pair(2, std::make_pair(1, 3))));
@@ -208,8 +215,8 @@ TEST(Match, test9)
   auto const optional = [](auto const &i)
   {
     Id<int32_t> x;
-    return match(i)(pattern | some(x) = expr(true),
-                    pattern | none = expr(false));
+    return match(i)(pattern | some(x) = true,
+                    pattern | none = false);
   };
   EXPECT_EQ(optional(std::make_unique<int32_t>(2)), true);
   EXPECT_EQ(optional(std::make_shared<int32_t>(2)), true);
@@ -245,9 +252,9 @@ TEST(Match, test10)
 
   auto const dynCast = [](auto const &i)
   {
-    return match(i)(pattern | some(as<Circle>(_)) = expr("Circle"),
-                    pattern | some(as<Square>(_)) = expr("Square"),
-                    pattern | none = expr("None"));
+    return match(i)(pattern | some(as<Circle>(_)) = "Circle",
+                    pattern | some(as<Square>(_)) = "Square",
+                    pattern | none = "None");
   };
 
   EXPECT_EQ(dynCast(std::unique_ptr<Shape>(new Square{})), "Square");
@@ -259,8 +266,8 @@ TEST(Match, test10_)
 {
   auto const dToBCast = [](auto const &i)
   {
-    return match(i)(pattern | some(as<Shape>(_)) = expr("Shape"),
-                    pattern | none = expr("None"));
+    return match(i)(pattern | some(as<Shape>(_)) = "Shape",
+                    pattern | none = "None");
   };
 
   EXPECT_EQ(dToBCast(std::make_unique<Circle>()), "Shape");
@@ -270,8 +277,8 @@ TEST(Match, test11)
 {
   auto const getIf = [](auto const &i)
   {
-    return match(i)(pattern | as<Square>(_) = expr("Square"),
-                    pattern | as<Circle>(_) = expr("Circle"));
+    return match(i)(pattern | as<Square>(_) = "Square",
+                    pattern | as<Circle>(_) = "Circle");
   };
 
   std::variant<Square, Circle> sc = Square{};
@@ -313,7 +320,7 @@ TEST(Match, test13)
   auto const dsAgg = [](auto const &v)
   {
     Id<int32_t> i;
-    return match(v)(pattern | ds(1, i) = expr(i), pattern | ds(_, i) = expr(i));
+    return match(v)(pattern | ds(1, i) = i, pattern | ds(_, i) = i);
   };
 
   EXPECT_EQ(dsAgg(A{1, 2}), 2);
@@ -326,8 +333,8 @@ TEST(Match, test14)
 {
   auto const anyCast = [](auto const &i)
   {
-    return match(i)(pattern | as<Square>(_) = expr("Square"),
-                    pattern | as<Circle>(_) = expr("Circle"));
+    return match(i)(pattern | as<Square>(_) = "Square",
+                    pattern | as<Circle>(_) = "Circle");
   };
 
   std::any sc;
@@ -350,8 +357,8 @@ TEST(Match, test15)
   auto const optional = [](auto const &i)
   {
     Id<char> c;
-    return match(i)(pattern | none = expr(1), pattern | some(none) = expr(2),
-                    pattern | some(some(c)) = expr(c));
+    return match(i)(pattern | none = 1, pattern | some(none) = 2,
+                    pattern | some(some(c)) = c);
   };
   char const **x = nullptr;
   char const *y_ = nullptr;
@@ -368,8 +375,8 @@ TEST(Match, test16)
 {
   auto const notX = [](auto const &i)
   {
-    return match(i)(pattern | not_(or_(1, 2)) = expr(3), pattern | 2 = expr(2),
-                    pattern | _ = expr(1));
+    return match(i)(pattern | not_(or_(1, 2)) = 3, pattern | 2 = 2,
+                    pattern | _ = 1);
   };
   EXPECT_EQ(notX(1), 1);
   EXPECT_EQ(notX(2), 2);
@@ -382,8 +389,8 @@ TEST(Match, test17)
   auto const whenX = [](auto const &x)
   {
     Id<int32_t> i, j;
-    return match(x)(pattern | ds(i, j) | when(i + j == 10) = expr(3),
-                    pattern | ds(_ < 5, _) = expr(5), pattern | _ = expr(1));
+    return match(x)(pattern | ds(i, j) | when(i + j == 10) = 3,
+                    pattern | ds(_ < 5, _) = 5, pattern | _ = 1);
   };
   EXPECT_EQ(whenX(std::make_pair(1, 9)), 3);
   EXPECT_EQ(whenX(std::make_pair(1, 7)), 5);
@@ -395,8 +402,8 @@ TEST(Match, test18)
   auto const idNotOwn = [](auto const &x)
   {
     Id<int32_t> i;
-    return match(x)(pattern | i | when(i == 5) = expr(1),
-                    pattern | _ = expr(2));
+    return match(x)(pattern | i | when(i == 5) = 1,
+                    pattern | _ = 2);
   };
   EXPECT_EQ(idNotOwn(1), 2);
   EXPECT_EQ(idNotOwn(5), 1);
@@ -409,25 +416,25 @@ TEST(Match, test19)
     Id<int32_t> j;
     return match(input)(
         // `... / 2 3`
-        pattern | ds(ooo, '/', 2, 3) = expr(1),
+        pattern | ds(ooo, '/', 2, 3) = 1,
         // `... 3`
-        pattern | ds(ooo, 3) = expr(3),
+        pattern | ds(ooo, 3) = 3,
         // `/ ...`
-        pattern | ds('/', ooo) = expr(4),
+        pattern | ds('/', ooo) = 4,
 
-        pattern | ooo = expr(222),
+        pattern | ooo = 222,
         // `3 3 3 3 ..` all 3
-        pattern | ooo = expr(333),
+        pattern | ooo = 333,
 
         // `... int32_t 3`
-        pattern | ds(ooo, j, 3) = expr(7),
+        pattern | ds(ooo, j, 3) = 7,
         // `... int32_t 3`
-        pattern | ds(ooo, or_(j), 3) = expr(8),
+        pattern | ds(ooo, or_(j), 3) = 8,
 
         // `...`
-        pattern | ooo = expr(12),
+        pattern | ooo = 12,
 
-        pattern | _ = expr(-1));
+        pattern | _ = -1);
   };
   EXPECT_EQ(matchFunc(std::make_tuple('/', 2, 3)), 1);
   EXPECT_EQ(matchFunc(std::make_tuple(3, 3, 3, 3, 3)), 3);

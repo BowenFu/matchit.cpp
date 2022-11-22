@@ -51,9 +51,9 @@ constexpr int32_t staticCastAs(Num const &input)
   using namespace matchit;
   return match(input)(
       // clang-format off
-        pattern | as<One>(_)       = expr(1),
-        pattern | kind<Kind::kTWO> = expr(2),
-        pattern | _                = expr(3)
+        pattern | as<One>(_)       = 1,
+        pattern | kind<Kind::kTWO> = 2,
+        pattern | _                = 3
       // clang-format on
   );
 }

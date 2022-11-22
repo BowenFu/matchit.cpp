@@ -21,9 +21,8 @@ The operator `=` between the pattern and handler can be any binary operators. It
 ### Handler
 
 Handlers should always be nullary functions. This is different from `mpark/patterns` and `jbandela/simple_match`.
-`expr` can be called to return simple functions returning a single value.
-`expr(value)` syntax is inspired by `Boost/Lambda` library.
-`pattern | xxx = expr(zzz)` or `pattern | xxx = [&]{zzzzzz}` syntaxes can be aligned and it is easy to find out the pattern parts and handler parts.
+Expressions can be used as handlers as well, which are equivalent to nullary functions that return the same values.
+Id instances used as handlers are equivalent to nullary functions that return the bound values.
 
 ## Pattern Primitives
 
@@ -34,8 +33,8 @@ You can even use a function call as Expression Pattern, the result of the functi
 
 ```C++
 match(map.find(key))(
-    pattern | map.end() = expr(false),
-    pattern | _         = expr(true)
+    pattern | map.end() = false,
+    pattern | _         = true
 )
 ```
 
@@ -53,8 +52,9 @@ Predicate Pattern corresponds to `(? expr)`.
 
 ```C++
 match(value)(
-    pattern | meet([](auto &&v { return v >= 0; })) = expr(value),
-    pattern | _                                     = expr(0))
+    pattern | meet([](auto &&v { return v >= 0; })) = value,
+    pattern | _                                     = 0
+)
 ```
 
 Predicate Pattern syntax is `meet(predicate function)`.
@@ -62,8 +62,9 @@ Predicate Pattern syntax is `meet(predicate function)`.
 
 ```C++
 match(value)(
-    pattern | (_ >= 0) = expr(value),
-    pattern | _        = expr(0))
+    pattern | (_ >= 0) = value,
+    pattern | _        = 0
+)
 ```
 
 The short syntax is inspired by `jbandela/simple_match`.
@@ -80,14 +81,14 @@ This means that handlers in `match(it)` are always nullary, but can be unary or 
 ```C++
 Id<double> s;
 match(value)(
-    pattern | app(_ * _, s) = expr(s),
-    pattern | _             = expr(0));
+    pattern | app(_ * _, s) = s,
+    pattern | _             = 0
+);
 ```
 
 You have to define / declare the identifiers first then bind them inside patterns and access them in handlers.
-`expr(s)` is a short for `[&]{ return *s; }`, i.e., a function returning the value bound to the identifier.
 
-Identifier Pattern supports binding non-constructable (via reference), non-copyable (via reference or moving) types.
+Identifier Pattern supports binding non-constructable (via reference), non-copyable (via reference or moving) types. This can be similar to "Ref pattern" or "Mut Ref pattern" in Rust.
 
 Identifier Pattern requires `operator==` for the binding types.
 
@@ -105,13 +106,14 @@ A simple sample can be
 ```C++
 bool flag = true;
 return match(v)(
-    pattern | 0 | when(expr(flag)) = expr(true),
-    pattern | _                    = expr(false));
+    pattern | 0 | when(flag) = true,
+    pattern | _              = false
+);
 ```
 
 ### Ooo Pattern
 
-Ooo Pattern can match arbitrary number of items. 
+Ooo Pattern can match arbitrary number of items.
 Similar patterns exist in most related works.
 The current one is mostly influenced by `..` pattern in Rust. (Also inspired by Racket's `...`).
 It can only be used inside Destructure Patterns and at most one Ooo pattern can appear inside one Destructure Pattern.
@@ -120,10 +122,10 @@ Refer to [Pattern Cominators / Destructure Pattern](#destructure-pattern).
 ```C++
 match(tuple)
 (
-    pattern | ds(2, ooo, 2)  = expr(4),
-    pattern | ds(2, ooo   )  = expr(3),
-    pattern | ds(ooo, 2   )  = expr(2),
-    pattern | ds(ooo      )  = expr(1)
+    pattern | ds(2, ooo, 2)  = 4,
+    pattern | ds(2, ooo   )  = 3,
+    pattern | ds(ooo, 2   )  = 2,
+    pattern | ds(ooo      )  = 1
 )
 ```
 
@@ -136,8 +138,8 @@ The Racket syntax is `(or pat ...)`, and the corresponding C++ syntax is `or_(pa
 
 ```C++
 match(n)(
-    pattern | or_(1, 3, 5) = expr(true),
-    pattern | _            = expr(false))
+    pattern | or_(1, 3, 5) = true,
+    pattern | _            = false)
 ```
 
 Note subpatterns of `or_` pattern can be any patterns, not just expression patterns.
@@ -145,8 +147,9 @@ Say Predicate Patterns
 
 ```C++
 match(n)(
-    pattern | or_(_ < 3, 5) = expr(true),
-    pattern | _             = expr(false))
+    pattern | or_(_ < 3, 5) = true,
+    pattern | _             = false
+)
 ```
 
 In Rust and some other related work, there exists a similar `anyof` pattern. But only literal patterns can be used as subpatterns.
@@ -158,18 +161,20 @@ The Racket syntax is `(and pat ...)`, and the corresponding C++ syntax is `and_(
 
 ```C++
 match(value)(
-    pattern | and_(_ >= min, _ <= max)) = expr(value),
-    pattern | (_ > max)                 = expr(max),
-    pattern | _                         = expr(min))
+    pattern | and_(_ >= min, _ <= max)) = value,
+    pattern | (_ > max)                 = max,
+    pattern | _                         = min
+)
 ```
 
 Note this can also be written as
 
 ```C++
 match(value)(
-    pattern | (min <= _ && _ <= max) = expr(value),
-    pattern | (_ > max)              = expr(max),
-    pattern | _                      = expr(min))
+    pattern | (min <= _ && _ <= max) = value,
+    pattern | (_ > max)              = max,
+    pattern | _                      = min
+)
 ```
 
 But `&&` can only be used between Predicate patterns, while `and_` can be used for all kinds of patterns (except Ooo Pattern).
@@ -189,8 +194,9 @@ That is to say, Predicate Pattern can be expressed with App Pattern, `meet(unary
 
 ```C++
 match(value)(
-    pattern | app(_ * _, _ > 1000) = expr(true),
-    pattern | _                    = expr(false))
+    pattern | app(_ * _, _ > 1000) = true,
+    pattern | _                    = false
+)
 ```
 
 ### Destructure Pattern
@@ -205,7 +211,8 @@ match(expr)(
     pattern | ds('-', i, j) = i - j,
     pattern | ds('*', i, j) = i * j,
     pattern | ds('/', i, j) = i / j,
-    pattern | _             = expr(-1))
+    pattern | _             = -1
+)
 ```
 
 Note the outermost `ds` inside pattern can be saved. That is to say, when pattern receives multiple parameters, they are treated as subpatterns of a ds pattern.
@@ -218,10 +225,11 @@ match(expr)(
     pattern | ds('-', i, j) = i - j,
     pattern | ds('*', i, j) = i * j,
     pattern | ds('/', i, j) = i / j,
-    pattern | _             = expr(-1))
+    pattern | _             = -1
+)
 ```
 
-We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and containers / ranges that can be called with `std::begin` and `std::end`. 
+We support Destructure Pattern for `std::tuple`, `std::pair`, `std::array`, and containers / ranges that can be called with `std::begin` and `std::end`.
 Mismatch of element numbers is a compile error for fixed-size containers.
 Mismatch of element numbers is just a mismatch for dynamic containers, neither a compile error, nor a runtime error.
 
@@ -240,8 +248,8 @@ constexpr auto dsViaMember(DummyStruct const&v)
     const auto dsA = dsVia(&DummyStruct::size, &DummyStruct::name);
     Id<char const*> name;
     return match(v)(
-        pattern | dsA(2, name) = expr(name),
-        pattern | _ = expr("not matched")
+        pattern | dsA(2, name) = name,
+        pattern | _ = "not matched"
     );
 };
 
@@ -256,8 +264,9 @@ At Pattern is similar to the `@` pattern in Rust. It can have one subpattern. Th
 ```C++
 Id<double> s;
 match(value)(
-    pattern | app(_ * _, s.at(_ > 1000)) = expr(s),
-    pattern | _                          = expr(0));
+    pattern | app(_ * _, s.at(_ > 1000)) = s,
+    pattern | _                          = 0
+);
 ```
 
 ### At Pattern for Ooo Pattern
@@ -269,8 +278,8 @@ Id<int32_t> i;
 Id<SubrangeT<Range const>> subrange;
 return match(range)(
     pattern | ds(i, subrange.at(ooo), i) = [&] { return recursiveSymmetric(*subrange); },
-    pattern | ds(i, subrange.at(ooo), _) = expr(false),
-    pattern | _                   = expr(true)
+    pattern | ds(i, subrange.at(ooo), _) = false,
+    pattern | _                          = true
 );
 ```
 
@@ -284,7 +293,8 @@ Their usage can be
 ```C++
 match(t)(
     pattern | some(id) = id * id,
-    pattern | none     = expr(0));
+    pattern | none     = 0
+);
 ```
 
 ### As Pattern
@@ -294,8 +304,8 @@ It can be used to handle sum type, including class hierarchies, std::variant, an
 
 ```C++
 match(v)(
-    pattern | as<char const*>(_) = expr("chars"),
-    pattern | as<int32_t>(_)     = expr("int32_t")
+    pattern | as<char const*>(_) = "chars",
+    pattern | as<int32_t>(_)     = "int32_t"
 );
 ```
 

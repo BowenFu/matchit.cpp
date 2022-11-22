@@ -182,14 +182,14 @@ int eval(const Expr &ex)
     Id<int> i;
     Id<Expr> e, l, r;
     return match(ex)(
-        pattern | as<int>(i)                   = expr(i),
+        pattern | as<int>(i)                   = i,
         pattern | asNegDs(some(e))             = [&]{ return -eval(*e); },
         pattern | asAddDs(some(l), some(r))    = [&]{ return eval(*l) + eval(*r); },
         // Optimize multiplication by 0.
-        pattern | asMulDs(some(as<int>(0)), _) = expr(0),
-        pattern | asMulDs(_, some(as<int>(0))) = expr(0),
+        pattern | asMulDs(some(as<int>(0)), _) = 0,
+        pattern | asMulDs(_, some(as<int>(0))) = 0,
         pattern | asMulDs(some(l), some(r))    = [&]{ return eval(*l) * eval(*r); },
-        pattern | _                            = expr(-1)
+        pattern | _                            = -1
     );
 }
 
@@ -219,11 +219,11 @@ Op parseOp(Parser& parser) {
 enum class Op { Add, Sub, Mul, Div };
 Op parseOp(Parser& parser) {
     Id<char> token;
-    return match(parser.consumeToken()) ( 
-        pattern | '+' = expr(Op::Add),
-        pattern | '-' = expr(Op::Sub),
-        pattern | '*' = expr(Op::Mul),
-        pattern | '/' = expr(Op::Div),
+    return match(parser.consumeToken())(
+        pattern | '+' = Op::Add,
+        pattern | '-' = Op::Sub,
+        pattern | '*' = Op::Mul,
+        pattern | '/' = Op::Div,
         pattern | token = [&]{
             std::cerr << "Unexpected: " << *token;
             std::terminate();
@@ -754,7 +754,7 @@ char* String::data() {
   Id<char*> l;
   Id<std::decay_t<decltype(remote)>> r;
   return match(*this) ( 
-    pattern | asEnum<Local>(l) = expr(l),
+    pattern | asEnum<Local>(l)  = l,
     pattern | asEnum<Remote>(r) = [&]{ return (*r).ptr; }
   );
 }
@@ -850,8 +850,8 @@ In `match(it)`:
 int fib(int n) {
   Id<int> x;
   return match (n) ( 
-    pattern | (_ < 0)  = expr(0),
-    pattern | or_(1,2) = expr(n), //1|2
+    pattern | (_ < 0)  = 0,
+    pattern | or_(1,2) = n, //1|2
     pattern | x        = [&] { return fib(*x - 1) + fib(*x - 2); }
   );
 }
@@ -1028,7 +1028,7 @@ void Node<T>::balance() {
       = [&] { return Node{Red, std::make_shared<Node>(Black, *a, *x, *b),
                    *y,
                    std::make_shared<Node>(Black, *c, *z, *d)}; },
-    pattern | self = expr(self) // do nothing
+    pattern | self = self // do nothing
   );
 }
 ```

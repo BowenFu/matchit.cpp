@@ -6,8 +6,8 @@ constexpr int32_t fib(int32_t n)
   assert(n >= 1);
   return match(n)(
       // clang-format off
-        pattern | 1 = expr(1),
-        pattern | 2 = expr(1),
+        pattern | 1 = 1,
+        pattern | 2 = 1,
         pattern | _ = [n] { return fib(n - 1) + fib(n - 2); }
       // clang-format on
   );
@@ -24,9 +24,9 @@ constexpr auto eval(Value &&input)
 {
   return match(input)(
       // clang-format off
-        pattern | ds('/', 1, 1) = expr(1),
-        pattern | ds('/', 0, _) = expr(0),
-        pattern | _             = expr(-1));
+        pattern | ds('/', 1, 1) = 1,
+        pattern | ds('/', 0, _) = 0,
+        pattern | _             = -1);
   // clang-format on
 }
 

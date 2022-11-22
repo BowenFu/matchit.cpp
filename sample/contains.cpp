@@ -8,8 +8,8 @@ constexpr bool contains(Map const &map, Key const &key)
   using namespace matchit;
   return match(map.find(key))(
       // clang-format off
-        pattern | map.end() = expr(false),
-        pattern | _         = expr(true)
+        pattern | map.end() = false,
+        pattern | _         = true
       // clang-format on
   );
 }

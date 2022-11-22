@@ -51,14 +51,14 @@ int eval(const Expr &ex)
   return match(ex)(
       // clang-format off
         // FIXME: Expr{5} won't match the following line.
-        pattern | as<int>(i)                   = expr(i),
+        pattern | as<int>(i)                   = i,
         pattern | asNegDs(some(e))             = [&]{ return -eval(*e); },
         pattern | asAddDs(some(l), some(r))    = [&]{ return eval(*l) + eval(*r); },
         // Optimize multiplication by 0.
-        pattern | asMulDs(some(as<int>(0)), _) = expr(0),
-        pattern | asMulDs(_, some(as<int>(0))) = expr(0),
+        pattern | asMulDs(some(as<int>(0)), _) = 0,
+        pattern | asMulDs(_, some(as<int>(0))) = 0,
         pattern | asMulDs(some(l), some(r))    = [&]{ return eval(*l) * eval(*r); },
-        pattern | _                            = expr(-1)
+        pattern | _                            = -1
       // clang-format on
   );
 }
