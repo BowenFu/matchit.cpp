@@ -549,9 +549,31 @@ struct Square : Shape {};
 
 auto getClassName(Shape const &s)
 {
+    using namespace matchit;
     return match(s)(
         pattern | as<Circle>(_) = "Circle",
         pattern | as<Square>(_) = "Square"
+    );
+}
+```
+
+or as raw or smart pointers, combining the As with the Some pattern
+
+```C++
+struct Shape
+{
+    virtual ~Shape() = default;
+};
+struct Circle : Shape {};
+struct Square : Shape {};
+
+auto getClassName(Shape const *s)
+{
+    using namespace matchit;
+    return match(s)(
+        pattern | some(as<Circle>(_)) = "Circle",
+        pattern | some(as<Square>(_)) = "Square",
+        pattern | _ = "nullptr"
     );
 }
 ```
