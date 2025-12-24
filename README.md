@@ -710,6 +710,7 @@ std::cout << toString(d) << std::endl;
 ## Projects using this library
 
 [opennask](https://github.com/HobbyOSs/opennask) : An 80x86 assembler like MASM/NASM for the tiny OS.
+[credence](https://github.com/jahan-addison/credence) : An x86-64, ARM64 B Language Compiler on steroids for Linux, and BSD (Darwin).
 
 
 If you are aware of other projects using this library, please let me know by submitting an issue or an PR.
