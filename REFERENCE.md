@@ -52,7 +52,7 @@ Predicate Pattern corresponds to `(? expr)`.
 
 ```C++
 match(value)(
-    pattern | meet([](auto &&v { return v >= 0; })) = value,
+    pattern | meet([](auto &&v) { return v >= 0; }) = value,
     pattern | _                                     = 0
 )
 ```
