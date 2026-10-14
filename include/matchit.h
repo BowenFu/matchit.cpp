@@ -649,6 +649,8 @@ namespace matchit
                 return matchPattern(std::forward<Value>(value), mPattern, /*depth*/ 0,
                                     context);
             }
+
+            constexpr const Pattern& pattern() const {return mPattern;}
             constexpr auto execute() const { return mHandler(); }
 
         private:
@@ -1978,7 +1980,7 @@ namespace matchit
         static_assert(PatternTraits<Or<Wildcard, float>>::nbIdV == 0);
 
         template <typename Value, typename... PatternPairs>
-        constexpr auto matchPatterns(Value &&value, PatternPairs const &...patterns)
+        constexpr auto matchPatterns(Value &&value, PatternPairs const &...pattern_pairs)
         {
             using RetType = typename PatternPairsRetType<PatternPairs...>::RetType;
             using TypeTuple = decltype(std::tuple_cat(
@@ -1989,19 +1991,19 @@ namespace matchit
             if constexpr (!std::is_same_v<RetType, void>)
             {
                 constexpr auto const func =
-                    [](auto const &pattern, auto &&value, RetType &result) constexpr->bool
+                    [](auto const &pattern_pair, auto &&value, RetType &result) constexpr->bool
                 {
                     auto context = typename ContextTrait<TypeTuple>::ContextT{};
-                    if (pattern.matchValue(std::forward<Value>(value), context))
+                    if (pattern_pair.matchValue(std::forward<Value>(value), context))
                     {
-                        result = pattern.execute();
-                        processId(pattern, 0, IdProcess::kCANCEL);
+                        result = pattern_pair.execute();
+                        processId(pattern_pair.pattern(), 0, IdProcess::kCANCEL);
                         return true;
                     }
                     return false;
                 };
                 RetType result{};
-                bool const matched = (func(patterns, value, result) || ...);
+                bool const matched = (func(pattern_pairs, value, result) || ...);
                 if (!matched)
                 {
                     throw std::logic_error{"Error: no patterns got matched!"};
@@ -2012,18 +2014,18 @@ namespace matchit
             else
             // statement, no return value, mismatching all patterns is not an error.
             {
-                auto const func = [](auto const &pattern, auto &&value) -> bool
+                auto const func = [](auto const &pattern_pair, auto &&value) -> bool
                 {
                     auto context = typename ContextTrait<TypeTuple>::ContextT{};
-                    if (pattern.matchValue(std::forward<Value>(value), context))
+                    if (pattern_pair.matchValue(std::forward<Value>(value), context))
                     {
-                        pattern.execute();
-                        processId(pattern, 0, IdProcess::kCANCEL);
+                        pattern_pair.execute();
+                        processId(pattern_pair.pattern(), 0, IdProcess::kCANCEL);
                         return true;
                     }
                     return false;
                 };
-                bool const matched = (func(patterns, value) || ...);
+                bool const matched = (func(pattern_pairs, value) || ...);
                 static_cast<void>(matched);
             }
         }

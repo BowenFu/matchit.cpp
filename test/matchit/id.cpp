@@ -307,3 +307,18 @@ TEST(Id, move)
   auto y = std::move(*x);
   EXPECT_TRUE((*x).empty());
 }
+
+TEST(Id, resetIdForNextMatch)
+{
+  Id<int> x;
+  
+  match(2)(
+    pattern | x = [&](){return *x;}
+  );
+  
+  EXPECT_NO_THROW(
+    match(3)(
+      pattern | x = [&](){return *x;}
+    )
+  );
+}
