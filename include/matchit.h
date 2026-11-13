@@ -870,8 +870,8 @@ namespace matchit
         class App
         {
         public:
-            constexpr App(Unary &&unary, Pattern const &pattern)
-                : mUnary{std::forward<Unary>(unary)}, mPattern{pattern} {}
+            constexpr App(Unary unary, Pattern const &pattern)
+                : mUnary{std::move(unary)}, mPattern{pattern} {}
             constexpr auto const &unary() const { return mUnary; }
             constexpr auto const &pattern() const { return mPattern; }
 
@@ -883,7 +883,9 @@ namespace matchit
         template <typename Unary, typename Pattern>
         constexpr auto app(Unary &&unary, Pattern const &pattern)
         {
-            return App<Unary, Pattern>{std::forward<Unary>(unary), pattern};
+            // Always store unary as a plain value. Storing references
+            // could make them dangle once the matching occurs.
+            return App<std::decay_t<Unary>, Pattern>{std::forward<Unary>(unary), pattern};
         }
 
         constexpr auto y = 1;
@@ -2186,9 +2188,7 @@ namespace matchit
     {
       return [members...](auto ...pats)
       {
-        // FIXME, why the following line will cause segfault in at-Bindings.cpp
-        // return as<T>(dsVia(members...)(pats...));
-        return as<T>(and_(app(members, pats)...));
+        return as<T>(dsVia(members...)(pats...));
       };
     };
 
