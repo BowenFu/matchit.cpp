@@ -135,9 +135,7 @@ namespace matchit
     {
       return [members...](auto ...pats)
       {
-        // FIXME, why the following line will cause segfault in at-Bindings.cpp
-        // return as<T>(dsVia(members...)(pats...));
-        return as<T>(and_(app(members, pats)...));
+        return as<T>(dsVia(members...)(pats...));
       };
     };
 
